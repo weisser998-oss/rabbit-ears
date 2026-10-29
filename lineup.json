@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793299704460,
+  "updated": 1793299738582,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -93,6 +93,20 @@
       "name": "History Channel",
       "sources": [
         "@history"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 1000,
+      "scanMode": "recent",
+      "skipShort": true,
+      "breaks": "between"
+    },
+    {
+      "id": "kbbi38i9",
+      "name": "HGTV",
+      "sources": [
+        "@hgtv"
       ],
       "shuffle": "full",
       "blockSize": 3,
