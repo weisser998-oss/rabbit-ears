@@ -88,6 +88,7 @@ body.static #tube { opacity: 1; }
   opacity: 0; transition: opacity .3s;
 }
 body.osd-on #osd, body.landscape.ui-on #osd { opacity: 1; }
+body.no-signal #osd { opacity: 0 !important; }
 #osd .num { font-size: clamp(56px, 9vw, 104px); line-height: .8; }
 #osd .name { font-size: clamp(22px, 3vw, 34px); text-transform: uppercase; letter-spacing: .05em; }
 
@@ -473,6 +474,9 @@ async function yt(path, params) {
     const reason = j.error?.errors?.[0]?.reason || "";
     if (reason === "quotaExceeded") throw new Error("Today's YouTube API allowance is used up. It resets at midnight Pacific time.");
     if (/keyInvalid|API key not valid/i.test(reason + j.error?.message)) throw new Error("The YouTube API key isn't valid. Check it in Settings.");
+    if (/referer.*blocked|REFERRER_BLOCKED/i.test(j.error?.message + JSON.stringify(j.error?.details || ""))) {
+      throw new Error(`Your API key doesn't allow this website yet. In Google Cloud, set the key's website restriction to ${location.origin}/* and wait 5 minutes.`);
+    }
     if (reason === "playlistNotFound") throw new Error("Playlist not found, or it's private.");
     throw new Error(j.error?.message || "YouTube didn't respond (" + r.status + ").");
   }
@@ -668,6 +672,7 @@ function noiseOff() { if (noise) { noise.stop(); noise.disconnect(); noise = nul
 
 function staticOn() {
   $("#nosignal").hidden = true;
+  document.body.classList.remove("no-signal");
   document.body.classList.add("static");
   staticSince = performance.now();
   if (!staticRAF) drawStatic();
@@ -687,6 +692,7 @@ function noSignal(why, big = "NO SIGNAL") {
   $("#nsBig").textContent = big;
   $("#whyText").textContent = why;
   $("#nosignal").hidden = false;
+  document.body.classList.add("no-signal");
   setNow("No signal", why);
   setTimeout(noiseOff, 1200);
 }
