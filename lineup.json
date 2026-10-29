@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793299507388,
+  "updated": 1793299560466,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -56,7 +56,7 @@
       "blockSize": 3,
       "order": "oldest",
       "scanCount": 50,
-      "scanMode": "random",
+      "scanMode": "recent",
       "skipShort": true,
       "breaks": "between"
     },
@@ -73,7 +73,7 @@
       "blockSize": 3,
       "order": "oldest",
       "scanCount": 50,
-      "scanMode": "recent",
+      "scanMode": "random",
       "skipShort": true,
       "breaks": "between"
     }
