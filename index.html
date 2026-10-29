@@ -1,0 +1,1272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rabbit Ears</title>
+<meta name="theme-color" content="#050607">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rabbit Ears">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Chivo:wght@400;600;800&display=swap">
+<style>
+/* Landscape: full-bleed picture tube with OSD top-left, CH rocker right, transport bar bottom, guide as a bottom sheet.
+   Portrait: 16:9 picture on top, now-playing + controls + the schedule grid docked underneath. */
+:root {
+  --bg: #050607;
+  --panel: rgba(17, 20, 24, 0.92);
+  --panel-solid: #121519;
+  --field: #1b2026;
+  --field-hi: #232a32;
+  --line: #2b323b;
+  --fg: #ebe7dc;
+  --dim: #8f969e;
+  --accent: #f2b134;
+  --accent-wash: rgba(242, 177, 52, 0.14);
+  --osd: #8dff9e;
+  --live: #ff5b4f;
+  --danger: #ff6b5e;
+  --font-osd: "VT323", ui-monospace, "Courier New", monospace;
+  --font-ui: "Chivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --chw: 168px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  margin: 0; overflow: hidden; overscroll-behavior: none;
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.45 var(--font-ui);
+  -webkit-text-size-adjust: 100%;
+}
+body.landscape:not(.ui-on):not(.panel-open) { cursor: none; }
+[hidden] { display: none !important; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { touch-action: manipulation; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- picture ---------- */
+#app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+#stage { position: fixed; inset: 0; background: #000; overflow: hidden; }
+.slot { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.slot.on { opacity: 1; z-index: 1; }
+.slot iframe, .slot > div { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+#shield { position: absolute; inset: 0; z-index: 2; touch-action: none; }
+body.tap-through #shield { pointer-events: none; }
+#static {
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3;
+  image-rendering: pixelated; pointer-events: none; opacity: 0; transition: opacity .12s;
+}
+body.static #static { opacity: 1; }
+#tube {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; transition: opacity .12s;
+  background:
+    repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65) 100%);
+}
+body.static #tube { opacity: 1; }
+#nosignal {
+  position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; pointer-events: none;
+  padding-inline: 16px; text-align: center;
+}
+#nosignal .box { background: rgba(0,0,0,.78); border: 1px solid var(--line); padding: 14px 20px; max-width: 34rem; }
+#nosignal .big { font: clamp(30px, 6vw, 44px)/1 var(--font-osd); color: var(--osd); letter-spacing: .08em; }
+#nosignal .why { margin-top: 6px; font-size: 14px; }
+
+#osd {
+  position: absolute; z-index: 5; pointer-events: none;
+  top: calc(env(safe-area-inset-top, 0px) + 20px);
+  left: calc(max(16px, env(safe-area-inset-left, 0px)) + 12px);
+  font-family: var(--font-osd); color: var(--osd);
+  text-shadow: 0 0 8px rgba(141,255,158,.55), 2px 2px 0 #000;
+  opacity: 0; transition: opacity .3s;
+}
+body.osd-on #osd, body.landscape.ui-on #osd { opacity: 1; }
+#osd .num { font-size: clamp(56px, 9vw, 104px); line-height: .8; }
+#osd .name { font-size: clamp(22px, 3vw, 34px); text-transform: uppercase; letter-spacing: .05em; }
+
+/* ---------- landscape controls ---------- */
+.ui { opacity: 0; pointer-events: none; transition: opacity .25s; }
+body.ui-on .ui { opacity: 1; pointer-events: auto; }
+body.panel-open .ui { opacity: 0; pointer-events: none; }
+
+#rocker {
+  position: fixed; z-index: 6; top: 50%; transform: translateY(-50%);
+  right: calc(max(16px, env(safe-area-inset-right, 0px)) + 4px);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 40px; padding: 8px;
+}
+.chbtn {
+  width: 58px; height: 58px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--field); cursor: pointer; display: grid; place-items: center; padding: 0;
+}
+.chbtn:hover { border-color: var(--accent); color: var(--accent); }
+.chbtn svg { width: 22px; height: 22px; }
+#rocker .lbl { font: 24px/1 var(--font-osd); color: var(--dim); padding: 2px 0; }
+
+#bar {
+  position: fixed; z-index: 6; left: 0; right: 0; bottom: 0;
+  padding-top: 48px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,.88));
+  display: flex; align-items: flex-end; gap: 12px 20px; flex-wrap: wrap;
+}
+#now { flex: 1 1 260px; min-width: 0; }
+.title-line { font-weight: 600; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta-line { color: var(--dim); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn {
+  font-weight: 600; font-size: 13px; letter-spacing: .02em;
+  background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+  min-height: 40px; padding: 8px 13px; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #1a1406; }
+.btn.danger { color: var(--danger); }
+input[type=range] { accent-color: var(--accent); width: 110px; }
+
+/* ---------- portrait dock ---------- */
+#dock { display: none; }
+body.portrait #app { padding-top: env(safe-area-inset-top, 0px); }
+body.portrait #stage { position: relative; inset: auto; width: 100%; aspect-ratio: 16 / 9; flex: none; }
+body.portrait #rocker, body.portrait #bar { display: none; }
+body.portrait #osd { top: 10px; left: 14px; }
+body.portrait #osd .num { font-size: 52px; }
+body.portrait #osd .name { font-size: 20px; }
+body.portrait #dock {
+  display: flex; flex-direction: column; flex: 1; min-height: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.dock-top {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: center;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--line);
+}
+.dock-num { font: 52px/.8 var(--font-osd); color: var(--osd); grid-row: span 2; }
+.dock-ch { font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); }
+.dock-top .title-line { font-size: 16px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.dock-top .meta-line { grid-column: 2; }
+.dock-controls {
+  display: flex; gap: 8px; align-items: center;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--line);
+}
+.dock-controls .chbtn { width: 48px; height: 48px; }
+.dock-controls .spacer { flex: 1; }
+#epgDock { flex: 1; min-height: 0; display: flex; }
+#epgDock .epg-scroll { flex: 1; }
+
+/* ---------- schedule grid ---------- */
+.epg-scroll { overflow: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; min-height: 0; }
+.epg { position: relative; width: calc(var(--chw) + var(--w)); }
+.epg-head { display: flex; position: sticky; top: 0; z-index: 4; background: var(--panel-solid); border-bottom: 1px solid var(--line); }
+.epg-corner {
+  position: sticky; left: 0; z-index: 5; width: var(--chw); flex: none; background: var(--panel-solid);
+  font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim);
+  display: flex; align-items: center; padding-left: 12px;
+}
+.epg-times { position: relative; width: var(--w); height: 34px; flex: none; }
+.epg-times span {
+  position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding-left: 8px;
+  border-left: 1px solid var(--line); font-size: 12.5px; font-weight: 600; color: var(--dim); font-variant-numeric: tabular-nums;
+}
+.epg-row { display: flex; height: 66px; border-bottom: 1px solid var(--line); }
+.epg-ch {
+  position: sticky; left: 0; z-index: 3; width: var(--chw); flex: none; text-align: left;
+  display: flex; align-items: center; gap: 10px; padding: 0 10px; cursor: pointer;
+  background: var(--panel-solid); border: 0; border-right: 1px solid var(--line);
+}
+.epg-ch .n { font: 30px/1 var(--font-osd); color: var(--osd); }
+.epg-ch .nm { font-weight: 800; font-size: 13px; line-height: 1.2; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.epg-row.cur .epg-ch { background: var(--field-hi); box-shadow: inset 3px 0 0 var(--osd); }
+.epg-track { position: relative; width: var(--w); flex: none; }
+.prog {
+  position: absolute; top: 5px; bottom: 5px; padding: 6px 9px; overflow: hidden; text-align: left; cursor: pointer;
+  background: var(--field); border: 1px solid var(--line); border-radius: 6px;
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+}
+.prog:hover { border-color: var(--dim); }
+.prog.now { background: var(--accent-wash); border-color: var(--accent); }
+.prog .t { font-size: 13px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prog .h { font-size: 11.5px; color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.prog.bad .t { color: var(--dim); text-decoration: line-through; }
+.epg-msg { padding: 0 12px; display: flex; align-items: center; color: var(--dim); font-size: 13px; position: sticky; left: var(--chw); }
+.epg-now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--live); z-index: 2; pointer-events: none; }
+.epg-now::before { content: ""; position: absolute; top: 0; left: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--live); }
+
+/* ---------- panels ---------- */
+.panel {
+  position: fixed; z-index: 8; background: var(--panel-solid); border: 1px solid var(--line);
+  overflow: auto; overscroll-behavior: contain;
+}
+.panel h2 { font: 800 13px/1 var(--font-ui); text-transform: uppercase; letter-spacing: .12em; color: var(--dim); margin: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+
+#guide {
+  left: 0; right: 0; bottom: 0; height: min(66dvh, 620px); border-width: 1px 0 0; overflow: hidden;
+  display: flex; flex-direction: column;
+  padding-top: 14px; padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+#guide .panel-head { padding-inline: 16px; margin-bottom: 10px; }
+#guideBody { flex: 1; min-height: 0; display: flex; }
+#guideBody .epg-scroll { flex: 1; }
+
+#settings {
+  top: 0; right: 0; bottom: 0; width: min(600px, 100%); border-width: 0 0 0 1px;
+  padding-top: calc(18px + env(safe-area-inset-top, 0px)); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px));
+}
+#settings .panel-head { position: sticky; top: calc(-18px - env(safe-area-inset-top, 0px)); background: var(--panel-solid); z-index: 2; padding-block: 8px; margin-top: -8px; }
+#settings section { display: grid; gap: 12px; padding-block: 18px; border-top: 1px solid var(--line); }
+label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+label.check { display: flex; gap: 10px; align-items: center; font-weight: 400; font-size: 14px; }
+label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.hint { color: var(--dim); font-weight: 400; font-size: 12.5px; margin: 0; }
+input[type=text], input[type=password], input[type=number], select, textarea {
+  width: 100%; background: var(--field); border: 1px solid var(--line); border-radius: 6px;
+  padding: 9px 10px; font-weight: 400; font-size: 16px; min-height: 42px;
+}
+textarea { resize: vertical; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; }
+.ch-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 12px; margin: 0; min-width: 0; }
+.ch-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ch-head .ch-num { font: 30px/1 var(--font-osd); color: var(--osd); }
+.ch-head input { flex: 1 1 160px; min-width: 0; font-weight: 800; }
+.ch-tools { display: flex; gap: 6px; }
+.ch-tools .btn { padding: 7px 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.ch-card:not([data-shuffle="partial"]) .only-partial { display: none; }
+.ch-card[data-shuffle="full"] .only-ordered { display: none; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.err { color: var(--danger); font-size: 13px; margin: 0; }
+
+/* ---------- power-on screen ---------- */
+#power {
+  position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; overflow: auto;
+  padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
+  background: radial-gradient(ellipse at 50% 40%, #161b20 0%, var(--bg) 70%);
+  cursor: default;
+}
+.power-card { display: grid; gap: 18px; justify-items: center; text-align: center; max-width: 30rem; width: 100%; padding-block: 32px; }
+.logo { font: clamp(64px, 14vw, 112px)/.85 var(--font-osd); color: var(--osd); text-shadow: 0 0 18px rgba(141,255,158,.4); }
+.tag { color: var(--dim); margin: 0; }
+#powerBtn {
+  width: 96px; height: 96px; border-radius: 50%; cursor: pointer;
+  background: var(--field); border: 2px solid var(--line); color: var(--accent);
+  display: grid; place-items: center; transition: border-color .2s, box-shadow .2s;
+}
+#powerBtn:hover { border-color: var(--accent); box-shadow: 0 0 24px rgba(242,177,52,.25); }
+#powerBtn svg { width: 40px; height: 40px; }
+.keys { color: var(--dim); font-size: 12.5px; margin: 0; }
+kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+.warn { border: 1px solid var(--danger); border-radius: 8px; padding: 10px 12px; font-size: 13px; text-align: left; }
+@media (hover: none) { .keys.desk { display: none; } }
+@media (hover: hover) { .keys.touch { display: none; } }
+
+#toast {
+  position: fixed; z-index: 11; left: 50%; transform: translateX(-50%);
+  bottom: calc(110px + env(safe-area-inset-bottom, 0px)); width: max-content; max-width: calc(100% - 32px);
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 14px;
+  opacity: 0; transition: opacity .25s; pointer-events: none;
+}
+#toast.on { opacity: 1; }
+
+@media (max-width: 700px) {
+  :root { --chw: 104px; }
+  .epg-ch .n { font-size: 26px; }
+  .epg-ch .nm { font-size: 12px; }
+  .chbtn { width: 50px; height: 50px; }
+  input[type=range] { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="stage">
+    <div id="players"></div>
+    <div id="shield"></div>
+    <canvas id="static" width="240" height="135"></canvas>
+    <div id="tube"></div>
+    <div id="nosignal" hidden><div class="box"><div class="big" id="nsBig">NO SIGNAL</div><div class="why" id="whyText"></div></div></div>
+    <div id="osd"><div class="num" id="osdNum">--</div><div class="name" id="osdName"></div></div>
+  </div>
+
+  <div id="dock">
+    <div class="dock-top">
+      <span class="dock-num" id="dockNum">--</span>
+      <span class="dock-ch" id="dockCh"></span>
+      <div class="title-line" id="dockTitle">Tuning…</div>
+      <div class="meta-line" id="dockMeta"></div>
+    </div>
+    <div class="dock-controls">
+      <button class="chbtn" data-ch-step="-1" aria-label="Channel down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <button class="chbtn" data-ch-step="1" aria-label="Channel up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>
+      <span class="spacer"></span>
+      <button class="btn" data-act="mute">Mute</button>
+      <button class="btn" data-act="fs">Full screen</button>
+      <button class="btn" data-act="settings">Settings</button>
+    </div>
+    <div id="epgDock"></div>
+  </div>
+</div>
+
+<div id="rocker" class="ui">
+  <button class="chbtn" data-ch-step="1" aria-label="Channel up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>
+  <span class="lbl">CH</span>
+  <button class="chbtn" data-ch-step="-1" aria-label="Channel down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+</div>
+
+<div id="bar" class="ui">
+  <div id="now"><div class="title-line" id="nowTitle">Tuning…</div><div class="meta-line" id="nowBy"></div></div>
+  <div class="controls">
+    <button class="btn" data-act="guide">Guide</button>
+    <button class="btn" data-act="mute">Mute</button>
+    <input type="range" id="vol" min="0" max="100" aria-label="Volume">
+    <button class="btn" data-act="fs">Full screen</button>
+    <button class="btn" data-act="settings">Settings</button>
+  </div>
+</div>
+
+<div id="guide" class="panel" hidden>
+  <div class="panel-head"><h2>Guide</h2><button class="btn" data-close>Close</button></div>
+  <div id="guideBody"></div>
+</div>
+
+<form id="settings" class="panel" hidden>
+  <div class="panel-head"><h2>Settings</h2><div class="row"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn primary">Save</button></div></div>
+
+  <section>
+    <label for="apiKey">YouTube API key
+      <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="AIza…">
+    </label>
+    <p class="hint">Free from Google Cloud Console: create a project, enable "YouTube Data API v3", then Credentials → Create API key. It stays in this browser only.</p>
+    <label for="preload">Pre-load channels
+      <select id="preload">
+        <option value="both">Above and below (fastest)</option>
+        <option value="next">Above only</option>
+        <option value="off">Off (saves data)</option>
+      </select>
+    </label>
+    <p class="hint">Pre-loaded channels play silently in the background so switching to them is instant. Each one uses about as much data as the channel you're watching.</p>
+    <label class="check"><input type="checkbox" id="staticSound"> Play static sound between channels</label>
+  </section>
+
+  <section>
+    <div class="panel-head" style="margin:0;position:static;padding:0"><h2>Lineup</h2><button type="button" class="btn" id="addCh">Add channel</button></div>
+    <div id="chList" style="display:grid;gap:14px"></div>
+  </section>
+
+  <section>
+    <h2>Backup</h2>
+    <p class="hint">Move your lineup to another device: copy it here, then paste it into Import there. The API key isn't included.</p>
+    <textarea id="backup" rows="4" spellcheck="false" placeholder="Paste a lineup here to import it"></textarea>
+    <div class="row">
+      <button type="button" class="btn" id="exportBtn">Copy lineup</button>
+      <button type="button" class="btn" id="importBtn">Import</button>
+      <button type="button" class="btn" id="rescanBtn">Rescan all channels</button>
+    </div>
+    <p class="err" id="backupMsg" hidden></p>
+  </section>
+</form>
+
+<div id="power">
+  <div class="power-card">
+    <div class="logo">RABBIT<br>EARS</div>
+    <p class="tag">Your YouTube, broadcast like it's 1994.</p>
+    <div class="warn" id="fileWarn" hidden>You opened this as a file. YouTube won't play videos that way. Open it from a web address instead, like your GitHub Pages link, or run <kbd>python3 -m http.server</kbd> in this folder and visit <kbd>localhost:8000</kbd>.</div>
+    <label for="powerKey" id="powerKeyWrap" style="width:100%;text-align:left" hidden>Paste your YouTube API key to get started
+      <input type="password" id="powerKey" autocomplete="off" spellcheck="false" placeholder="AIza…">
+    </label>
+    <button id="powerBtn" aria-label="Turn on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
+    <p class="keys desk"><kbd>↑</kbd> <kbd>↓</kbd> change channel · <kbd>0–9</kbd> jump to a number · <kbd>G</kbd> guide · <kbd>M</kbd> mute · <kbd>F</kbd> full screen</p>
+    <p class="keys touch">Swipe up or down on the picture to change channels. Turn your phone sideways for full-screen TV.</p>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pad = n => String(n).padStart(2, "0");
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clock = t => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+function shuffle(a, rand = Math.random) {
+  for (let i = a.length - 1; i > 0; i--) { const j = rand() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function hashStr(s) {
+  let h = 1779033703 ^ s.length;
+  for (let i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; }
+  return h >>> 0;
+}
+function seeded(seed) {
+  return () => {
+    seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* ---------- saved settings ---------- */
+
+const LS_KEY = "rabbit-ears-v1";
+const CACHE_KEY = "rabbit-ears-cache-v2";
+const BAD_KEY = "rabbit-ears-bad-v1";
+const CACHE_TTL = 24 * 3600e3;
+try { localStorage.removeItem("rabbit-ears-cache-v1"); } catch {}
+
+function newChannel(over = {}) {
+  return { id: uid(), name: "New channel", sources: [], shuffle: "full", blockSize: 3, order: "oldest",
+           scanCount: 50, scanMode: "recent", skipShort: true, ...over };
+}
+function defaults() {
+  // Example lineup: swap the links for your own in Settings.
+  return {
+    apiKey: "", volume: 80, muted: false, staticSound: true, lastChannel: 0,
+    preload: navigator.connection?.saveData ? "off" : "both",
+    channels: [
+      newChannel({ name: "Video Game Playthroughs", sources: ["@GameGrumps", "@Markiplier", "@jacksepticeye"],
+                   shuffle: "partial", blockSize: 4, order: "oldest", scanCount: 60, scanMode: "recent" }),
+      newChannel({ name: "Pop Culture", sources: ["@CinemaSins", "@vanityfair", "@WIRED"],
+                   shuffle: "full", scanCount: 40, scanMode: "random" }),
+      newChannel({ name: "Americana", sources: ["@townsends", "@PeriscopeFilm", "@smithsonianchannel"],
+                   shuffle: "full", scanCount: 50, scanMode: "random" }),
+    ],
+  };
+}
+function load(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
+function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+const state = Object.assign(defaults(), load(LS_KEY) || {});
+let cache = load(CACHE_KEY) || {};
+const bad = new Set(load(BAD_KEY) || []); // videos that refused to play; left out of future scans
+const save = () => store(LS_KEY, state);
+const saveCache = () => store(CACHE_KEY, cache);
+const saveBad = () => store(BAD_KEY, [...bad].slice(-500));
+const chs = () => state.channels;
+
+/* ---------- YouTube Data API ---------- */
+
+async function yt(path, params) {
+  const u = new URL("https://www.googleapis.com/youtube/v3/" + path);
+  for (const [k, v] of Object.entries(params)) if (v !== "" && v != null) u.searchParams.set(k, v);
+  u.searchParams.set("key", state.apiKey);
+  const r = await fetch(u);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const reason = j.error?.errors?.[0]?.reason || "";
+    if (reason === "quotaExceeded") throw new Error("Today's YouTube API allowance is used up. It resets at midnight Pacific time.");
+    if (/keyInvalid|API key not valid/i.test(reason + j.error?.message)) throw new Error("The YouTube API key isn't valid. Check it in Settings.");
+    if (reason === "playlistNotFound") throw new Error("Playlist not found, or it's private.");
+    throw new Error(j.error?.message || "YouTube didn't respond (" + r.status + ").");
+  }
+  return j;
+}
+
+function parseSource(raw) {
+  const s = raw.trim(); let m;
+  if (!s) return null;
+  if ((m = s.match(/[?&]list=([\w-]+)/))) return { type: "playlist", id: m[1] };
+  if ((m = s.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/live\/|\/embed\/)([\w-]{11})/))) return { type: "video", id: m[1] };
+  if ((m = s.match(/(?:\/channel\/|^)(UC[\w-]{22})\b/))) return { type: "channelId", id: m[1] };
+  if ((m = s.match(/^(PL|OL|UU|FL)[\w-]{10,}$/))) return { type: "playlist", id: s };
+  if ((m = s.match(/(@[\w.\-]+)/))) return { type: "handle", id: m[1] };
+  if ((m = s.match(/\/user\/([\w.\-]+)/))) return { type: "user", id: m[1] };
+  return { type: "unknown" };
+}
+
+async function uploadsPlaylist(src) {
+  const p = { part: "contentDetails" };
+  if (src.type === "handle") p.forHandle = src.id;
+  else if (src.type === "user") p.forUsername = src.id;
+  else p.id = src.id;
+  const j = await yt("channels", p);
+  if (!j.items?.length) throw new Error("Couldn't find that YouTube channel.");
+  return j.items[0].contentDetails.relatedPlaylists.uploads;
+}
+
+async function playlistEntries(playlistId, max) {
+  const out = []; let token = "";
+  do {
+    const j = await yt("playlistItems", { part: "contentDetails", playlistId, maxResults: 50, pageToken: token });
+    for (const it of j.items || []) out.push({ id: it.contentDetails.videoId, at: it.contentDetails.videoPublishedAt || "" });
+    token = j.nextPageToken || "";
+  } while (token && out.length < max);
+  return out;
+}
+
+function seconds(iso) {
+  const m = /P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?/.exec(iso || "") || [];
+  return (+m[1] || 0) * 86400 + (+m[2] || 0) * 3600 + (+m[3] || 0) * 60 + (+m[4] || 0);
+}
+
+// Returns up to ch.scanCount playable videos from one link.
+async function scanSource(src, ch) {
+  let cands;
+  if (src.type === "video") cands = [{ id: src.id }];
+  else {
+    const isUploads = src.type !== "playlist";
+    const plId = isUploads ? await uploadsPlaylist(src) : src.id;
+    // A channel's uploads list is already newest-first, so "most recent" only needs the first pages.
+    // Extra headroom covers Shorts and blocked videos that get filtered out below.
+    const max = ch.scanMode === "recent" && isUploads ? Math.min(1000, Math.ceil(ch.scanCount * 2 / 50) * 50) : 1000;
+    cands = await playlistEntries(plId, max);
+    if (ch.scanMode === "random") shuffle(cands);
+    else cands.sort((a, b) => b.at.localeCompare(a.at));
+  }
+  cands = cands.filter(c => !bad.has(c.id));
+  const out = [];
+  for (let i = 0; i < cands.length && out.length < ch.scanCount; i += 50) {
+    const batch = cands.slice(i, i + 50);
+    const j = await yt("videos", { part: "snippet,contentDetails,status", id: batch.map(c => c.id).join(","), maxResults: 50 });
+    const byId = new Map((j.items || []).map(v => [v.id, v]));
+    for (const c of batch) {
+      const v = byId.get(c.id);
+      if (!v || v.status?.embeddable === false || v.status?.privacyStatus === "private") continue;
+      if (v.snippet.liveBroadcastContent !== "none") continue;
+      const dur = seconds(v.contentDetails.duration);
+      if (!dur || (ch.skipShort && dur <= 60)) continue;
+      out.push({ id: v.id, title: v.snippet.title, by: v.snippet.channelTitle, at: v.snippet.publishedAt || c.at || "", dur });
+      if (out.length >= ch.scanCount) break;
+    }
+  }
+  return out;
+}
+
+/* ---------- lineups and schedules ---------- */
+
+const scanKey = ch => JSON.stringify([ch.sources, ch.scanCount, ch.scanMode, ch.skipShort]);
+const queueKey = ch => JSON.stringify([ch.shuffle, ch.blockSize, ch.order]);
+const scans = {};   // channel id -> { key, promise } while scanning
+const scanErr = {}; // channel id -> message from the last failed scan
+
+function ensureChannel(ch) {
+  const key = scanKey(ch), c = cache[ch.id];
+  if (c && c.key === key && Date.now() - c.at < CACHE_TTL) return Promise.resolve(c);
+  if (scans[ch.id]?.key === key) return scans[ch.id].promise;
+  const promise = (async () => {
+    if (!state.apiKey) throw new Error("Add your YouTube API key in Settings.");
+    const videos = [], errs = [], seen = new Set();
+    for (const [i, raw] of ch.sources.entries()) {
+      const src = parseSource(raw);
+      if (!src) continue;
+      if (src.type === "unknown") { errs.push(`"${raw}" isn't a channel, playlist or video link.`); continue; }
+      try {
+        for (const v of await scanSource(src, ch)) if (!seen.has(v.id)) { seen.add(v.id); videos.push({ ...v, src: i }); }
+      } catch (e) {
+        if (/API key|allowance/.test(e.message)) throw e;
+        errs.push(`${raw}: ${e.message}`);
+      }
+    }
+    if (!videos.length) throw new Error(errs[0] || "This channel has no links yet. Add some in Settings.");
+    const now = Date.now(), total = videos.reduce((s, v) => s + v.dur * 1000, 0);
+    // A refreshed lineup takes over when the program airing now ends, so nothing cuts off mid-show.
+    // A brand-new channel starts somewhere in the middle of its cycle, as if it's been on the air all along.
+    let carry = null;
+    try { if (c?.total) { const p = programAt(ch, c, now); carry = { v: p.v, start: p.start, end: p.end }; } } catch {}
+    const entry = { key, at: now, videos, errs, total, anchor: carry ? carry.end : now - Math.random() * total, carry };
+    cache[ch.id] = entry; saveCache();
+    return entry;
+  })().catch(e => {
+    if (c && c.key === key) return c; // keep the last good lineup if a refresh fails
+    throw e;
+  });
+  scans[ch.id] = { key, promise };
+  promise.then(() => { delete scanErr[ch.id]; }, e => { scanErr[ch.id] = e.message; })
+         .finally(() => { if (scans[ch.id]?.promise === promise) delete scans[ch.id]; renderGuide(); });
+  renderGuide();
+  return promise;
+}
+
+function buildQueue(ch, videos, rand) {
+  const asc = (a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id);
+  const sorter = ch.order === "newest" ? (a, b) => asc(b, a) : asc;
+  if (ch.shuffle === "full") return shuffle([...videos], rand);
+  if (ch.shuffle === "none") return [...videos].sort(sorter);
+  // Partial: runs of N consecutive videos from the same link stay in order; the runs are shuffled.
+  const n = Math.max(1, ch.blockSize | 0), bySrc = new Map(), blocks = [];
+  for (const v of videos) (bySrc.get(v.src) || bySrc.set(v.src, []).get(v.src)).push(v);
+  for (const list of bySrc.values()) {
+    list.sort(sorter);
+    for (let i = 0; i < list.length; i += n) blocks.push(list.slice(i, i + n));
+  }
+  return shuffle(blocks, rand).flat();
+}
+
+// Each pass through a channel's lineup is a "cycle" with its own seeded order,
+// so the schedule is the same every time it's computed and the guide can look ahead.
+const cycles = new Map();
+function cycle(ch, e, k) {
+  const key = `${ch.id}|${e.at}|${queueKey(ch)}|${k}`;
+  let c = cycles.get(key);
+  if (!c) {
+    const q = buildQueue(ch, e.videos, seeded(hashStr(key)));
+    const cum = [0];
+    for (const v of q) cum.push(cum[cum.length - 1] + v.dur * 1000);
+    if (cycles.size > 300) cycles.clear();
+    cycles.set(key, c = { q, cum });
+  }
+  return c;
+}
+function programAt(ch, e, t) {
+  const c = e.carry;
+  if (c && t >= c.start && t < c.end) return { v: c.v, start: c.start, end: c.end };
+  const el = t - e.anchor, k = Math.floor(el / e.total), off = el - k * e.total, cy = cycle(ch, e, k);
+  let lo = 0, hi = cy.q.length - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (cy.cum[mid] <= off) lo = mid; else hi = mid - 1; }
+  const start = e.anchor + k * e.total + cy.cum[lo];
+  return { v: cy.q[lo], start, end: start + cy.q[lo].dur * 1000 };
+}
+function programsBetween(ch, e, t0, t1) {
+  const out = [];
+  for (let p = programAt(ch, e, t0); p.start < t1 && out.length < 400; p = programAt(ch, e, p.end)) out.push(p);
+  return out;
+}
+
+/* ---------- static ---------- */
+
+const cv = $("#static"), cx = cv.getContext("2d");
+const img = cx.createImageData(cv.width, cv.height), px = new Uint32Array(img.data.buffer);
+const still = matchMedia("(prefers-reduced-motion: reduce)");
+let staticRAF = 0, staticSince = 0, actx = null, noiseBuf = null, noise = null, noiseGain = null;
+
+function drawStatic() {
+  for (let i = 0; i < px.length; i++) { const v = Math.random() * 255 | 0; px[i] = 0xff000000 | v << 16 | v << 8 | v; }
+  cx.putImageData(img, 0, 0);
+  staticRAF = still.matches ? 0 : requestAnimationFrame(drawStatic);
+}
+function noiseOn() {
+  if (!state.staticSound || !actx || noise) return;
+  actx.resume?.();
+  if (!noiseBuf) {
+    noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  noise = actx.createBufferSource(); noise.buffer = noiseBuf; noise.loop = true;
+  const f = actx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2800; f.Q.value = .5;
+  noiseGain = actx.createGain(); noiseGain.gain.value = state.muted ? 0 : .14 * state.volume / 100;
+  noise.connect(f).connect(noiseGain).connect(actx.destination); noise.start();
+}
+function noiseOff() { if (noise) { noise.stop(); noise.disconnect(); noise = null; } }
+
+function staticOn() {
+  $("#nosignal").hidden = true;
+  document.body.classList.add("static");
+  staticSince = performance.now();
+  if (!staticRAF) drawStatic();
+  noiseOn();
+}
+function staticOff(seqAtCall) {
+  const wait = Math.max(0, 450 - (performance.now() - staticSince));
+  setTimeout(() => {
+    if (seqAtCall !== seq) return;
+    document.body.classList.remove("static");
+    cancelAnimationFrame(staticRAF); staticRAF = 0;
+    noiseOff();
+  }, wait);
+}
+function noSignal(why, big = "NO SIGNAL") {
+  staticOn();
+  $("#nsBig").textContent = big;
+  $("#whyText").textContent = why;
+  $("#nosignal").hidden = false;
+  setNow("No signal", why);
+  setTimeout(noiseOff, 1200);
+}
+
+/* ---------- players ----------
+   One YouTube player per "slot". The active slot is visible with sound; the others quietly play
+   the neighbouring channels in sync with their schedules, so switching to them is instant. */
+
+let ytReady = false, pendingTune = null, seq = 0, cur = 0, active = null;
+let needUnmute = false, watchA = 0, watchB = 0, neighborT = 0;
+const slots = [];
+const preloadCount = () => ({ both: 2, next: 1, off: 0 }[state.preload] ?? 2);
+const chById = id => chs().find(c => c.id === id);
+
+window.onYouTubeIframeAPIReady = () => {
+  ytReady = true;
+  if (pendingTune != null) { const i = pendingTune; pendingTune = null; tune(i); }
+};
+
+function makeSlot() {
+  const el = document.createElement("div"); el.className = "slot";
+  const host = document.createElement("div"); el.append(host); $("#players").append(el);
+  const s = { el, player: null, ready: false, chId: null, p: null, v: null, filler: false, seq: 0, timer: 0, pending: null };
+  s.player = new YT.Player(host, {
+    width: "100%", height: "100%",
+    playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, playsinline: 1, mute: 1,
+                  ...(location.protocol.startsWith("http") ? { origin: location.origin } : {}) },
+    events: {
+      onReady: () => {
+        s.ready = true; s.player.mute();
+        if (s.pending) { const a = s.pending; s.pending = null; loadInto(s, ...a); }
+        if (s === active) applyVolume();
+      },
+      onStateChange: e => onSlotState(s, e.data),
+      onError: () => onSlotError(s),
+    },
+  });
+  slots.push(s);
+  return s;
+}
+
+// A slot to (re)use for a channel, never taking one that holds a channel in `keep`.
+function claimSlot(keep) {
+  const free = slots.find(s => !keep.has(s.chId) && s !== active) || slots.find(s => !keep.has(s.chId));
+  if (free) return free;
+  if (slots.length < 1 + preloadCount()) return makeSlot();
+  return slots.find(s => s !== active) || slots[0];
+}
+
+function loadInto(s, ch, p, v, offset, filler = false) {
+  s.chId = ch.id; s.p = p; s.v = v; s.filler = filler; s.seq++;
+  clearTimeout(s.timer);
+  // Re-check the schedule when this program should be over, in case the video stalls or a filler runs long.
+  s.timer = setTimeout(() => advance(s, false), Math.max(1000, p.end - Date.now() + (filler ? 0 : 8000)));
+  if (s === active) { updateNow(); renderGuide(); }
+  if (!s.ready) { s.pending = [ch, p, v, offset, filler]; return; }
+  const at = offset ?? (Date.now() - p.start) / 1000;
+  s.player.loadVideoById({ videoId: v.id, startSeconds: at < 4 ? 0 : Math.floor(at) });
+  if (s === active) { applyVolume(); watch(s); } else s.player.mute();
+}
+
+function playProgram(s, ch, e, t = Date.now()) {
+  const p = programAt(ch, e, t);
+  if (!bad.has(p.v.id)) return loadInto(s, ch, p, p.v);
+  // The scheduled video won't play: fill the slot with something else from the channel until it ends.
+  const pool = e.videos.filter(v => !bad.has(v.id));
+  if (!pool.length) { if (s === active) noSignal("None of this channel's videos would play."); return; }
+  const v = pool[Math.random() * pool.length | 0];
+  loadInto(s, ch, p, v, v.dur > 90 ? Math.floor(v.dur * (0.05 + Math.random() * 0.8)) : 0, true);
+}
+
+function advance(s, ended) {
+  const ch = chById(s.chId), e = ch && cache[ch.id];
+  if (!e || !s.p) return;
+  // When a video finishes, the next one starts from the top (or wherever the schedule has reached, if we fell behind).
+  const t = ended && !s.filler ? Math.max(Date.now(), s.p.end) : Date.now();
+  playProgram(s, ch, e, t);
+}
+
+function onSlotState(s, st) {
+  if (st === YT.PlayerState.PLAYING && s === active) {
+    clearTimeout(watchB);
+    document.body.classList.remove("tap-through");
+    staticOff(seq);
+    scheduleNeighbors();
+  }
+  if (st === YT.PlayerState.ENDED) advance(s, true);
+}
+function onSlotError(s) {
+  if (!s.v) return;
+  bad.add(s.v.id); saveBad();
+  if (s === active) { seq++; staticOn(); }
+  advance(s, false);
+}
+
+function activate(s) {
+  active = s;
+  for (const o of slots) {
+    o.el.classList.toggle("on", o === s);
+    if (o !== s && o.ready) o.player.mute();
+  }
+  applyVolume();
+}
+
+// Bring a pre-loaded slot back in line with its schedule before showing it.
+function resync(s) {
+  const ch = chById(s.chId), e = ch && cache[ch.id];
+  if (!e || !s.p) return false;
+  if (Date.now() >= s.p.end) { playProgram(s, ch, e); return false; }
+  if (!s.ready) return false;
+  const st = s.player.getPlayerState();
+  if (!s.filler) {
+    const want = (Date.now() - s.p.start) / 1000, have = s.player.getCurrentTime?.() || 0;
+    if (Math.abs(want - have) > 10) s.player.seekTo(want, true);
+  }
+  if (st !== YT.PlayerState.PLAYING) s.player.playVideo();
+  return st === YT.PlayerState.PLAYING;
+}
+
+// Browsers can block autoplay. Step 1: retry muted. Step 2: let the viewer tap the picture itself.
+function watch(s) {
+  clearTimeout(watchA); clearTimeout(watchB);
+  const sq = s.seq, playing = () => [YT.PlayerState.PLAYING, YT.PlayerState.BUFFERING].includes(s.player.getPlayerState());
+  watchA = setTimeout(() => {
+    if (s !== active || s.seq !== sq || playing()) return;
+    s.player.mute(); s.player.playVideo();
+    if (!state.muted) { needUnmute = true; toast("Your browser blocked sound. Tap anywhere to turn it on."); }
+  }, 3000);
+  watchB = setTimeout(() => {
+    if (s !== active || s.seq !== sq || playing()) return;
+    seq++;
+    document.body.classList.remove("static"); noiseOff();
+    document.body.classList.add("tap-through");
+    toast("Tap the picture to start playback.");
+  }, 7000);
+}
+
+async function tune(i) {
+  const list = chs();
+  if (!list.length) { noSignal("No channels yet. Add one in Settings."); return; }
+  cur = ((i % list.length) + list.length) % list.length;
+  state.lastChannel = cur; save();
+  const ch = list[cur], mySeq = ++seq;
+  showOSD(pad(cur + 1), ch.name);
+  staticOn();
+  document.body.classList.remove("tap-through");
+  if (!ytReady) { pendingTune = cur; setNow("Tuning…", ""); return; }
+
+  let s = slots.find(x => x.chId === ch.id);
+  if (s && s.p) {
+    // Pre-loaded: it's already playing in the background.
+    activate(s); updateNow(); renderGuide();
+    if (resync(s)) staticOff(mySeq); else watch(s);
+    if (cache[ch.id]?.errs?.length) skippedToast(ch, cache[ch.id]);
+    scheduleNeighbors();
+    return;
+  }
+  s = s || claimSlot(new Set([ch.id, ...neighbors(cur).map(c => c.id)]));
+  s.chId = ch.id; s.p = null; s.v = null;
+  if (s.ready) s.player.stopVideo();
+  activate(s);
+  setNow("Tuning…", "");
+  let e;
+  try { e = await ensureChannel(ch); }
+  catch (err) { if (mySeq === seq) noSignal(err.message); return; }
+  if (mySeq !== seq || active !== s) return;
+  if (e.errs.length) skippedToast(ch, e);
+  playProgram(s, ch, e);
+}
+function skippedToast(ch, e) {
+  toast(`Skipped ${e.errs.length === 1 ? "a link" : e.errs.length + " links"} on ${ch.name}. ${e.errs[0]}`);
+}
+
+function neighbors(i) {
+  const list = chs(), n = preloadCount(), out = [];
+  if (n >= 1) out.push(list[(i + 1) % list.length]);
+  if (n >= 2) out.push(list[(i - 1 + list.length) % list.length]);
+  return [...new Set(out)].filter(c => c && c !== list[i]);
+}
+
+// Load the neighbouring channels a moment after the current one is playing, so it gets the bandwidth first.
+function scheduleNeighbors() {
+  clearTimeout(neighborT);
+  neighborT = setTimeout(async () => {
+    const want = neighbors(cur), keep = new Set([chs()[cur]?.id, ...want.map(c => c.id)]);
+    while (slots.length > 1 + preloadCount()) { const s = slots.find(x => x !== active); s.player.destroy(); s.el.remove(); slots.splice(slots.indexOf(s), 1); }
+    for (const ch of want) {
+      if (slots.some(s => s.chId === ch.id)) continue;
+      const s = claimSlot(keep);
+      if (s === active) continue;
+      s.chId = ch.id; s.p = null; s.v = null; clearTimeout(s.timer);
+      if (s.ready) s.player.stopVideo();
+      try {
+        const e = await ensureChannel(ch);
+        if (s.chId === ch.id && s !== active) playProgram(s, ch, e);
+      } catch {}
+    }
+  }, 1500);
+}
+
+let prefetching = false;
+async function prefetch() {
+  if (prefetching) return; prefetching = true;
+  for (const ch of chs()) { try { await ensureChannel(ch); } catch {} }
+  prefetching = false;
+}
+
+function applyVolume() {
+  $("#vol").value = state.volume;
+  $$('[data-act="mute"]').forEach(b => b.textContent = state.muted ? "Unmute" : "Mute");
+  if (noiseGain) noiseGain.gain.value = state.muted ? 0 : .14 * state.volume / 100;
+  if (!active?.ready) return;
+  active.player.setVolume(state.volume);
+  if (state.muted || needUnmute) active.player.mute(); else active.player.unMute();
+}
+
+// Coming back to the tab: background players may have paused, so line everything up again.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden || !$("#power").hidden) return;
+  for (const s of slots) if (s.p) resync(s);
+  renderGuide();
+});
+
+/* ---------- now playing ---------- */
+
+function setNow(title, meta) {
+  const ch = chs()[cur];
+  $("#nowTitle").textContent = $("#dockTitle").textContent = title;
+  $("#nowBy").textContent = $("#dockMeta").textContent = meta;
+  $("#dockNum").textContent = pad(cur + 1);
+  $("#dockCh").textContent = ch?.name || "";
+}
+function updateNow() {
+  const s = active;
+  if (!s?.v) return setNow("Tuning…", "");
+  setNow(s.v.title, s.filler
+    ? `${s.v.by} · Filling in until ${clock(s.p.end)}`
+    : `${s.v.by} · ${clock(s.p.start)}–${clock(s.p.end)}`);
+}
+
+/* ---------- guide ---------- */
+
+const portraitMQ = matchMedia("(orientation: portrait)");
+const isPortrait = () => portraitMQ.matches;
+function applyLayout() {
+  document.body.classList.toggle("portrait", isPortrait());
+  document.body.classList.toggle("landscape", !isPortrait());
+  if (isPortrait()) $("#guide").hidden = true;
+  if (!panelOpen()) document.body.classList.remove("panel-open");
+  renderGuide();
+}
+portraitMQ.addEventListener?.("change", applyLayout);
+
+function renderGuide() {
+  const host = isPortrait() ? $("#epgDock") : ($("#guide").hidden ? null : $("#guideBody"));
+  if (!host || !$("#power").hidden) return;
+  const old = host.querySelector(".epg-scroll"), keep = old && [old.scrollLeft, old.scrollTop];
+  const ppm = innerWidth < 700 ? 5 : 7; // pixels per minute
+  const now = Date.now(), t0 = Math.floor(now / 18e5) * 18e5, t1 = t0 + 3 * 36e5, W = (t1 - t0) / 6e4 * ppm;
+  const x = t => (t - t0) / 6e4 * ppm;
+  let times = "";
+  for (let t = t0; t < t1; t += 18e5) times += `<span style="left:${x(t)}px;width:${30 * ppm}px">${clock(t)}</span>`;
+  const rows = chs().map((ch, i) => {
+    const e = cache[ch.id];
+    let track;
+    if (e?.total) {
+      track = programsBetween(ch, e, t0, t1).map(p => {
+        const l = x(Math.max(p.start, t0)), w = x(Math.min(p.end, t1)) - l - 3;
+        const isNow = p.start <= now && now < p.end;
+        const label = `${p.v.title} · ${clock(p.start)}–${clock(p.end)}`;
+        return `<button class="prog${isNow ? " now" : ""}${bad.has(p.v.id) ? " bad" : ""}" data-ch="${i}" style="left:${l}px;width:${Math.max(4, w)}px" title="${esc(label)}" aria-label="${esc(label)}">`
+          + (w >= 40 ? `<span class="t">${esc(p.v.title)}</span>` : "")
+          + (w >= 110 ? `<span class="h">${clock(p.start)}–${clock(p.end)}</span>` : "")
+          + `</button>`;
+      }).join("");
+    } else {
+      const msg = scans[ch.id] ? "Scanning links…" : scanErr[ch.id] ? esc(scanErr[ch.id]) : "Not scanned yet";
+      track = `<div class="epg-msg" style="height:100%">${msg}</div>`;
+    }
+    return `<div class="epg-row${i === cur ? " cur" : ""}"><button class="epg-ch" data-ch="${i}"><span class="n">${pad(i + 1)}</span><span class="nm">${esc(ch.name)}</span></button><div class="epg-track">${track}</div></div>`;
+  }).join("");
+  const day = new Date(now).toLocaleDateString([], { weekday: "short" });
+  host.innerHTML = `<div class="epg-scroll"><div class="epg" style="--w:${W}px">
+    <div class="epg-head"><div class="epg-corner">${day}</div><div class="epg-times">${times}</div></div>
+    ${rows}
+    <div class="epg-now" style="left:calc(var(--chw) + ${x(now)}px)"></div>
+  </div></div>`;
+  if (keep) { const n = host.querySelector(".epg-scroll"); n.scrollLeft = keep[0]; n.scrollTop = keep[1]; }
+}
+setInterval(renderGuide, 30e3);
+
+document.addEventListener("click", e => {
+  const b = e.target.closest(".epg [data-ch]");
+  if (!b) return;
+  if (!isPortrait()) closePanels();
+  tune(+b.dataset.ch);
+});
+
+/* ---------- on-screen UI ---------- */
+
+let osdT = 0, idleT = 0, toastT = 0;
+function showOSD(num, name) {
+  $("#osdNum").textContent = num; $("#osdName").textContent = name || "";
+  document.body.classList.add("osd-on");
+  clearTimeout(osdT); osdT = setTimeout(() => document.body.classList.remove("osd-on"), 3500);
+}
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 4500);
+}
+const panelOpen = () => !$("#guide").hidden || !$("#settings").hidden;
+function wake(ms = 2500) {
+  if (!$("#power").hidden) return;
+  document.body.classList.add("ui-on");
+  clearTimeout(idleT);
+  idleT = setTimeout(function hide() {
+    if (panelOpen() || document.querySelector("#bar:hover, #rocker:hover, #bar :focus, #rocker :focus")) { idleT = setTimeout(hide, 1000); return; }
+    document.body.classList.remove("ui-on");
+  }, ms);
+}
+function sleepUI() { clearTimeout(idleT); document.body.classList.remove("ui-on"); }
+addEventListener("pointermove", e => { if (e.pointerType === "mouse") wake(); }, { passive: true });
+addEventListener("pointerdown", e => { if (e.pointerType === "mouse") wake(); }, { passive: true });
+addEventListener("wheel", () => wake(), { passive: true });
+
+// Touch on the picture: swipe up/down changes channel, a tap shows or hides the controls.
+let touch0 = null;
+$("#shield").addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") touch0 = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+$("#shield").addEventListener("pointerup", e => {
+  if (needUnmute) { needUnmute = false; applyVolume(); toast("Sound on."); }
+  if (!touch0 || e.pointerType === "mouse") return;
+  const dx = e.clientX - touch0.x, dy = e.clientY - touch0.y; touch0 = null;
+  if (Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx) * 1.5) { tune(cur + (dy < 0 ? 1 : -1)); return; }
+  if (Math.abs(dx) < 12 && Math.abs(dy) < 12) {
+    if (isPortrait()) showOSD(pad(cur + 1), chs()[cur]?.name);
+    else document.body.classList.contains("ui-on") ? sleepUI() : wake(4000);
+  }
+});
+$("#shield").addEventListener("pointercancel", () => { touch0 = null; });
+
+function openGuide() {
+  if (isPortrait()) return;
+  $("#settings").hidden = true; $("#guide").hidden = false;
+  document.body.classList.add("panel-open"); renderGuide();
+}
+function closePanels() {
+  $("#guide").hidden = $("#settings").hidden = true;
+  document.body.classList.remove("panel-open");
+  if (!isPortrait()) wake();
+}
+
+document.addEventListener("click", e => {
+  const step = e.target.closest("[data-ch-step]");
+  if (step) return tune(cur + +step.dataset.chStep);
+  const b = e.target.closest("[data-act]");
+  if (!b || b.closest("#chList")) return;
+  const act = b.dataset.act;
+  if (act === "guide") $("#guide").hidden ? openGuide() : closePanels();
+  if (act === "settings") openSettings();
+  if (act === "mute") { state.muted = !state.muted; needUnmute = false; save(); applyVolume(); }
+  if (act === "fs") toggleFullscreen();
+});
+$$("[data-close]").forEach(b => b.addEventListener("click", closePanels));
+$("#vol").oninput = e => { state.volume = +e.target.value; state.muted = false; needUnmute = false; save(); applyVolume(); };
+
+const canFullscreen = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+if (!canFullscreen) $$('[data-act="fs"]').forEach(b => b.hidden = true);
+function toggleFullscreen() {
+  const d = document, el = d.documentElement;
+  if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+  else Promise.resolve((el.requestFullscreen || el.webkitRequestFullscreen)?.call(el))
+    .then(() => screen.orientation?.lock?.("landscape")).catch(() => {});
+}
+
+let digits = "", digitT = 0;
+addEventListener("keydown", e => {
+  if (!$("#power").hidden || e.target.closest("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
+  wake();
+  const k = e.key;
+  if (k === "Escape") return closePanels();
+  if (!$("#settings").hidden) return;
+  if (k === "ArrowUp" || k === "PageUp") { e.preventDefault(); tune(cur + 1); }
+  else if (k === "ArrowDown" || k === "PageDown") { e.preventDefault(); tune(cur - 1); }
+  else if (/^[0-9]$/.test(k)) {
+    digits = (digits + k).slice(-2);
+    showOSD(digits.padEnd(2, "-"), "");
+    clearTimeout(digitT);
+    digitT = setTimeout(() => {
+      const n = +digits; digits = "";
+      if (n >= 1 && n <= chs().length) tune(n - 1); else showOSD(pad(cur + 1), chs()[cur]?.name);
+    }, 1200);
+  }
+  else if (k === "g" || k === "G") $("#guide").hidden ? openGuide() : closePanels();
+  else if (k === "m" || k === "M") $('[data-act="mute"]').click();
+  else if (k === "f" || k === "F") toggleFullscreen();
+});
+
+/* ---------- settings ---------- */
+
+let draft = [];
+const shuffleHint = ch => ({
+  full: "Every video plays in random order.",
+  none: "Videos play in upload order, with all links merged together.",
+  partial: `Plays ${Math.max(2, ch.blockSize | 0)} videos in a row from the same link in order, then jumps somewhere random.`,
+}[ch.shuffle]) + (ch.scanMode === "random" ? " Random picks come from each link's 1,000 newest videos." : "");
+
+function renderChannels() {
+  $("#chList").innerHTML = draft.map((ch, i) => `
+    <fieldset class="ch-card" data-i="${i}" data-shuffle="${ch.shuffle}">
+      <div class="ch-head">
+        <span class="ch-num">${pad(i + 1)}</span>
+        <input type="text" id="name-${ch.id}" class="f-name" aria-label="Channel name" value="${esc(ch.name)}">
+        <div class="ch-tools">
+          <button type="button" class="btn" data-act="up" aria-label="Move up" ${i ? "" : "disabled"}>↑</button>
+          <button type="button" class="btn" data-act="down" aria-label="Move down" ${i < draft.length - 1 ? "" : "disabled"}>↓</button>
+          <button type="button" class="btn danger" data-act="del">Delete</button>
+        </div>
+      </div>
+      <label for="src-${ch.id}">Links
+        <textarea id="src-${ch.id}" class="f-sources" rows="4" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="@channelhandle&#10;https://www.youtube.com/playlist?list=…&#10;https://youtu.be/…">${esc(ch.sources.join("\n"))}</textarea>
+      </label>
+      <p class="hint">One per line: a YouTube channel (@handle or link), a playlist, or a single video.</p>
+      <div class="grid">
+        <label for="shuf-${ch.id}">Shuffle
+          <select id="shuf-${ch.id}" class="f-shuffle">
+            <option value="full" ${ch.shuffle === "full" ? "selected" : ""}>Complete shuffle</option>
+            <option value="none" ${ch.shuffle === "none" ? "selected" : ""}>No shuffle</option>
+            <option value="partial" ${ch.shuffle === "partial" ? "selected" : ""}>Partial shuffle</option>
+          </select>
+        </label>
+        <label class="only-partial" for="blk-${ch.id}">Videos in a row
+          <input type="number" inputmode="numeric" id="blk-${ch.id}" class="f-block" min="2" max="50" value="${ch.blockSize}">
+        </label>
+        <label class="only-ordered" for="ord-${ch.id}">Play order
+          <select id="ord-${ch.id}" class="f-order">
+            <option value="oldest" ${ch.order === "oldest" ? "selected" : ""}>Oldest first</option>
+            <option value="newest" ${ch.order === "newest" ? "selected" : ""}>Newest first</option>
+          </select>
+        </label>
+        <label for="cnt-${ch.id}">Videos to scan per link
+          <input type="number" inputmode="numeric" id="cnt-${ch.id}" class="f-count" min="1" max="500" value="${ch.scanCount}">
+        </label>
+        <label for="mode-${ch.id}">Which videos
+          <select id="mode-${ch.id}" class="f-mode">
+            <option value="recent" ${ch.scanMode === "recent" ? "selected" : ""}>Most recent</option>
+            <option value="random" ${ch.scanMode === "random" ? "selected" : ""}>Random</option>
+          </select>
+        </label>
+      </div>
+      <p class="hint f-hint">${esc(shuffleHint(ch))}</p>
+      <label class="check"><input type="checkbox" id="short-${ch.id}" class="f-short" ${ch.skipShort ? "checked" : ""}> Skip videos under 1 minute (Shorts)</label>
+    </fieldset>`).join("") || `<p class="hint">No channels yet. Add one to start your lineup.</p>`;
+}
+
+function readChannels() {
+  $$(".ch-card").forEach(card => {
+    const ch = draft[+card.dataset.i], q = s => card.querySelector(s);
+    const clamp = (v, lo, hi, d) => Math.min(hi, Math.max(lo, Math.round(+v) || d));
+    Object.assign(ch, {
+      name: q(".f-name").value.trim() || "Untitled",
+      sources: q(".f-sources").value.split("\n").map(s => s.trim()).filter(Boolean),
+      shuffle: q(".f-shuffle").value,
+      blockSize: clamp(q(".f-block").value, 2, 50, 3),
+      order: q(".f-order").value,
+      scanCount: clamp(q(".f-count").value, 1, 500, 50),
+      scanMode: q(".f-mode").value,
+      skipShort: q(".f-short").checked,
+    });
+  });
+}
+
+function openSettings() {
+  $("#guide").hidden = true;
+  draft = structuredClone(chs());
+  $("#apiKey").value = state.apiKey;
+  $("#preload").value = state.preload;
+  $("#staticSound").checked = state.staticSound;
+  $("#backup").value = ""; $("#backupMsg").hidden = true;
+  renderChannels();
+  $("#settings").hidden = false;
+  $("#settings").scrollTop = 0;
+  document.body.classList.add("panel-open");
+}
+
+$("#chList").addEventListener("change", e => {
+  if (!e.target.matches(".f-shuffle, .f-mode, .f-block")) return;
+  readChannels();
+  const card = e.target.closest(".ch-card"), ch = draft[+card.dataset.i];
+  card.dataset.shuffle = ch.shuffle;
+  card.querySelector(".f-hint").textContent = shuffleHint(ch);
+});
+$("#chList").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  readChannels();
+  const i = +b.closest(".ch-card").dataset.i, act = b.dataset.act;
+  if (act === "del") {
+    if (b.dataset.armed) draft.splice(i, 1);
+    else { b.dataset.armed = "1"; b.textContent = "Confirm delete"; return; }
+  }
+  if (act === "up" && i > 0) [draft[i - 1], draft[i]] = [draft[i], draft[i - 1]];
+  if (act === "down" && i < draft.length - 1) [draft[i + 1], draft[i]] = [draft[i], draft[i + 1]];
+  renderChannels();
+});
+$("#addCh").onclick = () => {
+  readChannels(); draft.push(newChannel()); renderChannels();
+  $("#chList").lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  $("#chList").lastElementChild?.querySelector(".f-name")?.select();
+};
+$("#exportBtn").onclick = async () => {
+  readChannels();
+  const text = JSON.stringify({ rabbitEars: 1, channels: draft });
+  $("#backup").value = text;
+  try { await navigator.clipboard.writeText(text); toast("Lineup copied."); }
+  catch { $("#backup").select(); toast("Lineup is selected in the box. Copy it from there."); }
+};
+$("#importBtn").onclick = () => {
+  const msg = $("#backupMsg");
+  try {
+    const j = JSON.parse($("#backup").value);
+    if (!Array.isArray(j.channels)) throw 0;
+    draft = j.channels.map(c => newChannel({ ...c, id: uid(), sources: Array.isArray(c.sources) ? c.sources.map(String) : [] }));
+    renderChannels(); msg.hidden = true;
+    toast(`Imported ${draft.length} channels. Save to keep them.`);
+  } catch {
+    msg.textContent = "That isn't a Rabbit Ears lineup. Paste the text from Copy lineup on your other device.";
+    msg.hidden = false;
+  }
+};
+let rescanAll = false;
+$("#rescanBtn").onclick = () => { rescanAll = true; toast("Channels will rescan when you save."); };
+
+$("#settings").addEventListener("submit", e => {
+  e.preventDefault();
+  readChannels();
+  const oldById = new Map(chs().map(c => [c.id, scanKey(c) + queueKey(c)]));
+  const keyChanged = state.apiKey !== $("#apiKey").value.trim();
+  const curId = chs()[cur]?.id;
+  state.apiKey = $("#apiKey").value.trim();
+  state.preload = $("#preload").value;
+  state.staticSound = $("#staticSound").checked;
+  state.channels = draft;
+  if (rescanAll) { cache = {}; saveCache(); rescanAll = false; }
+  save();
+  if (keyChanged) for (const k in scanErr) delete scanErr[k];
+  // Drop pre-loaded players whose channel was removed or changed.
+  const changed = id => !chById(id) || oldById.get(id) !== scanKey(chById(id)) + queueKey(chById(id)) || !cache[id];
+  for (const s of slots) if (s.chId && changed(s.chId)) { s.chId = null; s.p = null; clearTimeout(s.timer); if (s.ready && s !== active) s.player.stopVideo(); }
+  closePanels();
+  toast("Saved.");
+  const idx = chs().findIndex(c => c.id === curId);
+  tune(idx === -1 ? Math.min(cur, chs().length - 1) : idx);
+  prefetch();
+});
+
+/* ---------- power on ---------- */
+
+if (location.protocol === "file:") $("#fileWarn").hidden = false;
+$("#powerKeyWrap").hidden = !!state.apiKey;
+applyLayout();
+applyVolume();
+
+$("#powerBtn").onclick = () => {
+  const k = $("#powerKey").value.trim();
+  if (!state.apiKey && k) { state.apiKey = k; save(); }
+  try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+  navigator.wakeLock?.request("screen").catch(() => {});
+  $("#power").hidden = true;
+  renderGuide();
+  if (!state.apiKey) { openSettings(); $("#apiKey").focus(); toast("Add your YouTube API key to start watching."); }
+  tune(state.lastChannel || 0);
+  prefetch();
+};
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && $("#power").hidden) navigator.wakeLock?.request("screen").catch(() => {});
+});
+
+const tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
+tag.onerror = () => toast("Couldn't load the YouTube player. Check your connection.");
+document.head.append(tag);
+</script>
+</body>
+</html>
