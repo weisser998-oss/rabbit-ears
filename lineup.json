@@ -1,0 +1,55 @@
+{
+  "rabbitEars": 3,
+  "updated": 1793277006001,
+  "channels": [
+    {
+      "id": "kmq1dc9v",
+      "name": "Video Game Playthroughs",
+      "sources": [
+        "https://youtube.com/@syntac?si=4tDe0-wHwpmbNR_G"
+      ],
+      "shuffle": "full",
+      "blockSize": 4,
+      "order": "oldest",
+      "scanCount": 60,
+      "scanMode": "recent",
+      "skipShort": true,
+      "breaks": "between"
+    },
+    {
+      "id": "8ttpuiio",
+      "name": "Pop Culture",
+      "sources": [
+        "@CinemaSins",
+        "@vanityfair",
+        "@WIRED"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 40,
+      "scanMode": "random",
+      "skipShort": true,
+      "breaks": "between"
+    },
+    {
+      "id": "42f4upxm",
+      "name": "Americana",
+      "sources": [
+        "@townsends",
+        "@PeriscopeFilm",
+        "@smithsonianchannel"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 50,
+      "scanMode": "random",
+      "skipShort": true,
+      "breaks": "between"
+    }
+  ],
+  "ads": [],
+  "breakLen": 2,
+  "local": []
+}
