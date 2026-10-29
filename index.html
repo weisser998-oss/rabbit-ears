@@ -56,7 +56,10 @@ button { touch-action: manipulation; }
 #stage { position: fixed; inset: 0; background: #000; overflow: hidden; }
 .slot { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .slot.on { opacity: 1; z-index: 1; }
-.slot iframe, .slot > div { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.slot iframe, .slot > div, .slot video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.slot video { display: none; background: #000; object-fit: contain; }
+.slot.local video { display: block; }
+.slot.local iframe { visibility: hidden; }
 #shield { position: absolute; inset: 0; z-index: 2; touch-action: none; }
 body.tap-through #shield { pointer-events: none; }
 #static {
@@ -196,10 +199,18 @@ body.portrait #dock {
 }
 .prog:hover { border-color: var(--dim); }
 .prog.now { background: var(--accent-wash); border-color: var(--accent); }
+.prog.ad {
+  padding: 6px 4px; border-style: dashed; border-color: var(--line);
+  background: repeating-linear-gradient(135deg, var(--field) 0 4px, transparent 4px 8px);
+}
+.prog.ad .t { color: var(--dim); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
 .prog .t { font-size: 13px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prog .h { font-size: 11.5px; color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .prog.bad .t { color: var(--dim); text-decoration: line-through; }
-.epg-msg { padding: 0 12px; display: flex; align-items: center; color: var(--dim); font-size: 13px; position: sticky; left: var(--chw); }
+.prog.missing { border-style: dashed; }
+.prog.missing .t { color: var(--dim); font-style: italic; }
+.epg-row.sel .epg-ch { outline: 2px solid var(--accent); outline-offset: -2px; }
+.epg-msg { position: absolute; top: 0; bottom: 0; padding: 0 12px; display: flex; align-items: center; color: var(--dim); font-size: 13px; overflow: hidden; white-space: nowrap; }
 .epg-now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--live); z-index: 2; pointer-events: none; }
 .epg-now::before { content: ""; position: absolute; top: 0; left: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--live); }
 
@@ -226,12 +237,16 @@ body.portrait #dock {
   padding-top: calc(18px + env(safe-area-inset-top, 0px)); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px));
 }
-#settings .panel-head { position: sticky; top: calc(-18px - env(safe-area-inset-top, 0px)); background: var(--panel-solid); z-index: 2; padding-block: 8px; margin-top: -8px; }
+#settings > .panel-head { position: sticky; top: calc(-18px - env(safe-area-inset-top, 0px)); background: var(--panel-solid); z-index: 2; padding-block: 8px; margin-top: -8px; }
 #settings section { display: grid; gap: 12px; padding-block: 18px; border-top: 1px solid var(--line); }
+#settings section .panel-head { margin: 0; }
 label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
 label.check { display: flex; gap: 10px; align-items: center; font-weight: 400; font-size: 14px; }
 label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .hint { color: var(--dim); font-weight: 400; font-size: 12.5px; margin: 0; }
+.hint a { color: var(--accent); }
+.hint ol { margin: 4px 0 0; padding-left: 18px; }
+.status { font-size: 13px; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--field); }
 input[type=text], input[type=password], input[type=number], select, textarea {
   width: 100%; background: var(--field); border: 1px solid var(--line); border-radius: 6px;
   padding: 9px 10px; font-weight: 400; font-size: 16px; min-height: 42px;
@@ -247,6 +262,13 @@ textarea { resize: vertical; font-family: ui-monospace, "SF Mono", Menlo, monosp
 .ch-card:not([data-shuffle="partial"]) .only-partial { display: none; }
 .ch-card[data-shuffle="full"] .only-ordered { display: none; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+label.btn { display: inline-flex; align-items: center; font-size: 13px; }
+.files { display: grid; gap: 14px; }
+.files h3 { margin: 0 0 6px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); }
+.file-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); min-width: 0; }
+.file-row .fn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.file-row .fd { color: var(--dim); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.file-row .btn { min-height: 34px; padding: 5px 10px; }
 .err { color: var(--danger); font-size: 13px; margin: 0; }
 
 /* ---------- power-on screen ---------- */
@@ -365,19 +387,64 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
   </section>
 
   <section>
-    <div class="panel-head" style="margin:0;position:static;padding:0"><h2>Lineup</h2><button type="button" class="btn" id="addCh">Add channel</button></div>
+    <div class="panel-head"><h2>Lineup</h2><button type="button" class="btn" id="addCh">Add channel</button></div>
     <div id="chList" style="display:grid;gap:14px"></div>
   </section>
 
   <section>
+    <h2>Your video files</h2>
+    <div id="filesBody"></div>
+  </section>
+
+  <section>
+    <h2>Commercials</h2>
+    <label for="adLinks">Commercial links
+      <textarea id="adLinks" rows="4" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="https://www.youtube.com/playlist?list=…&#10;https://youtu.be/…"></textarea>
+    </label>
+    <p class="hint">One per line: playlists, channels or single videos of commercials. Long compilations work too: each break plays a slice of one. Try searching YouTube for "90s commercials compilation". Turn breaks on for each channel in its settings above.</p>
+    <label for="breakLen">Break length
+      <select id="breakLen">
+        <option value="1">1 minute</option>
+        <option value="2">2 minutes</option>
+        <option value="3">3 minutes</option>
+        <option value="4">4 minutes</option>
+      </select>
+    </label>
+  </section>
+
+  <section>
+    <h2>Sync between devices</h2>
+    <p class="status" id="syncStatus"></p>
+    <p class="hint">Every device with the same lineup shows the same thing at the same time. Each broadcast day starts at 4 AM. Your lineup is shared through a <kbd>lineup.json</kbd> file on your GitHub site, and every device checks it when it opens.</p>
+    <label for="ghToken">GitHub token (only on devices where you edit channels)
+      <input type="password" id="ghToken" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+    </label>
+    <div class="hint">With a token, saving here updates your other devices automatically. To make one on github.com:
+      <ol>
+        <li>Your picture → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.</li>
+        <li>Repository access: Only select repositories → <span id="repoName">your Rabbit Ears repository</span>.</li>
+        <li>Permissions → Contents: Read and write. Generate, copy, and paste it here.</li>
+      </ol>
+      Without a token, use Download lineup.json and upload it to your repository.
+    </div>
+    <div class="row">
+      <button type="button" class="btn" id="publishBtn">Update other devices now</button>
+      <button type="button" class="btn" id="downloadBtn">Download lineup.json</button>
+    </div>
+    <p class="err" id="syncMsg" hidden></p>
+  </section>
+
+  <section>
     <h2>Backup</h2>
-    <p class="hint">Move your lineup to another device: copy it here, then paste it into Import there. The API key isn't included.</p>
+    <p class="hint">Copy your lineup as text, or paste one in to import it. The API key and token aren't included.</p>
     <textarea id="backup" rows="4" spellcheck="false" placeholder="Paste a lineup here to import it"></textarea>
     <div class="row">
       <button type="button" class="btn" id="exportBtn">Copy lineup</button>
       <button type="button" class="btn" id="importBtn">Import</button>
       <button type="button" class="btn" id="rescanBtn">Rescan all channels</button>
+      <button type="button" class="btn" id="retryBtn">Retry skipped videos</button>
     </div>
+    <p class="hint">Videos that won't play (removed, blocked in your country, or blocked while your VPN was off) are skipped on this device and retried after a day. Retry skipped videos tries them all again now.</p>
     <p class="err" id="backupMsg" hidden></p>
   </section>
 </form>
@@ -424,23 +491,36 @@ function seeded(seed) {
   };
 }
 
+/* ---------- broadcast days ----------
+   Each day's schedule starts at 4 AM local time. Everything in it is derived from the lineup and the date,
+   so every device with the same lineup computes the same schedule. */
+
+const DAY_START_HOUR = 4;
+function dayStart(t) {
+  const d = new Date(t); d.setHours(DAY_START_HOUR, 0, 0, 0);
+  if (d.getTime() > t) d.setDate(d.getDate() - 1);
+  return d.getTime();
+}
+function nextDay(ds) { const d = new Date(ds); d.setDate(d.getDate() + 1); d.setHours(DAY_START_HOUR, 0, 0, 0); return d.getTime(); }
+function dayId(ds) { const d = new Date(ds); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+
 /* ---------- saved settings ---------- */
 
 const LS_KEY = "rabbit-ears-v1";
-const CACHE_KEY = "rabbit-ears-cache-v2";
+const CACHE_KEY = "rabbit-ears-cache-v3";
 const BAD_KEY = "rabbit-ears-bad-v1";
-const CACHE_TTL = 24 * 3600e3;
-try { localStorage.removeItem("rabbit-ears-cache-v1"); } catch {}
+try { localStorage.removeItem("rabbit-ears-cache-v1"); localStorage.removeItem("rabbit-ears-cache-v2"); } catch {}
 
 function newChannel(over = {}) {
   return { id: uid(), name: "New channel", sources: [], shuffle: "full", blockSize: 3, order: "oldest",
-           scanCount: 50, scanMode: "recent", skipShort: true, ...over };
+           scanCount: 50, scanMode: "recent", skipShort: true, breaks: "between", ...over };
 }
 function defaults() {
   // Example lineup: swap the links for your own in Settings.
   return {
-    apiKey: "", volume: 80, muted: false, staticSound: true, lastChannel: 0,
+    apiKey: "", ghToken: "", volume: 80, muted: false, staticSound: true, lastChannel: 0,
     preload: navigator.connection?.saveData ? "off" : "both",
+    ads: [], breakLen: 2, lineupUpdated: 0, catalog: [], deviceId: uid(),
     channels: [
       newChannel({ name: "Video Game Playthroughs", sources: ["@GameGrumps", "@Markiplier", "@jacksepticeye"],
                    shuffle: "partial", blockSize: 4, order: "oldest", scanCount: 60, scanMode: "recent" }),
@@ -455,12 +535,115 @@ function load(key) { try { return JSON.parse(localStorage.getItem(key)); } catch
 function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
 const state = Object.assign(defaults(), load(LS_KEY) || {});
+state.channels = state.channels.map(c => newChannel(c)); // fill in settings added since the lineup was saved
 let cache = load(CACHE_KEY) || {};
-const bad = new Set(load(BAD_KEY) || []); // videos that refused to play; left out of future scans
 const save = () => store(LS_KEY, state);
 const saveCache = () => store(CACHE_KEY, cache);
-const saveBad = () => store(BAD_KEY, [...bad].slice(-500));
+
+// Videos that refused to play on this device get skipped for a day, then tried again.
+const SKIP_FOR = 864e5;
+const bad = new Map(Object.entries((r => r && !Array.isArray(r) ? r : {})(load(BAD_KEY))).filter(([, t]) => Date.now() - t < SKIP_FOR));
+const isBad = id => { const t = bad.get(id); return t != null && Date.now() - t < SKIP_FOR; };
+const saveBad = () => store(BAD_KEY, Object.fromEntries([...bad].slice(-500)));
+const markBad = id => { bad.set(id, Date.now()); saveBad(); };
 const chs = () => state.channels;
+const adsChannel = () => ({ id: "__ads", sources: state.ads, scanCount: 150, scanMode: "random", skipShort: false });
+
+/* ---------- your own video files ----------
+   On a phone or computer, added files are stored in this browser (IndexedDB).
+   On the Raspberry Pi, the helper program serves files from the Pi's video folders.
+   The list of everyone's files (names and lengths, not the videos) is shared in lineup.json as the "catalog",
+   so every device schedules the same local videos even if it doesn't have them all. */
+
+const IS_LOCALHOST = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+let piConfig = null;        // set when running on the Raspberry Pi helper
+let myFiles = [];           // [{ path, folder, name, dur, size }] on this device
+let piConverting = [];      // file names the Pi is still converting
+const localUrls = new Map(); // path -> URL this device can play it from
+let effCatalog = [], effSig = "";
+const myOwner = () => piConfig ? "pi" : state.deviceId;
+
+function refreshCatalog() {
+  // Everyone's entries; where two devices have the same file, the Pi's (then the lowest owner id) wins, so all devices agree.
+  const all = [...myFiles.map(f => ({ ...f, owner: myOwner() })), ...(state.catalog || []).filter(f => f.owner !== myOwner())];
+  const best = new Map();
+  for (const f of all) {
+    const b = best.get(f.path);
+    if (!b || (f.owner === "pi") > (b.owner === "pi") || (b.owner !== "pi" && f.owner < b.owner)) best.set(f.path, f);
+  }
+  effCatalog = [...best.values()].sort((a, b) => a.path.localeCompare(b.path));
+  const sig = String(hashStr(JSON.stringify(effCatalog.map(f => [f.path, f.dur]))));
+  const changed = sig !== effSig;
+  effSig = sig;
+  if (changed && $("#power").hidden) {
+    // Channels with local videos have a new schedule now.
+    let retune = false;
+    for (const s of slots) if (s.chId && hasLocal(chById(s.chId))) { if (s === active) retune = true; clearSlot(s); }
+    if (retune) tune(cur);
+    renderGuide();
+  }
+}
+const hasLocal = ch => !!ch?.sources.some(r => /^local:/i.test(r.trim()));
+const naturalKey = s => s.toLowerCase().replace(/\d+/g, n => n.padStart(8, "0"));
+const prettyName = n => n.replace(/\.[^.]+$/, "").replace(/[._]+/g, " ").trim();
+
+// Phone/computer storage
+let dbP = null;
+function idb() {
+  return dbP ||= new Promise((res, rej) => {
+    const r = indexedDB.open("rabbit-ears-files", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("files", { keyPath: "path" });
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+async function idbDo(mode, fn) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction("files", mode), q = fn(tx.objectStore("files"));
+    tx.oncomplete = () => res(q?.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+  });
+}
+async function loadPhoneLibrary() {
+  try {
+    const all = await idbDo("readonly", st => st.getAll());
+    for (const u of localUrls.values()) if (u.startsWith("blob:")) URL.revokeObjectURL(u);
+    localUrls.clear();
+    myFiles = all.map(r => { localUrls.set(r.path, URL.createObjectURL(r.blob)); return { path: r.path, folder: r.folder, name: r.name, dur: r.dur, size: r.size }; });
+  } catch { myFiles = []; }
+  refreshCatalog();
+}
+function probeDuration(file) {
+  return new Promise(res => {
+    const v = document.createElement("video"), u = URL.createObjectURL(file);
+    let done = false;
+    const end = d => { if (done) return; done = true; URL.revokeObjectURL(u); v.removeAttribute("src"); res(d); };
+    v.preload = "metadata"; v.muted = true;
+    v.onloadedmetadata = () => end(isFinite(v.duration) ? v.duration : 0);
+    v.onerror = () => end(0);
+    setTimeout(() => end(0), 20000);
+    v.src = u;
+  });
+}
+
+// Raspberry Pi
+async function loadPiLibrary() {
+  try {
+    const j = await (await fetch("/api/library", { cache: "no-store" })).json();
+    const before = JSON.stringify(myFiles);
+    myFiles = j.files || []; piConverting = j.converting || [];
+    localUrls.clear();
+    for (const f of myFiles) localUrls.set(f.path, "/media/" + f.path.split("/").map(encodeURIComponent).join("/"));
+    if (JSON.stringify(myFiles) !== before) { refreshCatalog(); libraryChanged(); }
+    if (!$("#settings").hidden) renderFiles();
+  } catch {}
+}
+
+// When this device's files change, share the new list (if this device has a token).
+function libraryChanged() {
+  const mine = JSON.stringify(myFiles.map(f => [f.path, f.dur]));
+  const shared = JSON.stringify((state.catalog || []).filter(f => f.owner === myOwner()).map(f => [f.path, f.dur]));
+  if (mine !== shared && state.ghToken && repo) { state.lineupUpdated = Date.now(); save(); shareLineup(false, true); }
+}
 
 /* ---------- YouTube Data API ---------- */
 
@@ -486,6 +669,7 @@ async function yt(path, params) {
 function parseSource(raw) {
   const s = raw.trim(); let m;
   if (!s) return null;
+  if ((m = s.match(/^local:\s*(.*)$/i))) return { type: "local", folder: m[1].trim() };
   if ((m = s.match(/[?&]list=([\w-]+)/))) return { type: "playlist", id: m[1] };
   if ((m = s.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/live\/|\/embed\/)([\w-]{11})/))) return { type: "video", id: m[1] };
   if ((m = s.match(/(?:\/channel\/|^)(UC[\w-]{22})\b/))) return { type: "channelId", id: m[1] };
@@ -520,21 +704,22 @@ function seconds(iso) {
   return (+m[1] || 0) * 86400 + (+m[2] || 0) * 3600 + (+m[3] || 0) * 60 + (+m[4] || 0);
 }
 
-// Returns up to ch.scanCount playable videos from one link.
-async function scanSource(src, ch) {
+// Up to ch.scanCount playable videos from one link, as of the start of broadcast day `ds`.
+// Videos published after the day started wait until tomorrow, and "random" picks use a seed made
+// from the lineup and the date, so every device gets the same list.
+async function scanSource(src, raw, ch, ds) {
   let cands;
-  if (src.type === "video") cands = [{ id: src.id }];
+  if (src.type === "video") cands = [{ id: src.id, at: "" }];
   else {
     const isUploads = src.type !== "playlist";
     const plId = isUploads ? await uploadsPlaylist(src) : src.id;
     // A channel's uploads list is already newest-first, so "most recent" only needs the first pages.
     // Extra headroom covers Shorts and blocked videos that get filtered out below.
     const max = ch.scanMode === "recent" && isUploads ? Math.min(1000, Math.ceil(ch.scanCount * 2 / 50) * 50) : 1000;
-    cands = await playlistEntries(plId, max);
-    if (ch.scanMode === "random") shuffle(cands);
-    else cands.sort((a, b) => b.at.localeCompare(a.at));
+    cands = (await playlistEntries(plId, max)).filter(c => c.at && Date.parse(c.at) < ds);
+    cands.sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id));
+    if (ch.scanMode === "random") shuffle(cands, seeded(hashStr(`${dayId(ds)}|${raw}|${ch.scanCount}`)));
   }
-  cands = cands.filter(c => !bad.has(c.id));
   const out = [];
   for (let i = 0; i < cands.length && out.length < ch.scanCount; i += 50) {
     const batch = cands.slice(i, i + 50);
@@ -553,50 +738,84 @@ async function scanSource(src, ch) {
   return out;
 }
 
-/* ---------- lineups and schedules ---------- */
+/* ---------- scanned lists, one per channel per broadcast day ---------- */
 
-const scanKey = ch => JSON.stringify([ch.sources, ch.scanCount, ch.scanMode, ch.skipShort]);
-const queueKey = ch => JSON.stringify([ch.shuffle, ch.blockSize, ch.order]);
-const scans = {};   // channel id -> { key, promise } while scanning
+const scanKey = ch => JSON.stringify([ch.sources, ch.scanCount, ch.scanMode, ch.skipShort, hasLocal(ch) ? effSig : 0]);
+const needsYouTube = ch => ch.sources.some(r => { const s = parseSource(r); return s && s.type !== "local"; });
+const queueKey = ch => JSON.stringify([ch.shuffle, ch.blockSize, ch.order, ch.breaks]);
+const scans = {};   // cache key -> { key, promise } while scanning
 const scanErr = {}; // channel id -> message from the last failed scan
 
-function ensureChannel(ch) {
-  const key = scanKey(ch), c = cache[ch.id];
-  if (c && c.key === key && Date.now() - c.at < CACHE_TTL) return Promise.resolve(c);
-  if (scans[ch.id]?.key === key) return scans[ch.id].promise;
+function pruneCache() {
+  const today = dayId(dayStart(Date.now()));
+  for (const k of Object.keys(cache)) if (cache[k].day < today) delete cache[k];
+}
+
+function ensureEntry(ch, ds) {
+  const day = dayId(ds), ck = `${ch.id}@${day}`, key = scanKey(ch), c = cache[ck];
+  if (c && c.key === key) return Promise.resolve(c);
+  if (scans[ck]?.key === key) return scans[ck].promise;
+  const isAds = ch.id === "__ads";
   const promise = (async () => {
-    if (!state.apiKey) throw new Error("Add your YouTube API key in Settings.");
+    if (!state.apiKey && needsYouTube(ch)) throw new Error("Add your YouTube API key in Settings.");
     const videos = [], errs = [], seen = new Set();
     for (const [i, raw] of ch.sources.entries()) {
       const src = parseSource(raw);
       if (!src) continue;
       if (src.type === "unknown") { errs.push(`"${raw}" isn't a channel, playlist or video link.`); continue; }
+      if (src.type === "local") {
+        const want = src.folder.toLowerCase(), before = videos.length;
+        for (const f of effCatalog) {
+          if (want && f.folder.toLowerCase() !== want) continue;
+          const id = "local:" + f.path;
+          if (seen.has(id)) continue;
+          seen.add(id);
+          videos.push({ id, local: true, path: f.path, title: prettyName(f.name), by: f.folder || "Your videos", at: naturalKey(f.path), dur: f.dur, src: i });
+        }
+        if (videos.length === before) errs.push(want ? `No video files in a folder called "${src.folder}" yet.` : "No video files added yet.");
+        continue;
+      }
       try {
-        for (const v of await scanSource(src, ch)) if (!seen.has(v.id)) { seen.add(v.id); videos.push({ ...v, src: i }); }
+        for (const v of await scanSource(src, raw, ch, ds)) if (!seen.has(v.id)) { seen.add(v.id); videos.push({ ...v, src: i }); }
       } catch (e) {
         if (/API key|allowance/.test(e.message)) throw e;
         errs.push(`${raw}: ${e.message}`);
       }
     }
-    if (!videos.length) throw new Error(errs[0] || "This channel has no links yet. Add some in Settings.");
-    const now = Date.now(), total = videos.reduce((s, v) => s + v.dur * 1000, 0);
-    // A refreshed lineup takes over when the program airing now ends, so nothing cuts off mid-show.
-    // A brand-new channel starts somewhere in the middle of its cycle, as if it's been on the air all along.
-    let carry = null;
-    try { if (c?.total) { const p = programAt(ch, c, now); carry = { v: p.v, start: p.start, end: p.end }; } } catch {}
-    const entry = { key, at: now, videos, errs, total, anchor: carry ? carry.end : now - Math.random() * total, carry };
-    cache[ch.id] = entry; saveCache();
+    if (!videos.length && !isAds) throw new Error(errs[0] || "This channel has no links yet. Add some in Settings.");
+    const entry = { key, day, videos, errs };
+    cache[ck] = entry; pruneCache(); saveCache();
     return entry;
-  })().catch(e => {
-    if (c && c.key === key) return c; // keep the last good lineup if a refresh fails
-    throw e;
-  });
-  scans[ch.id] = { key, promise };
+  })();
+  scans[ck] = { key, promise };
   promise.then(() => { delete scanErr[ch.id]; }, e => { scanErr[ch.id] = e.message; })
-         .finally(() => { if (scans[ch.id]?.promise === promise) delete scans[ch.id]; renderGuide(); });
-  renderGuide();
+         .finally(() => { if (scans[ck]?.promise === promise) delete scans[ck]; renderGuide(); });
+  setTimeout(renderGuide);
   return promise;
 }
+
+// A channel's schedule for one broadcast day needs its own list and the commercials list.
+async function getSched(ch, ds) {
+  const [e, ads] = await Promise.all([
+    ensureEntry(ch, ds),
+    ch.breaks !== "off" && state.ads.length ? ensureEntry(adsChannel(), ds).catch(() => ({ key: "", videos: [] })) : { key: "", videos: [] },
+  ]);
+  return { ch, e, ads, ds };
+}
+function schedFor(ch, ds) {
+  const day = dayId(ds), e = cache[`${ch.id}@${day}`];
+  if (!e || e.key !== scanKey(ch)) return null;
+  let ads = { key: "", videos: [] };
+  if (ch.breaks !== "off" && state.ads.length) {
+    const a = cache[`__ads@${day}`];
+    if (!a || a.key !== scanKey(adsChannel())) return null;
+    ads = a;
+  }
+  return { ch, e, ads, ds };
+}
+const isScanning = (ch, ds) => !!scans[`${ch.id}@${dayId(ds)}`] || !!scans[`__ads@${dayId(ds)}`];
+
+/* ---------- schedules ---------- */
 
 function buildQueue(ch, videos, rand) {
   const asc = (a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id);
@@ -613,33 +832,94 @@ function buildQueue(ch, videos, rand) {
   return shuffle(blocks, rand).flat();
 }
 
-// Each pass through a channel's lineup is a "cycle" with its own seeded order,
-// so the schedule is the same every time it's computed and the guide can look ahead.
+// One pass through a channel's lineup is a "cycle": an ordered list of items (show segments and commercials)
+// with times relative to the cycle start, plus guide blocks (whole shows and breaks between them).
 const cycles = new Map();
-function cycle(ch, e, k) {
-  const key = `${ch.id}|${e.at}|${queueKey(ch)}|${k}`;
+function cycle(s, k) {
+  const { ch, e, ads, ds } = s;
+  const key = `${dayId(ds)}|${scanKey(ch)}|${queueKey(ch)}|${ads.key}|${state.breakLen}|${k}`;
   let c = cycles.get(key);
-  if (!c) {
-    const q = buildQueue(ch, e.videos, seeded(hashStr(key)));
-    const cum = [0];
-    for (const v of q) cum.push(cum[cum.length - 1] + v.dur * 1000);
-    if (cycles.size > 300) cycles.clear();
-    cycles.set(key, c = { q, cum });
-  }
+  if (c) return c;
+  const rand = seeded(hashStr(key));
+  const q = buildQueue(ch, e.videos, rand);
+  const pool = ch.breaks === "off" ? [] : ads.videos;
+  const items = [], blocks = [];
+  let t = 0;
+  const addBreak = (show, mid) => {
+    if (!pool.length) return;
+    const b0 = t, its = [];
+    let rem = state.breakLen * 60;
+    for (let guard = 0; rem > 10 && guard < 30; guard++) {
+      const a = pool[rand() * pool.length | 0];
+      // Short spots play whole; a long compilation contributes a slice that fills the rest of the break.
+      let from = 0, len = a.dur;
+      if (a.dur > rem + 15) { len = rem; from = Math.floor(rand() * (a.dur - rem)); }
+      its.push({ kind: "ad", v: a, from, len, rel: t });
+      t += len * 1000; rem -= len;
+    }
+    for (const it of its) Object.assign(it, { bEnd: t, show, mid });
+    items.push(...its);
+    blocks.push({ kind: "ad", start: b0, end: t });
+  };
+  q.forEach((v, i) => {
+    const s0 = t, segs = [];
+    if (ch.breaks === "during" && pool.length && v.dur > 20 * 60) {
+      // Break every 15 minutes, but never with less than 5 minutes of the show left.
+      for (let f = 0; f < v.dur;) {
+        let len = Math.min(15 * 60, v.dur - f);
+        if (v.dur - (f + len) < 5 * 60) len = v.dur - f;
+        segs.push([f, len]); f += len;
+      }
+    } else segs.push([0, v.dur]);
+    const mine = [];
+    segs.forEach(([from, len], j) => {
+      const it = { kind: "show", v, from, len, rel: t };
+      items.push(it); mine.push(it);
+      t += len * 1000;
+      if (j < segs.length - 1) addBreak(v, true);
+    });
+    for (const it of mine) { it.s0 = s0; it.s1 = t; }
+    blocks.push({ kind: "show", v, start: s0, end: t });
+    addBreak(q[i + 1] || null, false);
+  });
+  if (cycles.size > 400) cycles.clear();
+  cycles.set(key, c = { items, blocks, total: t });
   return c;
 }
-function programAt(ch, e, t) {
-  const c = e.carry;
-  if (c && t >= c.start && t < c.end) return { v: c.v, start: c.start, end: c.end };
-  const el = t - e.anchor, k = Math.floor(el / e.total), off = el - k * e.total, cy = cycle(ch, e, k);
-  let lo = 0, hi = cy.q.length - 1;
-  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (cy.cum[mid] <= off) lo = mid; else hi = mid - 1; }
-  const start = e.anchor + k * e.total + cy.cum[lo];
-  return { v: cy.q[lo], start, end: start + cy.q[lo].dur * 1000 };
+
+// Walk the day's cycles to the one containing t.
+function cycleAt(s, t) {
+  let base = s.ds;
+  for (let k = 0; k < 2000; k++) {
+    const cy = cycle(s, k);
+    if (t < base + cy.total) return { cy, base };
+    base += cy.total;
+  }
+  throw new Error("Schedule too long");
 }
-function programsBetween(ch, e, t0, t1) {
-  const out = [];
-  for (let p = programAt(ch, e, t0); p.start < t1 && out.length < 400; p = programAt(ch, e, p.end)) out.push(p);
+function itemAt(s, t) {
+  const { cy, base } = cycleAt(s, t), de = nextDay(s.ds), off = t - base, its = cy.items;
+  let lo = 0, hi = its.length - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (its[mid].rel <= off) lo = mid; else hi = mid - 1; }
+  const it = its[lo], start = base + it.rel;
+  return {
+    ...it, start, end: Math.min(start + it.len * 1000, de),
+    spanStart: it.kind === "show" ? base + it.s0 : start,
+    spanEnd: Math.min(it.kind === "show" ? base + it.s1 : base + it.bEnd, de),
+    bEnd: it.bEnd != null ? Math.min(base + it.bEnd, de) : null,
+  };
+}
+function blocksBetween(s, t0, t1) {
+  const out = [], de = Math.min(nextDay(s.ds), t1);
+  let { cy, base } = cycleAt(s, t0), k = 0;
+  while (base < de && k++ < 200) {
+    for (const b of cy.blocks) {
+      const start = base + b.start, end = Math.min(base + b.end, nextDay(s.ds));
+      if (end > t0 && start < de) out.push({ ...b, start, end });
+    }
+    base += cy.total;
+    if (base < de) ({ cy } = cycleAt(s, base));
+  }
   return out;
 }
 
@@ -698,41 +978,70 @@ function noSignal(why, big = "NO SIGNAL") {
 }
 
 /* ---------- players ----------
-   One YouTube player per "slot". The active slot is visible with sound; the others quietly play
-   the neighbouring channels in sync with their schedules, so switching to them is instant. */
+   Each "slot" has a YouTube player and a plain <video> for local files. The active slot is visible with sound;
+   the others quietly play the neighbouring channels in sync with their schedules, so switching to them is instant. */
 
-let ytReady = false, pendingTune = null, seq = 0, cur = 0, active = null;
+let ytReady = false, ytFailed = false, pendingTune = null, seq = 0, cur = 0, active = null;
 let needUnmute = false, watchA = 0, watchB = 0, neighborT = 0;
 const slots = [];
 const preloadCount = () => ({ both: 2, next: 1, off: 0 }[state.preload] ?? 2);
 const chById = id => chs().find(c => c.id === id);
+const canPlay = v => v.local ? localUrls.has(v.path) : ytReady;
+const skipVideo = v => isBad(v.id) || !canPlay(v);
 
 window.onYouTubeIframeAPIReady = () => {
   ytReady = true;
   if (pendingTune != null) { const i = pendingTune; pendingTune = null; tune(i); }
 };
+function youTubeUnavailable() {
+  if (ytReady || ytFailed) return;
+  ytFailed = true;
+  toast("Couldn't load the YouTube player. Only your own video files will play.");
+  if (pendingTune != null) { const i = pendingTune; pendingTune = null; tune(i); }
+}
+setTimeout(youTubeUnavailable, 20000);
 
 function makeSlot() {
   const el = document.createElement("div"); el.className = "slot";
-  const host = document.createElement("div"); el.append(host); $("#players").append(el);
-  const s = { el, player: null, ready: false, chId: null, p: null, v: null, filler: false, seq: 0, timer: 0, pending: null };
-  s.player = new YT.Player(host, {
+  const host = document.createElement("div");
+  const video = document.createElement("video");
+  video.playsInline = true; video.setAttribute("playsinline", ""); video.preload = "auto"; video.muted = true;
+  el.append(host, video); $("#players").append(el);
+  const s = { el, video, mode: "yt", player: null, ready: false, chId: null, sch: null, it: null, v: null, filler: false, endSec: 0, seq: 0, timer: 0, pending: null, advSeq: -1 };
+  if (ytReady) s.player = new YT.Player(host, {
     width: "100%", height: "100%",
     playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, playsinline: 1, mute: 1,
                   ...(location.protocol.startsWith("http") ? { origin: location.origin } : {}) },
     events: {
       onReady: () => {
         s.ready = true; s.player.mute();
-        if (s.pending) { const a = s.pending; s.pending = null; loadInto(s, ...a); }
+        if (s.pending) { const a = s.pending; s.pending = null; loadInto(...a); }
         if (s === active) applyVolume();
       },
-      onStateChange: e => onSlotState(s, e.data),
-      onError: () => onSlotError(s),
+      onStateChange: e => { if (s.mode === "yt") onSlotState(s, e.data); },
+      onError: () => { if (s.mode === "yt") onSlotError(s); },
     },
   });
+  video.addEventListener("playing", () => { if (s.mode === "local") onSlotPlaying(s); });
+  video.addEventListener("ended", () => { if (s.mode === "local") advance(s, true); });
+  video.addEventListener("timeupdate", () => { if (s.mode === "local" && s.it && video.currentTime >= s.endSec - 0.3) advance(s, true); });
+  video.addEventListener("error", () => { if (s.mode === "local" && video.getAttribute("src")) onSlotError(s); });
   slots.push(s);
   return s;
 }
+function stopLocal(s) { if (s.video.getAttribute("src")) { s.video.pause(); s.video.removeAttribute("src"); s.video.load(); } }
+function clearSlot(s) {
+  s.chId = null; s.sch = null; s.it = null; s.v = null; clearTimeout(s.timer); s.seq++;
+  if (s !== active) { stopLocal(s); if (s.ready) s.player.stopVideo(); }
+}
+
+// What a slot is doing, whichever kind of player it's using.
+const ytState = s => s.ready ? s.player.getPlayerState() : -1;
+const slotPlaying = s => s.mode === "local" ? !s.video.paused && s.video.readyState >= 3 : ytState(s) === YT.PlayerState.PLAYING;
+const slotStarting = s => s.mode === "local" ? !s.video.paused : [YT.PlayerState.PLAYING, YT.PlayerState.BUFFERING].includes(ytState(s));
+const slotTime = s => s.mode === "local" ? s.video.currentTime : (s.ready ? s.player.getCurrentTime?.() || 0 : 0);
+function slotSeek(s, t) { if (s.mode === "local") s.video.currentTime = t; else if (s.ready) s.player.seekTo(t, true); }
+function slotPlay(s) { if (s.mode === "local") s.video.play().catch(() => {}); else if (s.ready) s.player.playVideo(); }
 
 // A slot to (re)use for a channel, never taking one that holds a channel in `keep`.
 function claimSlot(keep) {
@@ -742,90 +1051,125 @@ function claimSlot(keep) {
   return slots.find(s => s !== active) || slots[0];
 }
 
-function loadInto(s, ch, p, v, offset, filler = false) {
-  s.chId = ch.id; s.p = p; s.v = v; s.filler = filler; s.seq++;
+function loadInto(s, sch, it, v, startSec, endSec, filler = false) {
+  s.chId = sch.ch.id; s.sch = sch; s.it = it; s.v = v; s.filler = filler; s.endSec = endSec; s.seq++;
+  const my = s.seq;
   clearTimeout(s.timer);
-  // Re-check the schedule when this program should be over, in case the video stalls or a filler runs long.
-  s.timer = setTimeout(() => advance(s, false), Math.max(1000, p.end - Date.now() + (filler ? 0 : 8000)));
+  // Move on when this item's time slot is over, even if the player never reports that it ended.
+  s.timer = setTimeout(() => advance(s, true), Math.max(1000, it.end - Date.now() + 2000));
+  s.el.classList.toggle("local", !!v.local);
   if (s === active) { updateNow(); renderGuide(); }
-  if (!s.ready) { s.pending = [ch, p, v, offset, filler]; return; }
-  const at = offset ?? (Date.now() - p.start) / 1000;
-  s.player.loadVideoById({ videoId: v.id, startSeconds: at < 4 ? 0 : Math.floor(at) });
+  if (v.local) {
+    s.mode = "local";
+    if (s.ready) s.player.stopVideo();
+    const vid = s.video, url = localUrls.get(v.path);
+    vid.volume = state.volume / 100;
+    vid.muted = s !== active || state.muted || needUnmute;
+    const go = () => { if (s.seq !== my) return; try { vid.currentTime = startSec; } catch {} vid.play().catch(() => {}); };
+    if (vid.getAttribute("src") === url && vid.readyState >= 1) go();
+    else { vid.src = url; vid.addEventListener("loadedmetadata", go, { once: true }); }
+    if (s === active) watch(s);
+    return;
+  }
+  s.mode = "yt";
+  stopLocal(s);
+  if (!s.ready) { s.pending = [s, sch, it, v, startSec, endSec, filler]; return; }
+  s.player.loadVideoById({ videoId: v.id, startSeconds: startSec, endSeconds: endSec });
   if (s === active) { applyVolume(); watch(s); } else s.player.mute();
 }
 
-function playProgram(s, ch, e, t = Date.now()) {
-  const p = programAt(ch, e, t);
-  if (!bad.has(p.v.id)) return loadInto(s, ch, p, p.v);
-  // The scheduled video won't play: fill the slot with something else from the channel until it ends.
-  const pool = e.videos.filter(v => !bad.has(v.id));
-  if (!pool.length) { if (s === active) noSignal("None of this channel's videos would play."); return; }
-  const v = pool[Math.random() * pool.length | 0];
-  loadInto(s, ch, p, v, v.dur > 90 ? Math.floor(v.dur * (0.05 + Math.random() * 0.8)) : 0, true);
-}
-
-function advance(s, ended) {
-  const ch = chById(s.chId), e = ch && cache[ch.id];
-  if (!e || !s.p) return;
-  // When a video finishes, the next one starts from the top (or wherever the schedule has reached, if we fell behind).
-  const t = ended && !s.filler ? Math.max(Date.now(), s.p.end) : Date.now();
-  playProgram(s, ch, e, t);
-}
-
-function onSlotState(s, st) {
-  if (st === YT.PlayerState.PLAYING && s === active) {
-    clearTimeout(watchB);
-    document.body.classList.remove("tap-through");
-    staticOff(seq);
-    scheduleNeighbors();
+function playAt(s, sch, t = Date.now()) {
+  const it = itemAt(sch, t);
+  if (!skipVideo(it.v)) {
+    const into = Math.max(0, (Date.now() - it.start) / 1000);
+    return loadInto(s, sch, it, it.v, into < 4 ? it.from : Math.floor(it.from + into), it.from + it.len);
   }
+  // The scheduled video can't play here: fill its slot with something else until it's over.
+  const pool = (it.kind === "ad" ? sch.ads.videos : sch.e.videos).filter(v => !skipVideo(v));
+  if (!pool.length) {
+    if (s === active) noSignal(!ytReady && !it.v.local ? "Couldn't load the YouTube player. Check the internet connection."
+      : it.v.local && !canPlay(it.v) ? "This channel's video files aren't on this device." : "None of this channel's videos would play.");
+    return;
+  }
+  const v = pool[Math.random() * pool.length | 0], need = (it.end - Date.now()) / 1000;
+  const from = v.dur > need + 30 ? Math.floor(Math.random() * (v.dur - need)) : 0;
+  loadInto(s, sch, it, v, from, v.dur, true);
+}
+
+async function advance(s, ended) {
+  const ch = chById(s.chId);
+  if (!ch || !s.it || s.advSeq === s.seq) return;
+  s.advSeq = s.seq;
+  const my = s.seq;
+  // When something finishes, the next item starts from its beginning, or wherever the schedule has reached if we fell behind.
+  const t = ended && !s.filler ? Math.max(Date.now(), s.it.end) : Date.now();
+  let sch = schedFor(ch, dayStart(t));
+  if (!sch) {
+    if (s === active) staticOn();
+    try { sch = await getSched(ch, dayStart(t)); }
+    catch (e) { if (s === active && s.seq === my) noSignal(e.message); return; }
+    if (s.seq !== my) return;
+  }
+  playAt(s, sch, t);
+}
+
+function onSlotPlaying(s) {
+  if (s !== active) return;
+  clearTimeout(watchB);
+  document.body.classList.remove("tap-through");
+  staticOff(seq);
+  scheduleNeighbors();
+}
+function onSlotState(s, st) {
+  if (st === YT.PlayerState.PLAYING) onSlotPlaying(s);
   if (st === YT.PlayerState.ENDED) advance(s, true);
+  // Some players pause at endSeconds instead of reporting ENDED.
+  if (st === YT.PlayerState.PAUSED && s.it && slotTime(s) >= s.endSec - 1.5) advance(s, true);
 }
 function onSlotError(s) {
   if (!s.v) return;
-  bad.add(s.v.id); saveBad();
+  markBad(s.v.id);
   if (s === active) { seq++; staticOn(); }
+  s.advSeq = -1;
   advance(s, false);
 }
 
 function activate(s) {
   active = s;
-  for (const o of slots) {
-    o.el.classList.toggle("on", o === s);
-    if (o !== s && o.ready) o.player.mute();
-  }
+  for (const o of slots) o.el.classList.toggle("on", o === s);
   applyVolume();
 }
 
 // Bring a pre-loaded slot back in line with its schedule before showing it.
 function resync(s) {
-  const ch = chById(s.chId), e = ch && cache[ch.id];
-  if (!e || !s.p) return false;
-  if (Date.now() >= s.p.end) { playProgram(s, ch, e); return false; }
-  if (!s.ready) return false;
-  const st = s.player.getPlayerState();
+  if (!s.it) return false;
+  if (Date.now() >= s.it.end) { advance(s, false); return false; }
+  if (s.mode === "yt" && !s.ready) return false;
   if (!s.filler) {
-    const want = (Date.now() - s.p.start) / 1000, have = s.player.getCurrentTime?.() || 0;
-    if (Math.abs(want - have) > 10) s.player.seekTo(want, true);
+    const want = s.it.from + (Date.now() - s.it.start) / 1000;
+    if (Math.abs(want - slotTime(s)) > 10) slotSeek(s, want);
   }
-  if (st !== YT.PlayerState.PLAYING) s.player.playVideo();
-  return st === YT.PlayerState.PLAYING;
+  const playing = slotPlaying(s);
+  if (!playing) slotPlay(s);
+  return playing;
 }
 
 // Browsers can block autoplay. Step 1: retry muted. Step 2: let the viewer tap the picture itself.
 function watch(s) {
   clearTimeout(watchA); clearTimeout(watchB);
-  const sq = s.seq, playing = () => [YT.PlayerState.PLAYING, YT.PlayerState.BUFFERING].includes(s.player.getPlayerState());
+  const sq = s.seq;
   watchA = setTimeout(() => {
-    if (s !== active || s.seq !== sq || playing()) return;
-    s.player.mute(); s.player.playVideo();
+    if (s !== active || s.seq !== sq || slotStarting(s)) return;
+    s.video.muted = true; if (s.ready) s.player.mute();
+    slotPlay(s);
     if (!state.muted) { needUnmute = true; toast("Your browser blocked sound. Tap anywhere to turn it on."); }
   }, 3000);
   watchB = setTimeout(() => {
-    if (s !== active || s.seq !== sq || playing()) return;
+    if (s !== active || s.seq !== sq || slotStarting(s)) return;
     seq++;
     document.body.classList.remove("static"); noiseOff();
     document.body.classList.add("tap-through");
+    if (s.mode === "local") s.video.controls = true;
     toast("Tap the picture to start playback.");
   }, 7000);
 }
@@ -839,31 +1183,28 @@ async function tune(i) {
   showOSD(pad(cur + 1), ch.name);
   staticOn();
   document.body.classList.remove("tap-through");
-  if (!ytReady) { pendingTune = cur; setNow("Tuning…", ""); return; }
+  for (const o of slots) o.video.controls = false;
+  if (!ytReady && !ytFailed) { pendingTune = cur; setNow("Tuning…", ""); return; }
 
   let s = slots.find(x => x.chId === ch.id);
-  if (s && s.p) {
+  if (s && s.it) {
     // Pre-loaded: it's already playing in the background.
     activate(s); updateNow(); renderGuide();
     if (resync(s)) staticOff(mySeq); else watch(s);
-    if (cache[ch.id]?.errs?.length) skippedToast(ch, cache[ch.id]);
     scheduleNeighbors();
     return;
   }
   s = s || claimSlot(new Set([ch.id, ...neighbors(cur).map(c => c.id)]));
-  s.chId = ch.id; s.p = null; s.v = null;
-  if (s.ready) s.player.stopVideo();
+  clearSlot(s); s.chId = ch.id;
+  stopLocal(s); if (s.ready) s.player.stopVideo();
   activate(s);
   setNow("Tuning…", "");
-  let e;
-  try { e = await ensureChannel(ch); }
+  let sch;
+  try { sch = await getSched(ch, dayStart(Date.now())); }
   catch (err) { if (mySeq === seq) noSignal(err.message); return; }
   if (mySeq !== seq || active !== s) return;
-  if (e.errs.length) skippedToast(ch, e);
-  playProgram(s, ch, e);
-}
-function skippedToast(ch, e) {
-  toast(`Skipped ${e.errs.length === 1 ? "a link" : e.errs.length + " links"} on ${ch.name}. ${e.errs[0]}`);
+  if (sch.e.errs.length) toast(`Skipped ${sch.e.errs.length === 1 ? "a link" : sch.e.errs.length + " links"} on ${ch.name}. ${sch.e.errs[0]}`);
+  playAt(s, sch);
 }
 
 function neighbors(i) {
@@ -878,16 +1219,19 @@ function scheduleNeighbors() {
   clearTimeout(neighborT);
   neighborT = setTimeout(async () => {
     const want = neighbors(cur), keep = new Set([chs()[cur]?.id, ...want.map(c => c.id)]);
-    while (slots.length > 1 + preloadCount()) { const s = slots.find(x => x !== active); s.player.destroy(); s.el.remove(); slots.splice(slots.indexOf(s), 1); }
+    while (slots.length > 1 + preloadCount()) {
+      const s = slots.find(x => x !== active);
+      stopLocal(s); s.player?.destroy(); s.el.remove(); slots.splice(slots.indexOf(s), 1);
+    }
     for (const ch of want) {
       if (slots.some(s => s.chId === ch.id)) continue;
       const s = claimSlot(keep);
       if (s === active) continue;
-      s.chId = ch.id; s.p = null; s.v = null; clearTimeout(s.timer);
-      if (s.ready) s.player.stopVideo();
+      clearSlot(s); s.chId = ch.id;
+      const my = s.seq;
       try {
-        const e = await ensureChannel(ch);
-        if (s.chId === ch.id && s !== active) playProgram(s, ch, e);
+        const sch = await getSched(ch, dayStart(Date.now()));
+        if (s.seq === my && s !== active) playAt(s, sch);
       } catch {}
     }
   }, 1500);
@@ -896,7 +1240,7 @@ function scheduleNeighbors() {
 let prefetching = false;
 async function prefetch() {
   if (prefetching) return; prefetching = true;
-  for (const ch of chs()) { try { await ensureChannel(ch); } catch {} }
+  for (const ch of chs()) { try { await getSched(ch, dayStart(Date.now())); } catch {} }
   prefetching = false;
 }
 
@@ -904,16 +1248,24 @@ function applyVolume() {
   $("#vol").value = state.volume;
   $$('[data-act="mute"]').forEach(b => b.textContent = state.muted ? "Unmute" : "Mute");
   if (noiseGain) noiseGain.gain.value = state.muted ? 0 : .14 * state.volume / 100;
-  if (!active?.ready) return;
-  active.player.setVolume(state.volume);
-  if (state.muted || needUnmute) active.player.mute(); else active.player.unMute();
+  const quiet = state.muted || needUnmute;
+  for (const o of slots) {
+    const on = o === active;
+    o.video.volume = state.volume / 100;
+    o.video.muted = !on || o.mode !== "local" || quiet;
+    if (o.ready) {
+      o.player.setVolume(state.volume);
+      if (on && o.mode === "yt" && !quiet) o.player.unMute(); else o.player.mute();
+    }
+  }
 }
 
 // Coming back to the tab: background players may have paused, so line everything up again.
 document.addEventListener("visibilitychange", () => {
   if (document.hidden || !$("#power").hidden) return;
-  for (const s of slots) if (s.p) resync(s);
+  for (const s of slots) if (s.it) resync(s);
   renderGuide();
+  pullLineup();
 });
 
 /* ---------- now playing ---------- */
@@ -926,11 +1278,15 @@ function setNow(title, meta) {
   $("#dockCh").textContent = ch?.name || "";
 }
 function updateNow() {
-  const s = active;
-  if (!s?.v) return setNow("Tuning…", "");
-  setNow(s.v.title, s.filler
-    ? `${s.v.by} · Filling in until ${clock(s.p.end)}`
-    : `${s.v.by} · ${clock(s.p.start)}–${clock(s.p.end)}`);
+  const s = active, it = s?.it;
+  if (!it) return setNow("Tuning…", "");
+  if (it.kind === "ad") {
+    const back = clock(it.bEnd);
+    return setNow("Commercial break", it.mid ? `Back to ${it.show.title} at ${back}`
+      : it.show ? `Up next at ${back}: ${it.show.title}` : `Back at ${back}`);
+  }
+  if (s.filler) return setNow(s.v.title, `${s.v.by} · Filling in until ${clock(it.end)}`);
+  setNow(it.v.title, `${it.v.by} · ${clock(it.spanStart)}–${clock(it.spanEnd)}`);
 }
 
 /* ---------- guide ---------- */
@@ -956,23 +1312,33 @@ function renderGuide() {
   let times = "";
   for (let t = t0; t < t1; t += 18e5) times += `<span style="left:${x(t)}px;width:${30 * ppm}px">${clock(t)}</span>`;
   const rows = chs().map((ch, i) => {
-    const e = cache[ch.id];
-    let track;
-    if (e?.total) {
-      track = programsBetween(ch, e, t0, t1).map(p => {
-        const l = x(Math.max(p.start, t0)), w = x(Math.min(p.end, t1)) - l - 3;
-        const isNow = p.start <= now && now < p.end;
-        const label = `${p.v.title} · ${clock(p.start)}–${clock(p.end)}`;
-        return `<button class="prog${isNow ? " now" : ""}${bad.has(p.v.id) ? " bad" : ""}" data-ch="${i}" style="left:${l}px;width:${Math.max(4, w)}px" title="${esc(label)}" aria-label="${esc(label)}">`
-          + (w >= 40 ? `<span class="t">${esc(p.v.title)}</span>` : "")
-          + (w >= 110 ? `<span class="h">${clock(p.start)}–${clock(p.end)}</span>` : "")
-          + `</button>`;
-      }).join("");
-    } else {
-      const msg = scans[ch.id] ? "Scanning links…" : scanErr[ch.id] ? esc(scanErr[ch.id]) : "Not scanned yet";
-      track = `<div class="epg-msg" style="height:100%">${msg}</div>`;
+    let track = "";
+    // The window can cross 4 AM, where one broadcast day hands over to the next.
+    for (let t = t0; t < t1;) {
+      const ds = dayStart(t), segEnd = Math.min(t1, nextDay(ds)), sch = schedFor(ch, ds);
+      if (sch) {
+        for (const b of blocksBetween(sch, t, segEnd)) {
+          const l = x(Math.max(b.start, t0)), w = x(Math.min(b.end, t1)) - l - 3;
+          if (b.kind === "ad") {
+            track += `<button class="prog ad" data-ch="${i}" style="left:${l}px;width:${Math.max(3, w)}px" title="Commercial break" aria-label="Commercial break ${clock(b.start)}">${w >= 50 ? `<span class="t">Ads</span>` : ""}</button>`;
+            continue;
+          }
+          const isNow = b.start <= now && now < b.end, label = `${b.v.title} · ${clock(b.start)}–${clock(b.end)}`;
+          const state2 = isBad(b.v.id) ? " bad" : b.v.local && !canPlay(b.v) ? " missing" : "";
+          track += `<button class="prog${isNow ? " now" : ""}${state2}" data-ch="${i}" style="left:${l}px;width:${Math.max(4, w)}px" title="${esc(label)}" aria-label="${esc(label)}">`
+            + (w >= 40 ? `<span class="t">${esc(b.v.title)}</span>` : "")
+            + (w >= 110 ? `<span class="h">${clock(b.start)}–${clock(b.end)}</span>` : "")
+            + `</button>`;
+        }
+      } else {
+        if (!isScanning(ch, ds) && !scanErr[ch.id] && state.apiKey) getSched(ch, ds).catch(() => {});
+        const msg = isScanning(ch, ds) ? "Scanning links…" : scanErr[ch.id] ? esc(scanErr[ch.id]) : "Not scanned yet";
+        track += `<div class="epg-msg" style="left:${x(Math.max(t, t0))}px;width:${x(segEnd) - x(Math.max(t, t0))}px">${msg}</div>`;
+      }
+      t = segEnd;
     }
-    return `<div class="epg-row${i === cur ? " cur" : ""}"><button class="epg-ch" data-ch="${i}"><span class="n">${pad(i + 1)}</span><span class="nm">${esc(ch.name)}</span></button><div class="epg-track">${track}</div></div>`;
+    const sel = !$("#guide").hidden && i === guideSel ? " sel" : "";
+    return `<div class="epg-row${i === cur ? " cur" : ""}${sel}"><button class="epg-ch" data-ch="${i}"><span class="n">${pad(i + 1)}</span><span class="nm">${esc(ch.name)}</span></button><div class="epg-track">${track}</div></div>`;
   }).join("");
   const day = new Date(now).toLocaleDateString([], { weekday: "short" });
   host.innerHTML = `<div class="epg-scroll"><div class="epg" style="--w:${W}px">
@@ -981,6 +1347,7 @@ function renderGuide() {
     <div class="epg-now" style="left:calc(var(--chw) + ${x(now)}px)"></div>
   </div></div>`;
   if (keep) { const n = host.querySelector(".epg-scroll"); n.scrollLeft = keep[0]; n.scrollTop = keep[1]; }
+  host.querySelector(".epg-row.sel")?.scrollIntoView({ block: "nearest" });
 }
 setInterval(renderGuide, 30e3);
 
@@ -1033,8 +1400,10 @@ $("#shield").addEventListener("pointerup", e => {
 });
 $("#shield").addEventListener("pointercancel", () => { touch0 = null; });
 
+let guideSel = 0;
 function openGuide() {
   if (isPortrait()) return;
+  guideSel = cur;
   $("#settings").hidden = true; $("#guide").hidden = false;
   document.body.classList.add("panel-open"); renderGuide();
 }
@@ -1067,15 +1436,29 @@ function toggleFullscreen() {
     .then(() => screen.orientation?.lock?.("landscape")).catch(() => {});
 }
 
+// Keyboard and remote control. Remotes send arrow keys, Enter for OK, and Escape/Backspace/Back for back.
 let digits = "", digitT = 0;
+const UP_KEYS = ["ArrowUp", "PageUp", "ChannelUp", "MediaTrackNext"], DOWN_KEYS = ["ArrowDown", "PageDown", "ChannelDown", "MediaTrackPrevious"];
+const BACK_KEYS = ["Escape", "Backspace", "BrowserBack", "GoBack"];
 addEventListener("keydown", e => {
-  if (!$("#power").hidden || e.target.closest("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
-  wake();
+  if (e.target.closest("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key;
-  if (k === "Escape") return closePanels();
+  if (!$("#power").hidden) { if (k === "Enter" || k === " ") { e.preventDefault(); $("#powerBtn").click(); } return; }
+  wake();
+  if (BACK_KEYS.includes(k)) { e.preventDefault(); return closePanels(); }
   if (!$("#settings").hidden) return;
-  if (k === "ArrowUp" || k === "PageUp") { e.preventDefault(); tune(cur + 1); }
-  else if (k === "ArrowDown" || k === "PageDown") { e.preventDefault(); tune(cur - 1); }
+  const guideOpen = !$("#guide").hidden;
+  if (guideOpen && (k === "ArrowUp" || k === "ArrowDown")) {
+    e.preventDefault();
+    guideSel = (guideSel + (k === "ArrowDown" ? 1 : -1) + chs().length) % chs().length;
+    renderGuide();
+  }
+  else if ((k === "Enter" || k === " ") && !e.target.closest("button")) {
+    e.preventDefault();
+    if (guideOpen) { closePanels(); tune(guideSel); } else openGuide();
+  }
+  else if (UP_KEYS.includes(k)) { e.preventDefault(); tune(cur + 1); }
+  else if (DOWN_KEYS.includes(k)) { e.preventDefault(); tune(cur - 1); }
   else if (/^[0-9]$/.test(k)) {
     digits = (digits + k).slice(-2);
     showOSD(digits.padEnd(2, "-"), "");
@@ -1090,6 +1473,103 @@ addEventListener("keydown", e => {
   else if (k === "f" || k === "F") toggleFullscreen();
 });
 
+/* ---------- lineup sync ----------
+   The lineup lives in lineup.json next to this page. Devices read it when they open and every 15 minutes;
+   saving with a GitHub token writes it back through the GitHub API. */
+
+let repo = (() => {
+  const m = location.hostname.match(/^([\w-]+)\.github\.io$/i);
+  if (!m) return null;
+  const seg = location.pathname.split("/").filter(Boolean)[0];
+  return { owner: m[1], name: seg && !seg.includes(".") ? seg : `${m[1]}.github.io` };
+})();
+const lineupData = () => ({ rabbitEars: 3, updated: state.lineupUpdated || Date.now(), channels: chs(), ads: state.ads, breakLen: state.breakLen, local: state.catalog || [] });
+const lineupSig = () => JSON.stringify([chs().map(c => [c.name, c.sources, scanKey(c), queueKey(c)]), state.ads, state.breakLen, state.catalog]);
+
+function applyLineup(j) {
+  state.channels = j.channels.map(c => newChannel({ ...c, sources: Array.isArray(c.sources) ? c.sources.map(String) : [] }));
+  state.ads = Array.isArray(j.ads) ? j.ads.map(String) : [];
+  state.breakLen = Math.min(4, Math.max(1, +j.breakLen || 2));
+  state.catalog = Array.isArray(j.local) ? j.local.filter(f => f && typeof f.path === "string" && +f.dur > 0)
+    .map(f => ({ path: f.path, folder: String(f.folder || ""), name: String(f.name || f.path), dur: Math.round(+f.dur), owner: String(f.owner || "") })) : [];
+  state.lineupUpdated = +j.updated || Date.now();
+  save();
+  refreshCatalog();
+}
+// Replace this device's entries in the shared file list with what it has now.
+function mergeMyFiles() {
+  state.catalog = [...(state.catalog || []).filter(f => f.owner !== myOwner()),
+    ...myFiles.map(f => ({ path: f.path, folder: f.folder, name: f.name, dur: Math.round(f.dur), owner: myOwner() }))];
+}
+
+async function pullLineup() {
+  if (location.protocol === "file:") return;
+  try {
+    const r = await fetch("lineup.json?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!Array.isArray(j.channels) || (+j.updated || 0) <= (state.lineupUpdated || 0)) return;
+    const curId = chs()[cur]?.id, before = lineupSig();
+    applyLineup(j);
+    if (lineupSig() === before) return;
+    toast("Lineup updated from your other devices.");
+    lineupReplaced(curId);
+  } catch {}
+}
+function lineupReplaced(curId) {
+  if (!$("#power").hidden) return;
+  for (const s of slots) clearSlot(s);
+  const idx = chs().findIndex(c => c.id === curId);
+  tune(idx === -1 ? Math.min(cur, chs().length - 1) : idx);
+  prefetch();
+}
+setInterval(pullLineup, 15 * 60e3);
+
+async function publishLineup() {
+  if (!repo) throw new Error("Sync works when Rabbit Ears runs on GitHub Pages.");
+  if (!state.ghToken) throw new Error("Add a GitHub token first, or use Download lineup.json.");
+  const url = `https://api.github.com/repos/${repo.owner}/${repo.name}/contents/lineup.json`;
+  const headers = { Authorization: `Bearer ${state.ghToken}`, Accept: "application/vnd.github+json" };
+  let sha, applied = false;
+  const g = await fetch(url, { headers, cache: "no-store" });
+  if (g.status === 401 || g.status === 403) throw new Error("GitHub didn't accept the token. Check it has Contents: Read and write for this repository.");
+  if (g.ok) {
+    const cur = await g.json();
+    sha = cur.sha;
+    // If another device published something newer, start from that so its changes aren't lost.
+    try {
+      const remote = JSON.parse(decodeURIComponent(escape(atob(String(cur.content || "").replace(/\s/g, "")))));
+      if (Array.isArray(remote.channels) && (+remote.updated || 0) > (state.lineupUpdated || 0)) { applyLineup(remote); applied = true; }
+    } catch {}
+  }
+  mergeMyFiles();
+  if (applied) state.lineupUpdated = Date.now();
+  save(); refreshCatalog();
+  const body = JSON.stringify(lineupData(), null, 2);
+  const content = btoa(unescape(encodeURIComponent(body)));
+  const p = await fetch(url, { method: "PUT", headers, body: JSON.stringify({ message: "Update Rabbit Ears lineup", content, ...(sha ? { sha } : {}) }) });
+  if (!p.ok) {
+    const j = await p.json().catch(() => ({}));
+    throw new Error(p.status === 404 ? "GitHub couldn't find the repository with that token. Check the token's repository access."
+      : (j.message || `GitHub said no (${p.status}).`));
+  }
+  return applied;
+}
+function downloadLineup() {
+  mergeMyFiles();
+  const blob = new Blob([JSON.stringify(lineupData(), null, 2)], { type: "application/json" });
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "lineup.json" });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function syncStatus() {
+  const when = state.lineupUpdated ? new Date(state.lineupUpdated).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "never";
+  $("#syncStatus").textContent = repo
+    ? `Sharing through ${repo.owner}/${repo.name}. This lineup was last changed ${when}.`
+    : "Sync works when Rabbit Ears runs on GitHub Pages. This copy isn't, so it keeps its lineup to itself.";
+  $("#repoName").textContent = repo ? repo.name : "your Rabbit Ears repository";
+}
+
 /* ---------- settings ---------- */
 
 let draft = [];
@@ -1097,9 +1577,10 @@ const shuffleHint = ch => ({
   full: "Every video plays in random order.",
   none: "Videos play in upload order, with all links merged together.",
   partial: `Plays ${Math.max(2, ch.blockSize | 0)} videos in a row from the same link in order, then jumps somewhere random.`,
-}[ch.shuffle]) + (ch.scanMode === "random" ? " Random picks come from each link's 1,000 newest videos." : "");
+}[ch.shuffle]) + (ch.scanMode === "random" ? " Random picks come from each link's 1,000 newest videos and change daily." : "");
 
 function renderChannels() {
+  const opt = (v, cur, label) => `<option value="${v}" ${v === cur ? "selected" : ""}>${label}</option>`;
   $("#chList").innerHTML = draft.map((ch, i) => `
     <fieldset class="ch-card" data-i="${i}" data-shuffle="${ch.shuffle}">
       <div class="ch-head">
@@ -1118,27 +1599,24 @@ function renderChannels() {
       <div class="grid">
         <label for="shuf-${ch.id}">Shuffle
           <select id="shuf-${ch.id}" class="f-shuffle">
-            <option value="full" ${ch.shuffle === "full" ? "selected" : ""}>Complete shuffle</option>
-            <option value="none" ${ch.shuffle === "none" ? "selected" : ""}>No shuffle</option>
-            <option value="partial" ${ch.shuffle === "partial" ? "selected" : ""}>Partial shuffle</option>
+            ${opt("full", ch.shuffle, "Complete shuffle")}${opt("none", ch.shuffle, "No shuffle")}${opt("partial", ch.shuffle, "Partial shuffle")}
           </select>
         </label>
         <label class="only-partial" for="blk-${ch.id}">Videos in a row
           <input type="number" inputmode="numeric" id="blk-${ch.id}" class="f-block" min="2" max="50" value="${ch.blockSize}">
         </label>
         <label class="only-ordered" for="ord-${ch.id}">Play order
-          <select id="ord-${ch.id}" class="f-order">
-            <option value="oldest" ${ch.order === "oldest" ? "selected" : ""}>Oldest first</option>
-            <option value="newest" ${ch.order === "newest" ? "selected" : ""}>Newest first</option>
-          </select>
+          <select id="ord-${ch.id}" class="f-order">${opt("oldest", ch.order, "Oldest first")}${opt("newest", ch.order, "Newest first")}</select>
         </label>
         <label for="cnt-${ch.id}">Videos to scan per link
           <input type="number" inputmode="numeric" id="cnt-${ch.id}" class="f-count" min="1" max="500" value="${ch.scanCount}">
         </label>
         <label for="mode-${ch.id}">Which videos
-          <select id="mode-${ch.id}" class="f-mode">
-            <option value="recent" ${ch.scanMode === "recent" ? "selected" : ""}>Most recent</option>
-            <option value="random" ${ch.scanMode === "random" ? "selected" : ""}>Random</option>
+          <select id="mode-${ch.id}" class="f-mode">${opt("recent", ch.scanMode, "Most recent")}${opt("random", ch.scanMode, "Random")}</select>
+        </label>
+        <label for="brk-${ch.id}">Commercial breaks
+          <select id="brk-${ch.id}" class="f-breaks">
+            ${opt("off", ch.breaks, "Off")}${opt("between", ch.breaks, "Between shows")}${opt("during", ch.breaks, "Between and during shows")}
           </select>
         </label>
       </div>
@@ -1159,6 +1637,7 @@ function readChannels() {
       order: q(".f-order").value,
       scanCount: clamp(q(".f-count").value, 1, 500, 50),
       scanMode: q(".f-mode").value,
+      breaks: q(".f-breaks").value,
       skipShort: q(".f-short").checked,
     });
   });
@@ -1168,10 +1647,15 @@ function openSettings() {
   $("#guide").hidden = true;
   draft = structuredClone(chs());
   $("#apiKey").value = state.apiKey;
+  $("#ghToken").value = state.ghToken;
   $("#preload").value = state.preload;
   $("#staticSound").checked = state.staticSound;
-  $("#backup").value = ""; $("#backupMsg").hidden = true;
+  $("#adLinks").value = state.ads.join("\n");
+  $("#breakLen").value = String(state.breakLen);
+  $("#backup").value = ""; $("#backupMsg").hidden = true; $("#syncMsg").hidden = true;
+  syncStatus();
   renderChannels();
+  renderFiles();
   $("#settings").hidden = false;
   $("#settings").scrollTop = 0;
   document.body.classList.add("panel-open");
@@ -1203,7 +1687,7 @@ $("#addCh").onclick = () => {
 };
 $("#exportBtn").onclick = async () => {
   readChannels();
-  const text = JSON.stringify({ rabbitEars: 1, channels: draft });
+  const text = JSON.stringify({ rabbitEars: 2, channels: draft, ads: $("#adLinks").value.split("\n").map(s => s.trim()).filter(Boolean), breakLen: +$("#breakLen").value });
   $("#backup").value = text;
   try { await navigator.clipboard.writeText(text); toast("Lineup copied."); }
   catch { $("#backup").select(); toast("Lineup is selected in the box. Copy it from there."); }
@@ -1213,7 +1697,9 @@ $("#importBtn").onclick = () => {
   try {
     const j = JSON.parse($("#backup").value);
     if (!Array.isArray(j.channels)) throw 0;
-    draft = j.channels.map(c => newChannel({ ...c, id: uid(), sources: Array.isArray(c.sources) ? c.sources.map(String) : [] }));
+    draft = j.channels.map(c => newChannel({ ...c, sources: Array.isArray(c.sources) ? c.sources.map(String) : [] }));
+    if (Array.isArray(j.ads)) $("#adLinks").value = j.ads.join("\n");
+    if (j.breakLen) $("#breakLen").value = String(Math.min(4, Math.max(1, +j.breakLen)));
     renderChannels(); msg.hidden = true;
     toast(`Imported ${draft.length} channels. Save to keep them.`);
   } catch {
@@ -1223,25 +1709,126 @@ $("#importBtn").onclick = () => {
 };
 let rescanAll = false;
 $("#rescanBtn").onclick = () => { rescanAll = true; toast("Channels will rescan when you save."); };
+$("#retryBtn").onclick = () => {
+  const n = [...bad.keys()].filter(isBad).length;
+  bad.clear(); saveBad();
+  toast(n ? `${n} skipped ${n === 1 ? "video" : "videos"} will be tried again.` : "No videos are being skipped right now.");
+  renderGuide();
+};
+
+/* your video files */
+const fmtDur = s => { s = Math.round(s); const h = s / 3600 | 0, m = (s % 3600) / 60 | 0; return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`; };
+const fmtSize = b => b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : Math.max(1, Math.round(b / 1e6)) + " MB";
+function fileList(files, removable) {
+  const byFolder = new Map();
+  for (const f of files) (byFolder.get(f.folder) || byFolder.set(f.folder, []).get(f.folder)).push(f);
+  return [...byFolder].sort(([a], [b]) => a.localeCompare(b)).map(([folder, list]) => `
+    <div><h3>${esc(folder || "No folder")} · <kbd>local:${esc(folder)}</kbd></h3>
+      ${list.map(f => `<div class="file-row"><span class="fn" title="${esc(f.name)}">${esc(f.name)}</span><span class="fd">${fmtDur(f.dur)}${f.size ? " · " + fmtSize(f.size) : ""}</span>${removable ? `<button type="button" class="btn" data-del-file="${esc(f.path)}">Remove</button>` : ""}</div>`).join("")}
+    </div>`).join("");
+}
+async function renderFiles() {
+  const others = effCatalog.filter(f => !localUrls.has(f.path)).length;
+  const otherNote = others ? `<p class="hint">${others} more ${others === 1 ? "file is" : "files are"} on your other devices. ${others === 1 ? "It shows" : "They show"} in the guide, but this device plays something else in ${others === 1 ? "its" : "their"} time slots.</p>` : "";
+  const howTo = `<p class="hint">To put files on a channel, add a line <kbd>local:Folder name</kbd> to its links, or <kbd>local:</kbd> for all of them.</p>`;
+  if (piConfig) {
+    $("#filesBody").innerHTML = `<div class="files">
+      <p class="hint">This Raspberry Pi plays videos from ${(piConfig.mediaRoots || []).map(r => `<kbd>${esc(r)}</kbd>`).join(" and ")}. Put each show in its own folder; the folder name is what you use in <kbd>local:</kbd>. New files appear within a minute. Files that aren't MP4 get converted first.</p>
+      ${howTo}
+      ${piConverting.length ? `<p class="status">Converting ${piConverting.length} ${piConverting.length === 1 ? "file" : "files"} to MP4: ${piConverting.slice(0, 3).map(esc).join(", ")}${piConverting.length > 3 ? "…" : ""}</p>` : ""}
+      ${fileList(myFiles, false) || `<p class="hint">No video files found yet.</p>`}
+      ${otherNote}</div>`;
+    return;
+  }
+  let storage = "";
+  try {
+    const est = await navigator.storage?.estimate?.();
+    if (est?.quota) storage = `Using ${fmtSize(est.usage || 0)} of about ${fmtSize(est.quota)} this browser allows.`;
+  } catch {}
+  $("#filesBody").innerHTML = `<div class="files">
+    <p class="hint">Files you add are copied into this browser on this device. MP4 works everywhere; MKV and AVI usually won't play on a phone.</p>
+    ${howTo}
+    <div class="grid"><label for="fileFolder">Folder<input type="text" id="fileFolder" value="${esc($("#fileFolder")?.value || "My videos")}"></label></div>
+    <div class="row"><label class="btn" for="fileInput">Add video files</label><input type="file" id="fileInput" multiple accept="video/*,.mp4,.m4v,.mov,.webm,.mkv" hidden></div>
+    <p class="hint" id="fileMsg">${esc(storage)}</p>
+    ${fileList(myFiles, true)}
+    ${otherNote}</div>`;
+}
+$("#filesBody").addEventListener("change", async e => {
+  if (e.target.id !== "fileInput") return;
+  const files = [...e.target.files], folder = ($("#fileFolder").value.trim() || "My videos").replace(/\//g, "-");
+  const msg = $("#fileMsg"), failed = [];
+  navigator.storage?.persist?.().catch(() => {});
+  for (const [i, file] of files.entries()) {
+    msg.textContent = `Adding ${i + 1} of ${files.length}: ${file.name}…`;
+    const dur = await probeDuration(file);
+    if (!dur) { failed.push(file.name); continue; }
+    try { await idbDo("readwrite", st => st.put({ path: `${folder}/${file.name}`, folder, name: file.name, dur: Math.round(dur), size: file.size, blob: file })); }
+    catch { failed.push(file.name); }
+  }
+  await loadPhoneLibrary();
+  await renderFiles();
+  if (failed.length) $("#fileMsg").textContent = `Couldn't add ${failed.join(", ")}. This browser can't play ${failed.length === 1 ? "it" : "them"}, or the device is out of space. Converting to MP4 usually fixes it.`;
+  else toast(`Added ${files.length} ${files.length === 1 ? "file" : "files"} to ${folder}.`);
+  libraryChanged();
+});
+$("#filesBody").addEventListener("click", async e => {
+  const b = e.target.closest("[data-del-file]"); if (!b) return;
+  if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Confirm"; return; }
+  try { await idbDo("readwrite", st => st.delete(b.dataset.delFile)); } catch {}
+  await loadPhoneLibrary();
+  renderFiles();
+  libraryChanged();
+});
+
+async function shareLineup(fromButton, quiet = false) {
+  const msg = $("#syncMsg");
+  if (!repo || !state.ghToken) {
+    if (fromButton) { msg.textContent = repo ? "Add a GitHub token above and save, or use Download lineup.json and upload it to your repository." : "Sync works when Rabbit Ears runs on GitHub Pages."; msg.hidden = false; }
+    return;
+  }
+  const curId = chs()[cur]?.id;
+  try {
+    const applied = await publishLineup();
+    msg.hidden = true;
+    if (!quiet) toast("Lineup shared. Your other devices pick it up the next time they open, or within 15 minutes.");
+    if (applied) lineupReplaced(curId);
+  } catch (e) {
+    msg.textContent = e.message; msg.hidden = false;
+    if (!quiet) toast("Saved on this device, but couldn't update your other devices. See Settings → Sync.");
+  }
+}
+$("#publishBtn").onclick = () => { state.ghToken = $("#ghToken").value.trim(); save(); shareLineup(true); };
+$("#downloadBtn").onclick = () => { readChannels(); downloadLineup(); };
 
 $("#settings").addEventListener("submit", e => {
   e.preventDefault();
   readChannels();
+  const oldSig = lineupSig(), oldAds = scanKey(adsChannel()), oldBreak = state.breakLen;
   const oldById = new Map(chs().map(c => [c.id, scanKey(c) + queueKey(c)]));
   const keyChanged = state.apiKey !== $("#apiKey").value.trim();
   const curId = chs()[cur]?.id;
   state.apiKey = $("#apiKey").value.trim();
+  state.ghToken = $("#ghToken").value.trim();
   state.preload = $("#preload").value;
   state.staticSound = $("#staticSound").checked;
+  state.ads = $("#adLinks").value.split("\n").map(s => s.trim()).filter(Boolean);
+  state.breakLen = +$("#breakLen").value;
   state.channels = draft;
   if (rescanAll) { cache = {}; saveCache(); rescanAll = false; }
+  const lineupChanged = lineupSig() !== oldSig;
+  if (lineupChanged) state.lineupUpdated = Date.now();
   save();
   if (keyChanged) for (const k in scanErr) delete scanErr[k];
-  // Drop pre-loaded players whose channel was removed or changed.
-  const changed = id => !chById(id) || oldById.get(id) !== scanKey(chById(id)) + queueKey(chById(id)) || !cache[id];
-  for (const s of slots) if (s.chId && changed(s.chId)) { s.chId = null; s.p = null; clearTimeout(s.timer); if (s.ready && s !== active) s.player.stopVideo(); }
+  // Drop pre-loaded players whose channel was removed or whose schedule changed.
+  const adsChanged = scanKey(adsChannel()) !== oldAds || state.breakLen !== oldBreak;
+  const changed = id => { const c = chById(id); return !c || oldById.get(id) !== scanKey(c) + queueKey(c) || (adsChanged && c.breaks !== "off"); };
+  for (const s of slots) if (s.chId && (changed(s.chId) || keyChanged)) clearSlot(s);
   closePanels();
   toast("Saved.");
+  if (lineupChanged || (state.ghToken && JSON.stringify(myFiles.map(f => f.path)) !== JSON.stringify((state.catalog || []).filter(f => f.owner === myOwner()).map(f => f.path)))) {
+    state.lineupUpdated = Date.now(); save(); shareLineup(false);
+  }
   const idx = chs().findIndex(c => c.id === curId);
   tune(idx === -1 ? Math.min(cur, chs().length - 1) : idx);
   prefetch();
@@ -1253,8 +1840,36 @@ if (location.protocol === "file:") $("#fileWarn").hidden = false;
 $("#powerKeyWrap").hidden = !!state.apiKey;
 applyLayout();
 applyVolume();
+refreshCatalog();
 
-$("#powerBtn").onclick = () => {
+(async () => {
+  // On the Raspberry Pi, the helper program supplies the keys, the repository and the video library, and Rabbit Ears turns itself on.
+  if (IS_LOCALHOST) {
+    try {
+      const r = await fetch("/api/config", { cache: "no-store" });
+      if (r.ok) piConfig = await r.json();
+    } catch {}
+  }
+  if (piConfig) {
+    if (piConfig.apiKey && !state.apiKey) state.apiKey = piConfig.apiKey;
+    if (piConfig.ghToken && !state.ghToken) state.ghToken = piConfig.ghToken;
+    if (piConfig.repo) repo = piConfig.repo;
+    if (!state.piSetup) { state.preload = piConfig.preload || "off"; state.piSetup = true; }
+    save();
+    $("#powerKeyWrap").hidden = !!state.apiKey;
+    await loadPiLibrary();
+    setInterval(loadPiLibrary, 60e3);
+    // A remote's Back button would otherwise leave the page.
+    history.pushState({ rabbitEars: 1 }, "");
+    addEventListener("popstate", () => { closePanels(); history.pushState({ rabbitEars: 1 }, ""); });
+  } else if (window.indexedDB) {
+    await loadPhoneLibrary();
+  }
+  await pullLineup();
+  if (piConfig?.autostart) $("#powerBtn").click();
+})();
+
+$("#powerBtn").onclick = async () => {
   const k = $("#powerKey").value.trim();
   if (!state.apiKey && k) { state.apiKey = k; save(); }
   try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
@@ -1271,7 +1886,7 @@ document.addEventListener("visibilitychange", () => {
 
 const tag = document.createElement("script");
 tag.src = "https://www.youtube.com/iframe_api";
-tag.onerror = () => toast("Couldn't load the YouTube player. Check your connection.");
+tag.onerror = youTubeUnavailable;
 document.head.append(tag);
 </script>
 </body>
