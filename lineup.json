@@ -1,14 +1,20 @@
 {
   "rabbitEars": 3,
-  "updated": 1793277007654,
+  "updated": 1793295514095,
   "channels": [
     {
       "id": "kmq1dc9v",
       "name": "Video Game Playthroughs",
       "sources": [
-        "https://youtube.com/@syntac?si=4tDe0-wHwpmbNR_G"
+        "https://youtube.com/@syntac?si=4tDe0-wHwpmbNR_G",
+        "https://youtube.com/playlist?list=PLwiTZDxPg_I1beHjYIwuqZoXD6KjLnUCQ&si=ND4ZjZoIrvHHd7mq",
+        "https://youtube.com/playlist?list=PLFdQ3YMJDN9jbWIFvmjgvolBLieiUkP2o&si=CpfnVsLN4D2sDNCZ",
+        "https://youtube.com/playlist?list=PL-7t9DoIELCQwIKGAJpHHSmO30VxmLoy6&si=BAfwf2gj62-eWfZx",
+        "https://youtube.com/playlist?list=PLdx-MmfUterw3siGQKvn7hnE6_nMscQ_t&si=FAPOOUMH99esRkFx",
+        "https://www.youtube.com/playlist?list=PLxBP4SL7zdxpRxe1EvOVfFtHgENMDoFMN",
+        "https://youtube.com/playlist?list=PL7RtZMiaOk8jQosb7kCBpsWqE7szfd3gc&si=bf5U8RusYT75XqHL"
       ],
-      "shuffle": "full",
+      "shuffle": "partial",
       "blockSize": 4,
       "order": "oldest",
       "scanCount": 60,
