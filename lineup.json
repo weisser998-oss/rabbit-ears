@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793299738582,
+  "updated": 1793299796828,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -107,6 +107,20 @@
       "name": "HGTV",
       "sources": [
         "@hgtv"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 1000,
+      "scanMode": "recent",
+      "skipShort": true,
+      "breaks": "between"
+    },
+    {
+      "id": "xa0fd1f2",
+      "name": "The Food Network",
+      "sources": [
+        "@foodnetwork"
       ],
       "shuffle": "full",
       "blockSize": 3,
