@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793299850353,
+  "updated": 1793299956371,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -135,6 +135,20 @@
       "name": "TLC",
       "sources": [
         "@tlc"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 1000,
+      "scanMode": "recent",
+      "skipShort": true,
+      "breaks": "between"
+    },
+    {
+      "id": "d6mzvto2",
+      "name": "PBS",
+      "sources": [
+        "@pbs"
       ],
       "shuffle": "full",
       "blockSize": 3,
