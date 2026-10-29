@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793299560466,
+  "updated": 1793299585645,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -45,9 +45,6 @@
       "id": "42f4upxm",
       "name": "Americana",
       "sources": [
-        "@townsends",
-        "@PeriscopeFilm",
-        "@smithsonianchannel",
         "https://www.youtube.com/playlist?list=PLLzowVyQHcXsT7aPbH9lHe-op8drsg4FE",
         "@petersantenello",
         "@rocanews"
