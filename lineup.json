@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793299165058,
+  "updated": 1793299507388,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -57,6 +57,23 @@
       "order": "oldest",
       "scanCount": 50,
       "scanMode": "random",
+      "skipShort": true,
+      "breaks": "between"
+    },
+    {
+      "id": "p0rw7jdn",
+      "name": "Outdoors",
+      "sources": [
+        "@mcqbushcraft",
+        "@primitiveskillsnet",
+        "@bertramcraftandwilderness",
+        "@outdoorboys"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 50,
+      "scanMode": "recent",
       "skipShort": true,
       "breaks": "between"
     }
