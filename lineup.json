@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793299585645,
+  "updated": 1793299667736,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -71,6 +71,20 @@
       "order": "oldest",
       "scanCount": 50,
       "scanMode": "random",
+      "skipShort": true,
+      "breaks": "between"
+    },
+    {
+      "id": "kaa6ihok",
+      "name": "Discovery Channel",
+      "sources": [
+        "@discovery"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 1000,
+      "scanMode": "recent",
       "skipShort": true,
       "breaks": "between"
     }
