@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793295514095,
+  "updated": 1793299165058,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -17,7 +17,7 @@
       "shuffle": "partial",
       "blockSize": 4,
       "order": "oldest",
-      "scanCount": 60,
+      "scanCount": 50,
       "scanMode": "recent",
       "skipShort": true,
       "breaks": "between"
@@ -28,12 +28,15 @@
       "sources": [
         "@CinemaSins",
         "@vanityfair",
-        "@WIRED"
+        "https://www.youtube.com/playlist?list=PLAzrgbu8gEMIIK3r4Se1dOZWSZzUSadfZ",
+        "https://www.youtube.com/playlist?list=PLmMXd0nY6NHwTnljzl6Qxqnfw0LkwL5Ue",
+        "@thebasementyard",
+        "@deepdiveproductions"
       ],
       "shuffle": "full",
       "blockSize": 3,
       "order": "oldest",
-      "scanCount": 40,
+      "scanCount": 50,
       "scanMode": "random",
       "skipShort": true,
       "breaks": "between"
@@ -44,7 +47,10 @@
       "sources": [
         "@townsends",
         "@PeriscopeFilm",
-        "@smithsonianchannel"
+        "@smithsonianchannel",
+        "https://www.youtube.com/playlist?list=PLLzowVyQHcXsT7aPbH9lHe-op8drsg4FE",
+        "@petersantenello",
+        "@rocanews"
       ],
       "shuffle": "full",
       "blockSize": 3,
