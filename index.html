@@ -263,6 +263,28 @@ textarea { resize: vertical; font-family: ui-monospace, "SF Mono", Menlo, monosp
 .ch-card[data-shuffle="full"] .only-ordered { display: none; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 label.btn { display: inline-flex; align-items: center; font-size: 13px; }
+.fieldname { font-size: 13px; font-weight: 600; }
+.src-list { display: grid; gap: 6px; }
+.src-row {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  padding: 6px 6px 6px 8px; background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+}
+.src-thumb {
+  flex: none; width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: var(--field-hi);
+  display: grid; place-items: center; color: var(--dim); font: 22px/1 var(--font-osd);
+}
+.src-thumb.playlist, .src-thumb.video { width: 56px; height: 32px; border-radius: 4px; }
+.src-thumb.local { border-radius: 6px; color: var(--osd); }
+.src-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.src-text { flex: 1; min-width: 0; display: grid; }
+.src-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.src-sub { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.src-sub.err { color: var(--danger); }
+.src-del { flex: none; width: 36px; min-height: 36px; padding: 0; display: grid; place-items: center; font-size: 18px; }
+.src-add { display: flex; gap: 8px; }
+.src-add input { flex: 1; min-width: 0; }
+.src-folders { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.src-folders .btn { min-height: 32px; padding: 4px 10px; font-size: 12.5px; }
 .files { display: grid; gap: 14px; }
 .files h3 { margin: 0 0 6px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); }
 .file-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); min-width: 0; }
@@ -398,10 +420,9 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
 
   <section>
     <h2>Commercials</h2>
-    <label for="adLinks">Commercial links
-      <textarea id="adLinks" rows="4" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="https://www.youtube.com/playlist?list=…&#10;https://youtu.be/…"></textarea>
-    </label>
-    <p class="hint">One per line: playlists, channels or single videos of commercials. Long compilations work too: each break plays a slice of one. Try searching YouTube for "90s commercials compilation". Turn breaks on for each channel in its settings above.</p>
+    <div class="fieldname">Commercial links</div>
+    <div id="adsEditor"></div>
+    <p class="hint">Playlists, channels or single videos of commercials. Long compilations work too: each break plays a slice of one. Try searching YouTube for "90s commercials compilation". Turn breaks on for each channel in its settings above.</p>
     <label for="breakLen">Break length
       <select id="breakLen">
         <option value="1">1 minute</option>
@@ -523,9 +544,9 @@ function defaults() {
     ads: [], breakLen: 2, lineupUpdated: 0, catalog: [], deviceId: uid(),
     channels: [
       newChannel({ name: "Video Game Playthroughs", sources: ["@GameGrumps", "@Markiplier", "@jacksepticeye"],
-                   shuffle: "partial", blockSize: 4, order: "oldest", scanCount: 60, scanMode: "recent" }),
+                   shuffle: "partial", blockSize: 4, order: "oldest", scanCount: 50, scanMode: "recent" }),
       newChannel({ name: "Pop Culture", sources: ["@CinemaSins", "@vanityfair", "@WIRED"],
-                   shuffle: "full", scanCount: 40, scanMode: "random" }),
+                   shuffle: "full", scanCount: 50, scanMode: "random" }),
       newChannel({ name: "Americana", sources: ["@townsends", "@PeriscopeFilm", "@smithsonianchannel"],
                    shuffle: "full", scanCount: 50, scanMode: "random" }),
     ],
@@ -1572,6 +1593,160 @@ function syncStatus() {
 
 /* ---------- settings ---------- */
 
+/* link editor: shows each link by its YouTube name instead of the raw URL */
+
+const NAMES_KEY = "rabbit-ears-names-v1";
+const names = load(NAMES_KEY) || {}; // "handle:@x" | "channelId:UC…" | "playlist:PL…" | "video:…" -> { title, sub, thumb } or { err, at }
+const srcKey = s => s && s.type !== "local" && s.type !== "unknown" ? `${s.type}:${s.id}` : null;
+let draftAds = [];
+const editorList = id => id === "ads" ? draftAds : draft[+id.slice(3)].sources;
+
+// Store links in a tidy form: tracking bits like ?si= are dropped.
+function cleanSource(raw) {
+  const s = parseSource(raw);
+  if (!s || s.type === "unknown") return null;
+  return { local: `local:${s.folder}`, handle: s.id, channelId: `https://www.youtube.com/channel/${s.id}`,
+           user: `https://www.youtube.com/user/${s.id}`, playlist: `https://www.youtube.com/playlist?list=${s.id}`,
+           video: `https://youtu.be/${s.id}` }[s.type];
+}
+
+function srcInfo(raw) {
+  const s = parseSource(raw), kind = s?.type || "unknown";
+  if (kind === "local") {
+    const n = effCatalog.filter(f => !s.folder || f.folder.toLowerCase() === s.folder.toLowerCase()).length;
+    return { kind: "local", title: s.folder || "All your video files", sub: `Your video files · ${n} ${n === 1 ? "video" : "videos"}` };
+  }
+  if (kind === "unknown") return { kind, title: raw, sub: "Not a YouTube link. Remove it and paste a channel, playlist or video.", err: true };
+  const label = { handle: "YouTube channel", channelId: "YouTube channel", user: "YouTube channel", playlist: "Playlist", video: "Single video" }[kind];
+  const n = names[srcKey(s)];
+  if (n && !n.err) return { kind: kind === "playlist" || kind === "video" ? kind : "channel", title: n.title, sub: [label, n.sub].filter(Boolean).join(" · "), thumb: n.thumb };
+  const fallback = kind === "handle" ? s.id : kind === "playlist" ? "Playlist" : kind === "video" ? "Video" : s.id;
+  if (n?.err) return { kind: "channel", title: fallback, sub: n.err, err: true };
+  return { kind: kind === "playlist" || kind === "video" ? kind : "channel", title: fallback, sub: state.apiKey ? `${label} · looking up name…` : label };
+}
+
+function sourceRows(id, list) {
+  return list.map((raw, j) => {
+    const info = srcInfo(raw);
+    const pic = info.thumb ? `<img src="${esc(info.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : info.kind === "local" ? "▤" : info.kind === "playlist" ? "≡" : info.kind === "video" ? "▶" : "@";
+    return `<div class="src-row" title="${esc(raw)}"><span class="src-thumb ${info.kind}">${pic}</span>
+      <span class="src-text"><span class="src-name">${esc(info.title)}</span><span class="src-sub${info.err ? " err" : ""}">${esc(info.sub)}</span></span>
+      <button type="button" class="btn src-del" data-src-del="${j}" data-editor="${id}" aria-label="Remove ${esc(info.title)}">×</button></div>`;
+  }).join("") || `<p class="hint">Nothing added yet.</p>`;
+}
+const sourceEditor = (id, list) => `<div class="src-editor" data-editor-box="${id}" style="display:grid;gap:8px">${sourceEditorInner(id, list)}</div>`;
+function sourceEditorInner(id, list) {
+  const folders = [...new Set(effCatalog.map(f => f.folder))].filter(f => !list.some(r => r.toLowerCase() === `local:${f}`.toLowerCase()));
+  return `<div class="src-list" data-list="${id}">${sourceRows(id, list)}</div>
+    <div class="src-add"><input type="text" class="f-newsrc" id="new-${id}" data-editor="${id}" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Paste a YouTube link or @handle" aria-label="Add a YouTube link">
+      <button type="button" class="btn" data-src-add="${id}">Add</button></div>
+    <p class="err" data-src-msg="${id}" hidden></p>
+    ${id !== "ads" && folders.length ? `<div class="src-folders"><span class="hint">Your video folders:</span>${folders.map(f => `<button type="button" class="btn" data-src-folder="${esc(f)}" data-editor="${id}">+ ${esc(f || "All files")}</button>`).join("")}</div>` : ""}`;
+}
+function refreshEditors() {
+  $$(".src-list[data-list]").forEach(el => { el.innerHTML = sourceRows(el.dataset.list, editorList(el.dataset.list)); });
+}
+
+function addSource(id, raw) {
+  const msg = document.querySelector(`[data-src-msg="${id}"]`);
+  raw = raw.trim();
+  if (!raw) return true;
+  const clean = cleanSource(raw);
+  if (!clean) { msg.textContent = "That doesn't look like a YouTube channel, playlist or video link."; msg.hidden = false; return false; }
+  const list = editorList(id);
+  if (!list.some(r => cleanSource(r) === clean)) list.push(clean);
+  msg.hidden = true;
+  return true;
+}
+// Re-render one editor (keeps everything else in the form as typed).
+function redrawEditor(id) {
+  const box = document.querySelector(`[data-editor-box="${id}"]`);
+  if (!box) return;
+  const typed = document.getElementById(`new-${id}`)?.value || "";
+  box.innerHTML = sourceEditorInner(id, editorList(id));
+  document.getElementById(`new-${id}`).value = typed;
+  resolveNames();
+}
+
+document.addEventListener("click", e => {
+  const add = e.target.closest("[data-src-add]"), del = e.target.closest("[data-src-del]"), fold = e.target.closest("[data-src-folder]");
+  if (!add && !del && !fold) return;
+  const id = (add || del || fold).dataset.srcAdd || (del || fold).dataset.editor;
+  if (add) {
+    const input = document.getElementById(`new-${id}`);
+    if (!addSource(id, input.value)) return;
+    input.value = "";
+  }
+  if (del) editorList(id).splice(+del.dataset.srcDel, 1);
+  if (fold) editorList(id).push(`local:${fold.dataset.srcFolder}`);
+  redrawEditor(id);
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" || !e.target.matches(".f-newsrc")) return;
+  e.preventDefault();
+  document.querySelector(`[data-src-add="${e.target.dataset.editor}"]`).click();
+});
+// Anything left in an "Add" box when saving gets added too.
+function takePendingLinks() {
+  $$(".f-newsrc").forEach(input => { if (input.value.trim() && addSource(input.dataset.editor, input.value)) input.value = ""; });
+}
+
+// Look up names for links we haven't named yet (one API call per batch).
+let resolving = false;
+async function resolveNames() {
+  if (resolving || !state.apiKey) return;
+  const all = [...draft.flatMap(c => c.sources), ...draftAds].map(parseSource).filter(s => {
+    const k = srcKey(s), n = k && names[k];
+    return k && (!n || (n.err && Date.now() - n.at > 864e5));
+  });
+  if (!all.length) return;
+  resolving = true;
+  const put = (s, v) => { names[srcKey(s)] = v; };
+  const thumb = sn => sn?.thumbnails?.default?.url || "";
+  try {
+    for (const s of all.filter(s => s.type === "handle" || s.type === "user")) {
+      try {
+        const j = await yt("channels", { part: "snippet", [s.type === "handle" ? "forHandle" : "forUsername"]: s.id });
+        const c = j.items?.[0];
+        put(s, c ? { title: c.snippet.title, sub: s.type === "handle" ? s.id : "", thumb: thumb(c.snippet) } : { err: "Couldn't find this channel on YouTube.", at: Date.now() });
+      } catch (e) { put(s, { err: e.message, at: Date.now() }); }
+    }
+    const batch = async (type, path, part, fill) => {
+      const list = all.filter(s => s.type === type);
+      for (let i = 0; i < list.length; i += 50) {
+        const chunk = list.slice(i, i + 50);
+        try {
+          const j = await yt(path, { part, id: chunk.map(s => s.id).join(","), maxResults: 50 });
+          const byId = new Map((j.items || []).map(x => [x.id, x]));
+          for (const s of chunk) { const x = byId.get(s.id); put(s, x ? fill(x) : { err: `Couldn't find this ${type === "video" ? "video" : type === "playlist" ? "playlist" : "channel"}. It may be private or deleted.`, at: Date.now() }); }
+        } catch (e) { chunk.forEach(s => put(s, { err: e.message, at: Date.now() })); }
+      }
+    };
+    await batch("channelId", "channels", "snippet", c => ({ title: c.snippet.title, sub: "", thumb: thumb(c.snippet) }));
+    await batch("playlist", "playlists", "snippet,contentDetails", p => ({ title: p.snippet.title, sub: `${p.contentDetails.itemCount} videos · by ${p.snippet.channelTitle}`, thumb: thumb(p.snippet) }));
+    await batch("video", "videos", "snippet", v => ({ title: v.snippet.title, sub: `by ${v.snippet.channelTitle}`, thumb: thumb(v.snippet) }));
+  } finally {
+    resolving = false;
+    store(NAMES_KEY, names);
+    if (!$("#settings").hidden) refreshEditors();
+  }
+}
+
+// "Which videos" combines how many videos to take from each link with whether they're the newest or a random mix.
+const PICKS = [
+  ["recent:25", "Newest 25"], ["recent:50", "Newest 50"], ["recent:100", "Newest 100"],
+  ["random:50", "Random mix of 50"], ["random:150", "Random mix of 150"], ["recent:1000", "Everything (up to 1,000)"],
+];
+function pickFor(ch) {
+  // Lineups saved before this setting existed get the closest choice.
+  if (ch.scanMode === "random") return ch.scanCount <= 90 ? "random:50" : "random:150";
+  return ch.scanCount <= 37 ? "recent:25" : ch.scanCount <= 75 ? "recent:50" : ch.scanCount <= 300 ? "recent:100" : "recent:1000";
+}
+function pickSettings(v) {
+  const [scanMode, n] = v.split(":");
+  return { scanMode, scanCount: +n };
+}
+
 let draft = [];
 const shuffleHint = ch => ({
   full: "Every video plays in random order.",
@@ -1592,10 +1767,8 @@ function renderChannels() {
           <button type="button" class="btn danger" data-act="del">Delete</button>
         </div>
       </div>
-      <label for="src-${ch.id}">Links
-        <textarea id="src-${ch.id}" class="f-sources" rows="4" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="@channelhandle&#10;https://www.youtube.com/playlist?list=…&#10;https://youtu.be/…">${esc(ch.sources.join("\n"))}</textarea>
-      </label>
-      <p class="hint">One per line: a YouTube channel (@handle or link), a playlist, or a single video.</p>
+      <div class="fieldname">What's on this channel</div>
+      ${sourceEditor(`ch-${i}`, ch.sources)}
       <div class="grid">
         <label for="shuf-${ch.id}">Shuffle
           <select id="shuf-${ch.id}" class="f-shuffle">
@@ -1608,11 +1781,8 @@ function renderChannels() {
         <label class="only-ordered" for="ord-${ch.id}">Play order
           <select id="ord-${ch.id}" class="f-order">${opt("oldest", ch.order, "Oldest first")}${opt("newest", ch.order, "Newest first")}</select>
         </label>
-        <label for="cnt-${ch.id}">Videos to scan per link
-          <input type="number" inputmode="numeric" id="cnt-${ch.id}" class="f-count" min="1" max="500" value="${ch.scanCount}">
-        </label>
-        <label for="mode-${ch.id}">Which videos
-          <select id="mode-${ch.id}" class="f-mode">${opt("recent", ch.scanMode, "Most recent")}${opt("random", ch.scanMode, "Random")}</select>
+        <label for="pick-${ch.id}">Which videos
+          <select id="pick-${ch.id}" class="f-pick">${PICKS.map(([v, label]) => opt(v, pickFor(ch), label)).join("")}</select>
         </label>
         <label for="brk-${ch.id}">Commercial breaks
           <select id="brk-${ch.id}" class="f-breaks">
@@ -1631,12 +1801,10 @@ function readChannels() {
     const clamp = (v, lo, hi, d) => Math.min(hi, Math.max(lo, Math.round(+v) || d));
     Object.assign(ch, {
       name: q(".f-name").value.trim() || "Untitled",
-      sources: q(".f-sources").value.split("\n").map(s => s.trim()).filter(Boolean),
       shuffle: q(".f-shuffle").value,
       blockSize: clamp(q(".f-block").value, 2, 50, 3),
       order: q(".f-order").value,
-      scanCount: clamp(q(".f-count").value, 1, 500, 50),
-      scanMode: q(".f-mode").value,
+      ...pickSettings(q(".f-pick").value),
       breaks: q(".f-breaks").value,
       skipShort: q(".f-short").checked,
     });
@@ -1650,19 +1818,21 @@ function openSettings() {
   $("#ghToken").value = state.ghToken;
   $("#preload").value = state.preload;
   $("#staticSound").checked = state.staticSound;
-  $("#adLinks").value = state.ads.join("\n");
+  draftAds = [...state.ads];
+  $("#adsEditor").innerHTML = sourceEditor("ads", draftAds);
   $("#breakLen").value = String(state.breakLen);
   $("#backup").value = ""; $("#backupMsg").hidden = true; $("#syncMsg").hidden = true;
   syncStatus();
   renderChannels();
   renderFiles();
+  resolveNames();
   $("#settings").hidden = false;
   $("#settings").scrollTop = 0;
   document.body.classList.add("panel-open");
 }
 
 $("#chList").addEventListener("change", e => {
-  if (!e.target.matches(".f-shuffle, .f-mode, .f-block")) return;
+  if (!e.target.matches(".f-shuffle, .f-pick, .f-block")) return;
   readChannels();
   const card = e.target.closest(".ch-card"), ch = draft[+card.dataset.i];
   card.dataset.shuffle = ch.shuffle;
@@ -1686,8 +1856,9 @@ $("#addCh").onclick = () => {
   $("#chList").lastElementChild?.querySelector(".f-name")?.select();
 };
 $("#exportBtn").onclick = async () => {
+  takePendingLinks();
   readChannels();
-  const text = JSON.stringify({ rabbitEars: 2, channels: draft, ads: $("#adLinks").value.split("\n").map(s => s.trim()).filter(Boolean), breakLen: +$("#breakLen").value });
+  const text = JSON.stringify({ rabbitEars: 2, channels: draft, ads: draftAds, breakLen: +$("#breakLen").value });
   $("#backup").value = text;
   try { await navigator.clipboard.writeText(text); toast("Lineup copied."); }
   catch { $("#backup").select(); toast("Lineup is selected in the box. Copy it from there."); }
@@ -1698,7 +1869,7 @@ $("#importBtn").onclick = () => {
     const j = JSON.parse($("#backup").value);
     if (!Array.isArray(j.channels)) throw 0;
     draft = j.channels.map(c => newChannel({ ...c, sources: Array.isArray(c.sources) ? c.sources.map(String) : [] }));
-    if (Array.isArray(j.ads)) $("#adLinks").value = j.ads.join("\n");
+    if (Array.isArray(j.ads)) { draftAds = j.ads.map(String); $("#adsEditor").innerHTML = sourceEditor("ads", draftAds); }
     if (j.breakLen) $("#breakLen").value = String(Math.min(4, Math.max(1, +j.breakLen)));
     renderChannels(); msg.hidden = true;
     toast(`Imported ${draft.length} channels. Save to keep them.`);
@@ -1803,6 +1974,7 @@ $("#downloadBtn").onclick = () => { readChannels(); downloadLineup(); };
 
 $("#settings").addEventListener("submit", e => {
   e.preventDefault();
+  takePendingLinks();
   readChannels();
   const oldSig = lineupSig(), oldAds = scanKey(adsChannel()), oldBreak = state.breakLen;
   const oldById = new Map(chs().map(c => [c.id, scanKey(c) + queueKey(c)]));
@@ -1812,7 +1984,7 @@ $("#settings").addEventListener("submit", e => {
   state.ghToken = $("#ghToken").value.trim();
   state.preload = $("#preload").value;
   state.staticSound = $("#staticSound").checked;
-  state.ads = $("#adLinks").value.split("\n").map(s => s.trim()).filter(Boolean);
+  state.ads = [...draftAds];
   state.breakLen = +$("#breakLen").value;
   state.channels = draft;
   if (rescanAll) { cache = {}; saveCache(); rescanAll = false; }
