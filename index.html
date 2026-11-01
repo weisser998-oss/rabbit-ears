@@ -1465,9 +1465,25 @@ function playAt(s, sch, t = Date.now()) {
       : it.v.local && !canPlay(it.v) ? "This channel's video files aren't on this device." : "None of this channel's videos would play.");
     return;
   }
-  const v = pool[Math.random() * pool.length | 0], need = (it.end - Date.now()) / 1000;
-  const from = v.dur > need + 30 ? Math.floor(Math.random() * (v.dur - need)) : 0;
-  loadInto(s, sch, it, v, from, v.dur, true);
+  const f = fillerAt(it, pool, t);
+  const into = Math.max(0, (Date.now() - f.start) / 1000);
+  loadInto(s, sch, it, f.v, Math.floor(f.from + into), f.from + (f.end - f.start) / 1000, true);
+}
+
+// The stand-ins for a slot whose video can't play are picked from a seed made from the slot itself, so tuning
+// away and back (or watching on another device) finds the same stand-in, already partway through like any show.
+// If one stand-in is shorter than the slot, more follow it until the slot is over.
+function fillerAt(it, pool, t) {
+  const rand = seeded(hashStr(`${it.start}|${it.v.id}|filler`));
+  const slot = (it.end - it.start) / 1000;
+  let at = it.start;
+  for (let k = 0; ; k++) {
+    const v = pool[rand() * pool.length | 0];
+    const from = k === 0 && v.dur > slot + 30 ? Math.floor(rand() * (v.dur - slot)) : 0;
+    const end = Math.min(at + (v.dur - from) * 1000, it.end);
+    if (t < end || end >= it.end || k > 60) return { v, from, start: at, end };
+    at = end;
+  }
 }
 
 async function advance(s, ended) {
