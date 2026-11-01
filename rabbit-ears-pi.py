@@ -40,7 +40,7 @@ DIRECT_AUDIO = {None, "aac", "mp3", "opus", "vorbis"}
 SCAN_EVERY = 60
 
 library = {"files": [], "converting": [], "by_path": {}}
-power = {"presses": 0, "watching": False}
+power = {"presses": 0, "keys": 0, "watching": False}
 lock = threading.Lock()
 
 
@@ -219,12 +219,19 @@ def power_loop():
                 continue
             for i in range(0, len(data) - EVENT.size + 1, EVENT.size):
                 _, _, typ, code, value = EVENT.unpack_from(data, i)
-                # One press can arrive as more than one key (some remotes send power and sleep together).
-                if typ == 1 and code in (KEY_POWER, KEY_SLEEP, KEY_SUSPEND) and value == 1 and time.time() - last_press > 0.6:
-                    last_press = time.time()
+                if typ != 1 or value != 1:  # key presses only (not releases or held-down repeats)
+                    continue
+                if code in (KEY_POWER, KEY_SLEEP, KEY_SUSPEND):
+                    # One press can arrive as more than one key (some remotes send power and sleep together).
+                    if time.time() - last_press > 0.6:
+                        last_press = time.time()
+                        with lock:
+                            power["presses"] += 1
+                        log("power button pressed")
+                else:
+                    # Any other button: lets the app wake from rest even if the browser doesn't get the key.
                     with lock:
-                        power["presses"] += 1
-                    log("power button pressed")
+                        power["keys"] += 1
 
 
 def library_loop():

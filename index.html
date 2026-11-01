@@ -2947,7 +2947,7 @@ $("#qList").addEventListener("click", e => {
    The remote's power button blanks the screen and stops every player, so nothing streams in the background.
    Any button brings it back, tuned to wherever the current channel is now. */
 
-let resting = false, piPowerSeen = null, piPowerWatched = false;
+let resting = false, piPowerSeen = null, piKeysSeen = null, piPowerWatched = false;
 function rest() {
   if (resting) return;
   resting = true;
@@ -2974,7 +2974,9 @@ async function pollPowerButton() {
     const j = await (await fetch("/api/power", { cache: "no-store" })).json();
     piPowerWatched = !!j.watching;
     if (piPowerSeen !== null && j.presses > piPowerSeen) resting ? wakeFromRest() : rest();
-    piPowerSeen = j.presses;
+    // While resting, any button on the remote wakes it (the helper sees the button even if the browser doesn't).
+    else if (resting && piKeysSeen !== null && (j.keys || 0) > piKeysSeen) wakeFromRest();
+    piPowerSeen = j.presses; piKeysSeen = j.keys || 0;
   } catch {}
 }
 
@@ -3007,7 +3009,7 @@ refreshCatalog();
     $("#powerKeyWrap").hidden = !!state.apiKey;
     await loadPiLibrary();
     setInterval(loadPiLibrary, 60e3);
-    setInterval(pollPowerButton, 1000);
+    setInterval(pollPowerButton, 500);
     // A remote's Back button would otherwise leave the page.
     history.pushState({ rabbitEars: 1 }, "");
     addEventListener("popstate", () => { closePanels(); history.pushState({ rabbitEars: 1 }, ""); });
