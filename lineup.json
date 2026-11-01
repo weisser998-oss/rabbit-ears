@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793549626309,
+  "updated": 1793549887154,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -126,7 +126,10 @@
         "@discovery",
         "@OutdoorBoys",
         "@PolissyaBushcraft",
-        "@OvensRockyMountainBushcraft"
+        "@OvensRockyMountainBushcraft",
+        "@AstrumEarth",
+        "@NatGeo",
+        "@bbcearth"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -135,7 +138,29 @@
       "scanMode": "recent",
       "minLen": 300,
       "maxLen": 0,
-      "linkOpts": {},
+      "linkOpts": {
+        "@NatGeo": {
+          "pick": "recent:1000",
+          "minLen": 1200,
+          "maxLen": 7200,
+          "shuffle": "full",
+          "blockSize": 3
+        },
+        "@discovery": {
+          "pick": "recent:1000",
+          "minLen": 1200,
+          "maxLen": 7200,
+          "shuffle": "full",
+          "blockSize": 3
+        },
+        "@bbcearth": {
+          "pick": "recent:1000",
+          "minLen": 1200,
+          "maxLen": 7200,
+          "shuffle": "full",
+          "blockSize": 3
+        }
+      },
       "breaks": "between",
       "kind": "tv",
       "display": "video",
@@ -173,7 +198,8 @@
         "@Homeworthy",
         "@Homesteadyshow",
         "https://www.youtube.com/channel/UChmxGAJgT_FnZNW_7CRP2Og",
-        "@Archdigest"
+        "@Archdigest",
+        "@SpaceMakerMethod"
       ],
       "shuffle": "full",
       "blockSize": 3,
