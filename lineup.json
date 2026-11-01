@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793549887154,
+  "updated": 1793550485336,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -129,7 +129,8 @@
         "@OvensRockyMountainBushcraft",
         "@AstrumEarth",
         "@NatGeo",
-        "@bbcearth"
+        "@bbcearth",
+        "https://www.youtube.com/playlist?list=PLP6xA_SBHbyg"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -159,6 +160,13 @@
           "maxLen": 7200,
           "shuffle": "full",
           "blockSize": 3
+        },
+        "https://www.youtube.com/playlist?list=PLP6xA_SBHbyg": {
+          "pick": "recent:1000",
+          "minLen": 0,
+          "maxLen": 0,
+          "shuffle": "partial",
+          "blockSize": 3
         }
       },
       "breaks": "between",
@@ -173,7 +181,11 @@
       "name": "History Channel",
       "sources": [
         "@history",
-        "@OTRontheroad"
+        "@OTRontheroad",
+        "@HeyHistorically",
+        "@this_is_history",
+        "@BBCTimestamp",
+        "@townsends"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -181,8 +193,23 @@
       "scanCount": 1000,
       "scanMode": "recent",
       "minLen": 300,
-      "maxLen": 0,
-      "linkOpts": {},
+      "maxLen": 7200,
+      "linkOpts": {
+        "@history": {
+          "pick": "recent:1000",
+          "minLen": 1200,
+          "maxLen": 7200,
+          "shuffle": "full",
+          "blockSize": 3
+        },
+        "@BBCTimestamp": {
+          "pick": "recent:1000",
+          "minLen": 300,
+          "maxLen": 7200,
+          "shuffle": "full",
+          "blockSize": 3
+        }
+      },
       "breaks": "between",
       "kind": "tv",
       "display": "video",
