@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793553334671,
+  "updated": 1793553823350,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -167,12 +167,15 @@
     },
     {
       "id": "42f4upxm",
-      "name": "Americana",
+      "name": "America and More",
       "sources": [
         "https://www.youtube.com/playlist?list=PLLzowVyQHcXsT7aPbH9lHe-op8drsg4FE",
         "@petersantenello",
         "@rocanews",
-        "@TravelingRobert"
+        "@TravelingRobert",
+        "@RoadshowPBS",
+        "@TreasureHuntingWithJebus",
+        "@YesTheory"
       ],
       "shuffle": "full",
       "blockSize": 3,
