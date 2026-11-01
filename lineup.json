@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793552871534,
+  "updated": 1793553264788,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -200,7 +200,9 @@
         "@NatGeo",
         "@bbcearth",
         "https://www.youtube.com/playlist?list=PLP6xA_SBHbyg",
-        "@NaturalWorldFacts"
+        "@NaturalWorldFacts",
+        "@menwiththepot",
+        "@mr.scienceYT"
       ],
       "shuffle": "full",
       "blockSize": 3,
