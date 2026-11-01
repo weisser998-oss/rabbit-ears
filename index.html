@@ -920,6 +920,8 @@ function parseSource(raw) {
   const s = raw.trim(); let m;
   if (!s) return null;
   if ((m = s.match(/^local:\s*(.*)$/i))) return { type: "local", folder: m[1].trim() };
+  if ((m = s.match(/archive\.org\/details\/(@[\w.\-]+)/i))) return { type: "iaAccount", id: m[1].toLowerCase() };
+  if ((m = s.match(/archive\.org\/(?:details|download|embed)\/([^/?#\s]+)/i))) return { type: "iaItem", id: decodeURIComponent(m[1]) };
   if ((m = s.match(/[?&]list=([\w-]+)/))) return { type: "playlist", id: m[1] };
   if ((m = s.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/live\/|\/embed\/)([\w-]{11})/))) return { type: "video", id: m[1] };
   if ((m = s.match(/(?:\/channel\/|^)(UC[\w-]{22})\b/))) return { type: "channelId", id: m[1] };
@@ -966,6 +968,7 @@ const lengthOk = (dur, ls) => dur > 0 && dur >= ls.minLen && (!ls.maxLen || dur 
 // Videos published after the day started wait until tomorrow, and "random" picks use a seed made
 // from the lineup and the date, so every device gets the same list.
 async function scanSource(src, raw, chIn, ds) {
+  if (src.type === "iaAccount" || src.type === "iaItem") return scanArchive(src, raw, chIn, ds);
   const ch = linkSettings(chIn, raw);
   let cands;
   if (src.type === "video") cands = [{ id: src.id, at: "" }];
@@ -997,10 +1000,86 @@ async function scanSource(src, raw, chIn, ds) {
   return out;
 }
 
+/* ---------- Internet Archive ----------
+   Accounts (archive.org/details/@name), collections and single items. Videos play straight from the Archive's
+   MP4 files in the slot's <video> element; no API key needed. */
+
+async function iaJSON(url) {
+  let r;
+  try { r = await fetch(url); } catch { throw new Error("Couldn't reach the Internet Archive. Check the internet connection."); }
+  if (!r.ok) throw new Error(`The Internet Archive didn't respond (${r.status}).`);
+  return r.json();
+}
+// Everything an account has uploaded, the same list its profile page shows.
+async function iaAccountItems(account, maxPages = 50) {
+  const out = []; let total = 0;
+  for (let page = 1; page <= maxPages; page++) {
+    const j = await iaJSON(`https://archive.org/services/search/beta/page_production/?user_query=&page_type=account_details&page_target=${encodeURIComponent(account)}&page_elements=%5B%22uploads%22%5D&hits_per_page=100&page=${page}`);
+    const hits = j?.response?.body?.page_elements?.uploads?.hits;
+    if (!hits) throw new Error(`Couldn't find the Internet Archive account ${account}.`);
+    total = hits.total || 0;
+    for (const h of hits.hits || []) { const f = h.fields || {}; if (f.identifier) out.push({ id: f.identifier, at: f.addeddate || f.publicdate || "", type: f.mediatype }); }
+    if (!(hits.hits || []).length || out.length >= total) break;
+  }
+  return Object.assign(out, { total });
+}
+async function iaCollectionItems(coll) {
+  const out = [];
+  for (let page = 1; page <= 10; page++) {
+    const q = `collection:(${coll}) AND mediatype:(movies)`;
+    const j = await iaJSON(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl%5B%5D=identifier&fl%5B%5D=addeddate&sort%5B%5D=addeddate+desc&rows=100&page=${page}&output=json`);
+    const docs = j?.response?.docs || [];
+    for (const d of docs) out.push({ id: d.identifier, at: d.addeddate || "", type: "movies" });
+    if (docs.length < 100) break;
+  }
+  return out;
+}
+const iaSeconds = v => { const p = String(v || "").split(":").map(Number); return p.some(isNaN) ? 0 : p.reduce((a, b) => a * 60 + b, 0); };
+// The playable videos in one item. Items often hold the same video twice (the uploader's file and the Archive's
+// web copy); the web copy (h.264) is the one browsers can always play.
+function iaVideos(m, ident) {
+  const best = new Map(), rank = f => /h\.264/i.test(f.format || "") ? 0 : /\.mp4$/i.test(f.name) ? 1 : 2;
+  for (const f of m.files || []) {
+    if (!/\.(mp4|m4v)$/i.test(f.name || "") || f.private === "true") continue;
+    const key = f.source === "derivative" && f.original ? f.original : f.name, cur = best.get(key);
+    if (!cur || rank(f) < rank(cur)) best.set(key, f);
+  }
+  const files = [...best.values()].sort((a, b) => naturalKey(a.name).localeCompare(naturalKey(b.name)));
+  const md = m.metadata || {}, title = [].concat(md.title || ident)[0], by = [].concat(md.creator || "Internet Archive")[0];
+  return files.map(f => ({
+    id: `ia:${ident}/${f.name}`, ia: ident,
+    url: `https://archive.org/download/${encodeURIComponent(ident)}/${f.name.split("/").map(encodeURIComponent).join("/")}`,
+    title: files.length === 1 ? title : `${title}: ${prettyName(f.title || f.name.split("/").pop())}`,
+    by, at: md.addeddate || md.publicdate || "", dur: Math.round(iaSeconds(f.length)),
+  })).filter(v => v.dur > 0);
+}
+async function scanArchive(src, raw, ch, ds) {
+  const ls = linkSettings(ch, raw);
+  let items;
+  if (src.type === "iaAccount") items = await iaAccountItems(src.id);
+  else {
+    const m = await iaJSON(`https://archive.org/metadata/${encodeURIComponent(src.id)}`);
+    if (!m?.metadata) throw new Error("Couldn't find that on the Internet Archive.");
+    if (m.metadata.mediatype !== "collection") return iaVideos(m, src.id).filter(v => lengthOk(v.dur, ls)).slice(0, ls.scanCount);
+    items = await iaCollectionItems(src.id);
+  }
+  // Same list on every device: items added after today's broadcast day began wait until tomorrow.
+  items = items.filter(i => (!i.type || i.type === "movies") && (!i.at || Date.parse(i.at) < ds));
+  items.sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id));
+  if (ls.scanMode === "random") shuffle(items, seeded(hashStr(`${dayId(ds)}|${raw}|${ls.scanCount}`)));
+  const out = [];
+  for (let i = 0; i < items.length && out.length < ls.scanCount; i += 6) {
+    const metas = await Promise.all(items.slice(i, i + 6).map(it => iaJSON(`https://archive.org/metadata/${encodeURIComponent(it.id)}`).catch(() => null)));
+    metas.forEach((m, k) => { if (m) for (const v of iaVideos(m, items[i + k].id)) if (lengthOk(v.dur, ls) && out.length < ls.scanCount) out.push(v); });
+  }
+  if (!out.length) throw new Error("No playable videos found there.");
+  return out;
+}
+
 /* ---------- scanned lists, one per channel per broadcast day ---------- */
 
 const scanKey = ch => JSON.stringify([ch.sources, ch.scanCount, ch.scanMode, ch.minLen, ch.maxLen, ch.linkOpts || {}, hasLocal(ch) ? effSig : 0]);
-const needsYouTube = ch => ch.sources.some(r => { const s = parseSource(r); return s && s.type !== "local"; });
+const needsYouTube = ch => ch.sources.some(r => { const s = parseSource(r); return s && !["local", "iaAccount", "iaItem"].includes(s.type); });
 const queueKey = ch => JSON.stringify([ch.shuffle, ch.blockSize, ch.order, ch.breaks, ch.timeMode, ch.timeMode === "blocks" ? ch.blocks : 0, ch.kind]);
 const scans = {};   // cache key -> { key, promise } while scanning
 const scanErr = {}; // channel id -> message from the last failed scan
@@ -1333,7 +1412,9 @@ let needUnmute = false, watchA = 0, watchB = 0, neighborT = 0;
 const slots = [];
 const preloadCount = () => ({ both: 2, next: 1, off: 0 }[state.preload] ?? 2);
 const chById = id => chs().find(c => c.id === id);
-const canPlay = v => v.local ? localUrls.has(v.path) : ytReady;
+const isFile = v => !!(v?.local || v?.url);
+const fileUrl = v => v.local ? localUrls.get(v.path) : v.url;
+const canPlay = v => v.local ? localUrls.has(v.path) : v.url ? true : ytReady;
 const skipVideo = v => isBad(v.id) || !canPlay(v);
 
 window.onYouTubeIframeAPIReady = () => {
@@ -1416,13 +1497,13 @@ function loadInto(s, sch, it, v, startSec, endSec, filler = false) {
   clearTimeout(s.timer);
   // Move on when this item's time slot is over, even if the player never reports that it ended.
   s.timer = setTimeout(() => advance(s, true), Math.max(1000, it.end - Date.now() + 2000));
-  s.el.classList.toggle("local", !!v.local);
-  if (s === active) markYouTube(!v.local);
+  s.el.classList.toggle("local", isFile(v));
+  if (s === active) markYouTube(!isFile(v));
   if (s === active) { updateNow(); renderGuide(); }
-  if (v.local) {
+  if (isFile(v)) {
     s.mode = "local";
     if (s.ready) s.player.stopVideo();
-    const vid = s.video, url = localUrls.get(v.path);
+    const vid = s.video, url = fileUrl(v);
     vid.volume = state.volume / 100;
     vid.muted = s !== active || state.muted || needUnmute;
     const go = () => { if (s.seq !== my) return; try { vid.currentTime = startSec; } catch {} vid.play().catch(() => {}); };
@@ -1745,8 +1826,9 @@ function updateOverlays() {
     $("#radioTitle").textContent = it.kind === "ad" ? "Commercial break" : v?.title || "";
     $("#radioBy").textContent = it.kind === "ad" ? "" : v?.by || "";
     const art = $("#radioArt");
-    art.style.backgroundImage = v && !v.local && it.kind !== "ad" ? `url("https://i.ytimg.com/vi/${v.id}/hqdefault.jpg")` : "";
-    art.textContent = v && !v.local && it.kind !== "ad" ? "" : "♪";
+    const pic = !v || it.kind === "ad" || v.local ? "" : v.ia ? `https://archive.org/services/img/${encodeURIComponent(v.ia)}` : `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
+    art.style.backgroundImage = pic ? `url("${pic}")` : "";
+    art.textContent = pic ? "" : "♪";
   }
   if (weather) renderWeather(true);
 }
@@ -1934,7 +2016,7 @@ function recordHistory(s) {
   if (!ch || ch.kind === "weather" && !s.v) return;
   const top = history_[0];
   if (top && top.id === s.v.id && top.ch === ch.name) return;
-  history_.unshift({ id: s.v.id, title: s.it.kind === "ad" ? `Commercial: ${s.v.title}` : s.v.title, by: s.v.by, local: !!s.v.local, ch: ch.name, at: Date.now(),
+  history_.unshift({ id: s.v.id, title: s.it.kind === "ad" ? `Commercial: ${s.v.title}` : s.v.title, by: s.v.by, local: !!s.v.local, ia: s.v.ia || "", ch: ch.name, at: Date.now(),
                      from: Math.floor(s.it.from + Math.max(0, (Date.now() - s.it.start) / 1000)) });
   history_ = history_.slice(0, 300);
   store(HIST_KEY, history_);
@@ -1945,7 +2027,7 @@ function renderHistory() {
   $("#histList").innerHTML = history_.map(h => `<div class="hist-row">
       <span class="hist-time">${day(h.at)}${clock(h.at)}</span>
       <span class="hist-text"><span class="hist-title">${esc(h.title)}</span><span class="hist-sub">${esc(h.ch)} · ${esc(h.by)}</span></span>
-      ${h.local ? `<span class="hist-sub">Your file</span>` : `<a class="btn" href="https://www.youtube.com/watch?v=${encodeURIComponent(h.id)}&t=${h.from || 0}s" target="_blank" rel="noopener">Watch on YouTube</a>`}
+      ${h.local ? `<span class="hist-sub">Your file</span>` : h.ia ? `<a class="btn" href="https://archive.org/details/${encodeURIComponent(h.ia)}" target="_blank" rel="noopener">Open on the Internet Archive</a>` : `<a class="btn" href="https://www.youtube.com/watch?v=${encodeURIComponent(h.id)}&t=${h.from || 0}s" target="_blank" rel="noopener">Watch on YouTube</a>`}
     </div>`).join("") || `<p class="hint">Nothing yet. What you watch shows up here.</p>`;
 }
 function openHistory() {
@@ -2305,7 +2387,8 @@ function cleanSource(raw) {
   if (!s || s.type === "unknown") return null;
   return { local: `local:${s.folder}`, handle: s.id, channelId: `https://www.youtube.com/channel/${s.id}`,
            user: `https://www.youtube.com/user/${s.id}`, playlist: `https://www.youtube.com/playlist?list=${s.id}`,
-           video: `https://youtu.be/${s.id}` }[s.type];
+           video: `https://youtu.be/${s.id}`, iaAccount: `https://archive.org/details/${s.id}`,
+           iaItem: `https://archive.org/details/${encodeURIComponent(s.id)}` }[s.type];
 }
 
 function srcInfo(raw) {
@@ -2314,7 +2397,13 @@ function srcInfo(raw) {
     const n = effCatalog.filter(f => !s.folder || f.folder.toLowerCase() === s.folder.toLowerCase()).length;
     return { kind: "local", title: s.folder || "All your video files", sub: `Your video files · ${n} ${n === 1 ? "video" : "videos"}` };
   }
-  if (kind === "unknown") return { kind, title: raw, sub: "Not a YouTube link. Remove it and paste a channel, playlist or video.", err: true };
+  if (kind === "unknown") return { kind, title: raw, sub: "Not a YouTube or Internet Archive link. Remove it and paste a channel, playlist or video.", err: true };
+  if (kind === "iaAccount" || kind === "iaItem") {
+    const n = names[srcKey(s)], label = kind === "iaAccount" ? "Internet Archive uploads" : "Internet Archive";
+    if (n?.err) return { kind: "playlist", title: s.id, sub: n.err, err: true };
+    return { kind: "playlist", title: n?.title || s.id, sub: [label, n?.sub || "looking up name…"].join(" · "),
+             thumb: `https://archive.org/services/img/${encodeURIComponent(s.id)}` };
+  }
   const label = { handle: "YouTube channel", channelId: "YouTube channel", user: "YouTube channel", playlist: "Playlist", video: "Single video" }[kind];
   const n = names[srcKey(s)];
   if (n && !n.err) return { kind: kind === "playlist" || kind === "video" ? kind : "channel", title: n.title, sub: [label, n.sub].filter(Boolean).join(" · "), thumb: n.thumb };
@@ -2455,16 +2544,29 @@ function takePendingLinks() {
 // Look up names for links we haven't named yet (one API call per batch).
 let resolving = false;
 async function resolveNames() {
-  if (resolving || !state.apiKey) return;
-  const all = [...draft.flatMap(c => c.sources), ...draftAds].map(parseSource).filter(s => {
+  if (resolving) return;
+  const all = [...draft.flatMap(c => [...c.sources, ...(c.blocks || []).flatMap(b => b.sources || [])]), ...draftAds].map(parseSource).filter(s => {
     const k = srcKey(s), n = k && names[k];
-    return k && (!n || (n.err && Date.now() - n.at > 864e5));
+    return k && (!n || (n.err && Date.now() - n.at > 864e5)) && (state.apiKey || s.type.startsWith("ia"));
   });
   if (!all.length) return;
   resolving = true;
   const put = (s, v) => { names[srcKey(s)] = v; };
   const thumb = sn => sn?.thumbnails?.default?.url || "";
   try {
+    for (const s of all.filter(s => s.type === "iaAccount" || s.type === "iaItem")) {
+      try {
+        if (s.type === "iaAccount") {
+          const items = await iaAccountItems(s.id, 1);
+          put(s, { title: s.id, sub: `${items.total} ${items.total === 1 ? "upload" : "uploads"}` });
+        } else {
+          const m = await iaJSON(`https://archive.org/metadata/${encodeURIComponent(s.id)}`);
+          if (!m?.metadata) throw new Error("Couldn't find this on the Internet Archive.");
+          const n = m.metadata.mediatype === "collection" ? "Collection" : `${iaVideos(m, s.id).length || "No"} playable ${iaVideos(m, s.id).length === 1 ? "video" : "videos"}`;
+          put(s, { title: [].concat(m.metadata.title || s.id)[0], sub: n });
+        }
+      } catch (e) { put(s, { err: e.message, at: Date.now() }); }
+    }
     for (const s of all.filter(s => s.type === "handle" || s.type === "user")) {
       try {
         const j = await yt("channels", { part: "snippet", [s.type === "handle" ? "forHandle" : "forUsername"]: s.id });
