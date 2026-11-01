@@ -100,6 +100,35 @@ mkdir -p "$HOME/.config/labwc"
 touch "$HOME/.config/labwc/autostart"
 grep -q "rabbit-ears/kiosk.sh" "$HOME/.config/labwc/autostart" || echo "$DIR/kiosk.sh &" >> "$HOME/.config/labwc/autostart"
 
+echo
+SHARE="$(ask 'Share the video folder on your Wi-Fi, so your phone and laptop can add videos? (Y/n): ')"
+if [[ ! "$SHARE" =~ ^[Nn] ]]; then
+  say "Sharing Videos/RabbitEars on your Wi-Fi"
+  sudo apt-get install -y -qq samba
+  if ! grep -q "^\[RabbitEars\]" /etc/samba/smb.conf; then
+    sudo tee -a /etc/samba/smb.conf >/dev/null <<EOF
+
+[RabbitEars]
+   path = $HOME/Videos/RabbitEars
+   browseable = yes
+   read only = no
+   valid users = $USER
+   force user = $USER
+   create mask = 0644
+   directory mask = 0755
+EOF
+  fi
+  while true; do
+    read -r -s -p "Choose a password for the shared folder (your phone will ask for it): " PW1 </dev/tty; echo
+    read -r -s -p "Type it again: " PW2 </dev/tty; echo
+    [ -n "$PW1" ] && [ "$PW1" = "$PW2" ] && break
+    echo "Those didn't match (or were empty). Try again."
+  done
+  printf '%s\n%s\n' "$PW1" "$PW1" | sudo smbpasswd -s -a "$USER" >/dev/null
+  sudo systemctl restart smbd
+  SHARED=1
+fi
+
 say "Keeping the screen on"
 sudo raspi-config nonint do_blanking 1 2>/dev/null || true
 
@@ -119,6 +148,8 @@ One more step on your computer or phone:
 
 Put videos in  ~/Videos/RabbitEars  (one folder per show), or in a folder called
 RabbitEars on a USB drive. Then add a line like  local:Folder name  to a channel.
+
+$( [ -n "$SHARED" ] && printf 'To add videos from your phone or laptop over Wi-Fi, connect to\n    smb://%s.local   (user: %s, and the password you just chose)\nand open the RabbitEars folder.\n' "$(hostname)" "$USER" )
 
 Restart the Pi to start watching:  sudo reboot
 To get back to the desktop while it's running, press Alt+F4 on a keyboard.

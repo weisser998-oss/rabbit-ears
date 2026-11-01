@@ -55,12 +55,14 @@ button { touch-action: manipulation; }
 #app { position: fixed; inset: 0; display: flex; flex-direction: column; }
 #stage { position: fixed; inset: 0; background: #000; overflow: hidden; }
 .slot { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
-.slot.on { opacity: 1; z-index: 1; }
+.slot.on { opacity: 1; z-index: 1; pointer-events: auto; }
 .slot iframe, .slot > div, .slot video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .slot video { display: none; background: #000; object-fit: contain; }
 .slot.local video { display: block; }
 .slot.local iframe { visibility: hidden; }
 #shield { position: absolute; inset: 0; z-index: 2; touch-action: none; }
+/* Leave the bottom-right corner uncovered so YouTube's "Skip ad" button can be tapped. */
+body.yt-active #shield { clip-path: polygon(0 0, 100% 0, 100% 70%, 66% 70%, 66% 100%, 0 100%); }
 body.tap-through #shield { pointer-events: none; }
 #static {
   position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3;
@@ -1278,6 +1280,7 @@ function makeSlot() {
   slots.push(s);
   return s;
 }
+function markYouTube(on = active?.mode === "yt" && !!active?.v) { document.body.classList.toggle("yt-active", !!on); }
 function stopLocal(s) { if (s.video.getAttribute("src")) { s.video.pause(); s.video.removeAttribute("src"); s.video.load(); } }
 function clearSlot(s) {
   s.chId = null; s.sch = null; s.it = null; s.v = null; clearTimeout(s.timer); s.seq++;
@@ -1289,6 +1292,13 @@ const ytState = s => s.ready ? s.player.getPlayerState() : -1;
 const slotPlaying = s => s.mode === "local" ? !s.video.paused && s.video.readyState >= 3 : ytState(s) === YT.PlayerState.PLAYING;
 const slotStarting = s => s.mode === "local" ? !s.video.paused : [YT.PlayerState.PLAYING, YT.PlayerState.BUFFERING].includes(ytState(s));
 const slotTime = s => s.mode === "local" ? s.video.currentTime : (s.ready ? s.player.getCurrentTime?.() || 0 : 0);
+// While YouTube plays an ad, the player reports the ad's length instead of the video's. Don't seek or resume then:
+// seeking during an ad can start a new one.
+function inAd(s) {
+  if (s.mode !== "yt" || !s.ready || !s.v || s.filler) return false;
+  const d = s.player.getDuration?.() || 0;
+  return d > 0 && Math.abs(d - s.v.dur) > 3;
+}
 function slotSeek(s, t) { if (s.mode === "local") s.video.currentTime = t; else if (s.ready) s.player.seekTo(t, true); }
 function slotPlay(s) { if (s.mode === "local") s.video.play().catch(() => {}); else if (s.ready) s.player.playVideo(); }
 
@@ -1307,6 +1317,7 @@ function loadInto(s, sch, it, v, startSec, endSec, filler = false) {
   // Move on when this item's time slot is over, even if the player never reports that it ended.
   s.timer = setTimeout(() => advance(s, true), Math.max(1000, it.end - Date.now() + 2000));
   s.el.classList.toggle("local", !!v.local);
+  if (s === active) markYouTube(!v.local);
   if (s === active) { updateNow(); renderGuide(); }
   if (v.local) {
     s.mode = "local";
@@ -1334,6 +1345,7 @@ function parkSlot(s, sch, it) {
   s.timer = setTimeout(() => advance(s, true), Math.max(1000, it.end - Date.now() + 500));
   stopLocal(s); if (s.ready) s.player.stopVideo();
   if (s !== active) return;
+  markYouTube(false);
   updateNow(); renderGuide();
   if (sch.ch.kind === "weather") { staticOff(seq); scheduleNeighbors(); }
   else noSignal(`Nothing on this channel until ${clock(it.end)}.`, "OFF THE AIR");
@@ -1399,7 +1411,7 @@ function onSlotState(s, st) {
 // so pick back up where the channel is now. If the phone won't allow that without a tap, ask for one.
 let needResume = false;
 function unexpectedPause(s) {
-  if (s !== active || !s.v) return;
+  if (s !== active || !s.v || inAd(s)) return;
   const sq = s.seq;
   setTimeout(() => {
     if (s !== active || s.seq !== sq || slotStarting(s) || document.hidden) return;
@@ -1422,6 +1434,7 @@ function onSlotError(s) {
 function activate(s) {
   active = s;
   for (const o of slots) o.el.classList.toggle("on", o === s);
+  markYouTube();
   applyVolume();
   updateOverlays();
 }
@@ -1434,7 +1447,7 @@ function resync(s) {
   if (s.mode === "yt" && !s.ready) return false;
   if (!s.filler) {
     const want = s.it.from + (Date.now() - s.it.start) / 1000;
-    if (Math.abs(want - slotTime(s)) > 10) slotSeek(s, want);
+    if (Math.abs(want - slotTime(s)) > 10 && !inAd(s)) slotSeek(s, want);
   }
   const playing = slotPlaying(s);
   if (!playing) slotPlay(s);
