@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793522378404,
+  "updated": 1793547005690,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -254,6 +254,27 @@
         "lon": 9.73322,
         "label": "Hanover, Lower Saxony, Germany"
       }
+    },
+    {
+      "id": "dt7iob0y",
+      "name": "VHS",
+      "sources": [
+        "https://archive.org/details/@thevhsdude"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 50,
+      "scanMode": "recent",
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     }
   ],
   "ads": [],
