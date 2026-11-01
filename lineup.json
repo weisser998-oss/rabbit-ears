@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793299956371,
+  "updated": 1793522378404,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -19,8 +19,15 @@
       "order": "oldest",
       "scanCount": 50,
       "scanMode": "recent",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "off",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "8ttpuiio",
@@ -38,8 +45,15 @@
       "order": "oldest",
       "scanCount": 50,
       "scanMode": "random",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "42f4upxm",
@@ -54,8 +68,15 @@
       "order": "oldest",
       "scanCount": 50,
       "scanMode": "recent",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "p0rw7jdn",
@@ -71,8 +92,15 @@
       "order": "oldest",
       "scanCount": 50,
       "scanMode": "random",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "kaa6ihok",
@@ -85,8 +113,15 @@
       "order": "oldest",
       "scanCount": 1000,
       "scanMode": "recent",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "6qrf7ls2",
@@ -99,8 +134,15 @@
       "order": "oldest",
       "scanCount": 1000,
       "scanMode": "recent",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "kbbi38i9",
@@ -113,8 +155,15 @@
       "order": "oldest",
       "scanCount": 1000,
       "scanMode": "recent",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "xa0fd1f2",
@@ -127,8 +176,15 @@
       "order": "oldest",
       "scanCount": 1000,
       "scanMode": "recent",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "f3812fcf",
@@ -141,8 +197,15 @@
       "order": "oldest",
       "scanCount": 1000,
       "scanMode": "recent",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
     },
     {
       "id": "d6mzvto2",
@@ -155,8 +218,42 @@
       "order": "oldest",
       "scanCount": 1000,
       "scanMode": "recent",
-      "skipShort": true,
-      "breaks": "between"
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
+    },
+    {
+      "id": "mkdgz5vj",
+      "name": "Local Forecast",
+      "sources": [
+        "https://youtu.be/JKoGhlBU84A"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 50,
+      "scanMode": "recent",
+      "minLen": 0,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "off",
+      "kind": "weather",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": {
+        "place": "Hannover",
+        "units": "metric",
+        "lat": 52.37052,
+        "lon": 9.73322,
+        "label": "Hanover, Lower Saxony, Germany"
+      }
     }
   ],
   "ads": [],
