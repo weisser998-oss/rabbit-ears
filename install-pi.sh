@@ -21,6 +21,7 @@ fi
 say "Installing ffmpeg (for video lengths and converting to MP4)"
 sudo apt-get update -qq
 sudo apt-get install -y -qq ffmpeg python3 curl
+sudo apt-get install -y -qq wlr-randr 2>/dev/null || true
 
 CHROMIUM="$(command -v chromium-browser || command -v chromium || true)"
 if [ -z "$CHROMIUM" ]; then
@@ -35,6 +36,7 @@ curl -fsSL "${SITE}rabbit-ears-pi.py" -o "$DIR/rabbit-ears-pi.py"
 say "Settings"
 OLD_KEY="$(python3 -c "import json;print(json.load(open('$DIR/config.json')).get('apiKey',''))" 2>/dev/null || true)"
 OLD_TOKEN="$(python3 -c "import json;print(json.load(open('$DIR/config.json')).get('ghToken',''))" 2>/dev/null || true)"
+OLD_RES="$(python3 -c "import json;print(json.load(open('$DIR/config.json')).get('resolution',''))" 2>/dev/null || true)"
 echo "Paste your YouTube API key (the same one your phone uses)."
 [ -n "$OLD_KEY" ] && echo "Press Enter to keep the one you already set."
 KEY="$(ask 'YouTube API key: ')"; KEY="${KEY:-$OLD_KEY}"
@@ -42,13 +44,18 @@ echo
 echo "Optional: paste a GitHub token so the Pi can share its list of video files with your phone."
 echo "Press Enter to skip$( [ -n "$OLD_TOKEN" ] && echo ' (keeps the one you already set)')."
 TOKEN="$(ask 'GitHub token: ')"; TOKEN="${TOKEN:-$OLD_TOKEN}"
+echo
+echo "Screen resolution. A lower one makes everything bigger, and suits small screens and TVs"
+echo "connected through an HDMI-to-AV adaptor. Try 720x480 or 1280x720."
+echo "Type 'auto' to let the Pi choose. Press Enter to keep: ${OLD_RES:-auto}"
+RES="$(ask 'Resolution: ')"; RES="${RES:-$OLD_RES}"; [ "$RES" = "auto" ] && RES=""
 
-KEY="$KEY" TOKEN="$TOKEN" SITE="$SITE" PORT="$PORT" python3 - <<'PY'
+KEY="$KEY" TOKEN="$TOKEN" RES="$RES" SITE="$SITE" PORT="$PORT" python3 - <<'PY'
 import json, os
 from pathlib import Path
 p = Path.home() / ".rabbit-ears" / "config.json"
 p.write_text(json.dumps({"site": os.environ["SITE"], "port": int(os.environ["PORT"]), "apiKey": os.environ["KEY"],
-                         "ghToken": os.environ["TOKEN"], "preload": "off"}, indent=2))
+                         "ghToken": os.environ["TOKEN"], "preload": "off", "resolution": os.environ["RES"]}, indent=2))
 p.chmod(0o600)
 PY
 
@@ -80,6 +87,20 @@ cat > "$DIR/kiosk.sh" <<EOF
 exec 9>"$DIR/kiosk.lock"
 flock -n 9 || exit 0
 for i in \$(seq 1 30); do curl -fs "http://localhost:$PORT/api/config" >/dev/null && break; sleep 1; done
+# Screen resolution from config.json (empty = leave it to the Pi).
+RES="\$(python3 -c "import json;print(json.load(open('$DIR/config.json')).get('resolution',''))" 2>/dev/null)"
+if [ -n "\$RES" ]; then
+  if [ -n "\$WAYLAND_DISPLAY" ] && command -v wlr-randr >/dev/null; then
+    OUT="\$(wlr-randr | awk '/^[^ ]/{print \$1; exit}')"
+    wlr-randr --output "\$OUT" --mode "\$RES" 2>/dev/null || wlr-randr --output "\$OUT" --custom-mode "\$RES"
+  elif command -v xrandr >/dev/null; then
+    xrandr --output "\$(xrandr | awk '/ connected/{print \$1; exit}')" --mode "\$RES"
+  fi
+  sleep 1
+fi
+# Full volume: the TV's own buttons control loudness.
+wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0 2>/dev/null || true
+wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 2>/dev/null || true
 exec "$CHROMIUM" --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble \\
   --autoplay-policy=no-user-gesture-required --disable-features=Translate --overscroll-history-navigation=0 \\
   --check-for-update-interval=31536000 --password-store=basic --user-data-dir="$DIR/browser" \\
@@ -101,7 +122,12 @@ touch "$HOME/.config/labwc/autostart"
 grep -q "rabbit-ears/kiosk.sh" "$HOME/.config/labwc/autostart" || echo "$DIR/kiosk.sh &" >> "$HOME/.config/labwc/autostart"
 
 echo
-SHARE="$(ask 'Share the video folder on your Wi-Fi, so your phone and laptop can add videos? (Y/n): ')"
+if grep -qs "^\[RabbitEars\]" /etc/samba/smb.conf; then
+  echo "The video folder is already shared on your Wi-Fi."
+  SHARE=n; SHARED=1
+else
+  SHARE="$(ask 'Share the video folder on your Wi-Fi, so your phone and laptop can add videos? (Y/n): ')"
+fi
 if [[ ! "$SHARE" =~ ^[Nn] ]]; then
   say "Sharing Videos/RabbitEars on your Wi-Fi"
   sudo apt-get install -y -qq samba

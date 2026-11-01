@@ -93,7 +93,14 @@ body.static #tube { opacity: 1; }
   text-shadow: 0 0 8px rgba(141,255,158,.55), 2px 2px 0 #000;
   opacity: 0; transition: opacity .3s;
 }
-body.osd-on #osd, body.landscape.ui-on #osd { opacity: 1; }
+body.osd-on #osd, body.landscape.ui-on:not(.tv) #osd { opacity: 1; }
+/* On the Pi ("TV mode") the remote does everything, so the button bar and rocker never appear. */
+body.tv .ui { display: none !important; }
+#osd .ep { display: none; font-family: var(--font-ui); color: #fff; text-shadow: 0 1px 3px #000; margin-top: 1.5cqh; max-width: 80cqw; }
+body.tv #osd .ep { display: block; }
+#osd .ep .t { font-weight: 800; font-size: max(14px, 5.2cqh); line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+#osd .ep .m { font-size: max(11px, 3.6cqh); color: #d8dde3; margin-top: .5cqh; }
+#muted { position: absolute; z-index: 5; top: 5cqh; right: 5cqw; font: max(18px, 7cqh)/1 var(--font-osd); color: var(--osd); text-shadow: 0 0 8px rgba(141,255,158,.55), 2px 2px 0 #000; pointer-events: none; }
 body.no-signal #osd { opacity: 0 !important; }
 #osd .num { font-size: clamp(56px, 9vw, 104px); line-height: .8; }
 #osd .name { font-size: clamp(22px, 3vw, 34px); text-transform: uppercase; letter-spacing: .05em; }
@@ -108,14 +115,14 @@ body.no-signal #osd { opacity: 0 !important; }
 }
 #bug .bug-num { font-size: max(16px, 6cqh); line-height: 1; }
 #bug .bug-name { font-size: max(10px, 3cqh); text-transform: uppercase; letter-spacing: .06em; }
-body.landscape.ui-on #bug, body.static #bug { opacity: 0; }
+body.landscape.ui-on:not(.tv) #bug, body.static #bug { opacity: 0; }
 #lower {
   position: absolute; z-index: 2; left: 4cqw; bottom: 9cqh; max-width: min(70cqw, 560px); pointer-events: none;
   background: rgba(8, 10, 12, .82); border-left: 4px solid var(--accent); padding: 1.6cqh 2cqw;
   opacity: 0; transform: translateY(8px); transition: opacity .35s, transform .35s;
 }
 #lower.on { opacity: 1; transform: none; }
-body.landscape.ui-on #lower { opacity: 0; }
+body.landscape.ui-on:not(.tv) #lower, body.osd-on.tv #lower { opacity: 0; }
 .lower-label { font-size: max(10px, 2.4cqh); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 .lower-title { font-size: max(13px, 4cqh); font-weight: 800; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .lower-meta { font-size: max(10px, 2.6cqh); color: var(--dim); font-variant-numeric: tabular-nums; }
@@ -149,34 +156,36 @@ body.landscape.ui-on #lower { opacity: 0; }
   display: flex; align-items: baseline; gap: 2cqw; padding: 3cqh 4cqw 1.5cqh;
   background: linear-gradient(to bottom, rgba(0,0,0,.35), transparent);
 }
-.wx-brand { font-weight: 800; font-size: max(12px, 4.4cqh); letter-spacing: .06em; text-transform: uppercase; color: var(--wx-gold); }
-.wx-place { flex: 1; min-width: 0; font-size: max(11px, 3.4cqh); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wx-clock { font: max(14px, 5cqh)/1 var(--font-osd); font-variant-numeric: tabular-nums; }
+.wx-brand { font-weight: 800; font-size: max(14px, 6.4cqh); letter-spacing: .04em; text-transform: uppercase; color: var(--wx-gold); }
+.wx-place { flex: 1 1 0; min-width: 0; font-size: max(13px, 5cqh); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx-brand, .wx-clock { flex: none; white-space: nowrap; }
+.wx-clock { font: max(18px, 8cqh)/1 var(--font-osd); font-variant-numeric: tabular-nums; }
 .wx-main { min-height: 0; padding: 1cqh 4cqw; display: grid; }
 .wx-page { display: grid; align-content: center; gap: 2cqh; animation: wxin .5s ease; }
 @keyframes wxin { from { opacity: 0; transform: translateX(3cqw); } }
 .wx-panel { background: var(--wx-panel); border: 1px solid rgba(169,188,232,.25); border-radius: 1cqh; padding: 2.4cqh 2.6cqw; }
-.wx-now { display: grid; grid-template-columns: auto auto 1fr; gap: 3cqw; align-items: center; }
-.wx-now svg { width: 26cqh; height: 26cqh; }
-.wx-temp { font: max(36px, 24cqh)/.8 var(--font-osd); }
-.wx-cond { font-size: max(13px, 5cqh); font-weight: 800; }
-.wx-facts { display: grid; grid-template-columns: auto auto; gap: .6cqh 2.4cqw; font-size: max(11px, 3.4cqh); }
-.wx-facts dt { color: var(--wx-dim); } .wx-facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
-.wx-days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.4cqw; }
-.wx-day { text-align: center; display: grid; justify-items: center; gap: .8cqh; }
-.wx-day .d { font-weight: 800; font-size: max(11px, 3.6cqh); text-transform: uppercase; color: var(--wx-gold); }
-.wx-day svg { width: 13cqh; height: 13cqh; }
-.wx-day .c { font-size: max(9px, 2.6cqh); color: var(--wx-dim); min-height: 2lh; }
-.wx-day .hl { font: max(14px, 6cqh)/1 var(--font-osd); font-variant-numeric: tabular-nums; }
+.wx-now { display: grid; grid-template-columns: auto 1fr; gap: 1.5cqh 4cqw; align-items: center; }
+.wx-now svg { width: 24cqh; height: 24cqh; }
+.wx-temp { font: max(44px, 27cqh)/.8 var(--font-osd); }
+.wx-cond { font-size: max(18px, 7.4cqh); font-weight: 800; line-height: 1.1; }
+.wx-facts { grid-column: 1 / -1; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqw; text-align: center; border-top: 1px solid rgba(169,188,232,.25); padding-top: 1.5cqh; }
+.wx-facts dt { color: var(--wx-dim); font-size: max(13px, 4.6cqh); }
+.wx-facts dd { margin: 0; font-weight: 800; font-size: max(17px, 7cqh); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wx-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4cqw; }
+.wx-day { text-align: center; display: grid; justify-items: center; gap: 1cqh; }
+.wx-day .d { font-weight: 800; font-size: max(16px, 7cqh); text-transform: uppercase; color: var(--wx-gold); }
+.wx-day svg { width: 18cqh; height: 18cqh; }
+.wx-day .c { font-size: max(13px, 4.6cqh); font-weight: 600; min-height: 2lh; line-height: 1.15; }
+.wx-day .hl { font: max(22px, 10cqh)/1 var(--font-osd); font-variant-numeric: tabular-nums; }
 .wx-day .hl span { color: var(--wx-dim); }
-.wx-day .p { font-size: max(9px, 2.6cqh); color: var(--wx-dim); }
+.wx-day .p { display: none; }
 .wx-today { display: grid; grid-template-columns: 1fr 1fr; gap: 2cqw; }
-.wx-today h3 { margin: 0 0 1cqh; font-size: max(12px, 4cqh); color: var(--wx-gold); text-transform: uppercase; letter-spacing: .06em; }
-.wx-today p { margin: 0; font-size: max(12px, 4cqh); line-height: 1.35; }
-.wx-today .big { font: max(30px, 13cqh)/1 var(--font-osd); }
-.wx-chart svg { width: 100%; height: 44cqh; display: block; }
-.wx-msg { align-self: center; justify-self: center; text-align: center; font-size: max(13px, 4.4cqh); max-width: 70cqw; }
-.wx-ticker { background: rgba(0,0,0,.45); border-top: 2px solid var(--wx-gold); padding: 1.4cqh 4cqw; font-size: max(11px, 3.4cqh); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx-today h3 { margin: 0 0 1cqh; font-size: max(16px, 6.4cqh); color: var(--wx-gold); text-transform: uppercase; letter-spacing: .04em; }
+.wx-today p { margin: 0; font-size: max(15px, 5.6cqh); line-height: 1.3; }
+.wx-today .big { font: max(40px, 20cqh)/1 var(--font-osd); }
+.wx-chart svg { width: 100%; height: 56cqh; display: block; }
+.wx-msg { align-self: center; justify-self: center; text-align: center; font-size: max(16px, 6cqh); max-width: 80cqw; }
+.wx-ticker { background: rgba(0,0,0,.45); border-top: 2px solid var(--wx-gold); padding: 1.6cqh 4cqw; font-size: max(14px, 5.4cqh); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 body.portrait .wx-head { padding-top: 2cqh; }
 @media (prefers-reduced-motion: reduce) { .eq i { animation: none; height: 50%; } .wx-page { animation: none; } }
 
@@ -499,7 +508,8 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
     <canvas id="static" width="240" height="135"></canvas>
     <div id="tube"></div>
     <div id="nosignal" hidden><div class="box"><div class="big" id="nsBig">NO SIGNAL</div><div class="why" id="whyText"></div></div></div>
-    <div id="osd"><div class="num" id="osdNum">--</div><div class="name" id="osdName"></div></div>
+    <div id="osd"><div class="num" id="osdNum">--</div><div class="name" id="osdName"></div><div class="ep"><div class="t" id="osdTitle"></div><div class="m" id="osdMeta"></div></div></div>
+    <div id="muted" hidden>MUTE</div>
   </div>
 
   <div id="dock">
@@ -1597,6 +1607,7 @@ async function prefetch() {
 
 function applyVolume() {
   $("#vol").value = state.volume;
+  $("#muted").hidden = !state.muted;
   $$('[data-act="mute"]').forEach(b => b.textContent = state.muted ? "Unmute" : "Mute");
   if (noiseGain) noiseGain.gain.value = state.muted ? 0 : .14 * state.volume / 100;
   const quiet = state.muted || needUnmute;
@@ -1623,6 +1634,8 @@ document.addEventListener("visibilitychange", () => {
 
 function setNow(title, meta) {
   const ch = chs()[cur];
+  $("#osdTitle").textContent = title === "Tuning…" ? "" : title;
+  $("#osdMeta").textContent = meta;
   $("#nowTitle").textContent = $("#dockTitle").textContent = title;
   $("#nowBy").textContent = $("#dockMeta").textContent = meta;
   $("#dockNum").textContent = pad(cur + 1);
@@ -1779,19 +1792,18 @@ function wxPages(ch, d) {
   const day = i => new Date(d.daily.time[i] + "T12:00").toLocaleDateString([], { weekday: "short" });
   const r = Math.round;
   const pages = [];
-  pages.push(["Current Conditions", `<div class="wx-page"><div class="wx-panel wx-now">${wxIcon(icon)}
+  pages.push(["Right Now", `<div class="wx-page"><div class="wx-panel wx-now">${wxIcon(icon)}
     <div><div class="wx-temp">${r(cur.temperature_2m)}${deg}</div><div class="wx-cond">${cond}</div></div>
-    <dl class="wx-facts"><dt>Feels like</dt><dd>${r(cur.apparent_temperature)}${deg}</dd><dt>Humidity</dt><dd>${r(cur.relative_humidity_2m)}%</dd>
-      <dt>Wind</dt><dd>${r(cur.wind_speed_10m) ? `${compass(cur.wind_direction_10m)} ${r(cur.wind_speed_10m)} ${spd}` : "Calm"}</dd>
-      <dt>Sunset</dt><dd>${clock(Date.parse(d.daily.sunset[0]))}</dd></dl></div></div>`]);
+    <dl class="wx-facts"><div><dt>Feels like</dt><dd>${r(cur.apparent_temperature)}${deg}</dd></div><div><dt>Humidity</dt><dd>${r(cur.relative_humidity_2m)}%</dd></div>
+      <div><dt>Wind</dt><dd>${r(cur.wind_speed_10m) ? `${compass(cur.wind_direction_10m)} ${r(cur.wind_speed_10m)}` : "Calm"}</dd></div></dl></div></div>`]);
   const [tc] = wxCode(d.daily.weather_code[0]);
   const nightCodes = d.hourly.time.map((t, i) => [t, i]).filter(([t]) => t.startsWith(d.daily.time[0]) && +t.slice(11, 13) >= 18).map(([, i]) => d.hourly.weather_code[i]);
   const [nc] = wxCode(nightCodes.length ? Math.max(...nightCodes) : d.daily.weather_code[1], false);
-  pages.push(["Today's Forecast", `<div class="wx-page"><div class="wx-today">
+  pages.push(["Today", `<div class="wx-page"><div class="wx-today">
     <div class="wx-panel"><h3>Today</h3><div class="big">${r(d.daily.temperature_2m_max[0])}${deg}</div><p>${tc}. ${d.daily.precipitation_probability_max[0] ?? 0}% chance of rain or snow.</p></div>
     <div class="wx-panel"><h3>Tonight</h3><div class="big">${r(d.daily.temperature_2m_min[1] ?? d.daily.temperature_2m_min[0])}${deg}</div><p>${nc}. Sunrise tomorrow at ${clock(Date.parse(d.daily.sunrise[1] || d.daily.sunrise[0]))}.</p></div>
   </div></div>`]);
-  pages.push(["Extended Forecast", `<div class="wx-page"><div class="wx-panel wx-days">${[1, 2, 3, 4, 5].filter(i => d.daily.time[i]).map(i => {
+  pages.push(["4-Day Forecast", `<div class="wx-page"><div class="wx-panel wx-days">${[1, 2, 3, 4].filter(i => d.daily.time[i]).map(i => {
     const [c, ic] = wxCode(d.daily.weather_code[i]);
     return `<div class="wx-day"><div class="d">${day(i)}</div>${wxIcon(ic)}<div class="c">${c}</div><div class="hl">${r(d.daily.temperature_2m_max[i])}${deg} <span>${r(d.daily.temperature_2m_min[i])}${deg}</span></div><div class="p">${d.daily.precipitation_probability_max[i] ?? 0}% precip</div></div>`;
   }).join("")}</div></div>`]);
@@ -1799,17 +1811,17 @@ function wxPages(ch, d) {
   const nowIdx = Math.max(0, d.hourly.time.findIndex(t => Date.parse(t) >= Date.now() - 36e5));
   const hrs = d.hourly.time.slice(nowIdx, nowIdx + 13).map((t, i) => ({ t: Date.parse(t), v: d.hourly.temperature_2m[nowIdx + i], p: d.hourly.precipitation_probability[nowIdx + i] ?? 0 }));
   if (hrs.length > 2) {
-    const W = 640, H = 220, L = 40, R = 36, T = 30, B = 46;
+    const W = 640, H = 260, L = 44, R = 44, T = 48, B = 40;
     const lo = Math.floor(Math.min(...hrs.map(h => h.v)) - 2), hi = Math.ceil(Math.max(...hrs.map(h => h.v)) + 2);
     const x = i => L + i * (W - L - R) / (hrs.length - 1), y = v => T + (hi - v) * (H - T - B) / (hi - lo || 1);
     const line = hrs.map((h, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(h.v).toFixed(1)}`).join(" ");
     const bars = hrs.map((h, i) => `<rect x="${(x(i) - 7).toFixed(1)}" y="${(H - B - h.p * .5).toFixed(1)}" width="14" height="${(h.p * .5).toFixed(1)}" fill="#6fb6ff" opacity=".55"/>`).join("");
-    const labels = hrs.map((h, i) => i % 3 ? "" : `<text x="${x(i)}" y="${H - B + 22}" text-anchor="middle" fill="#a9bce8" font-size="15">${new Date(h.t).toLocaleTimeString([], { hour: "numeric" })}</text>
-      <text x="${x(i)}" y="${y(h.v) - 12}" text-anchor="middle" fill="#f2f5ff" font-size="18" font-weight="700">${r(h.v)}${deg}</text>`).join("");
+    const labels = hrs.map((h, i) => i % 3 ? "" : `<text x="${x(i)}" y="${H - B + 22}" text-anchor="middle" fill="#a9bce8" font-size="24" font-weight="600">${new Date(h.t).toLocaleTimeString([], { hour: "numeric" })}</text>
+      <text x="${x(i)}" y="${y(h.v) - 14}" text-anchor="middle" fill="#f2f5ff" font-size="30" font-weight="800">${r(h.v)}${deg}</text>`).join("");
     pages.push(["Next 12 Hours", `<div class="wx-page"><div class="wx-panel wx-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Temperature for the next 12 hours">
       <line x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}" stroke="#a9bce8" stroke-opacity=".4"/>${bars}
       <path d="${line}" fill="none" stroke="#f5cf3d" stroke-width="4" stroke-linejoin="round"/>${hrs.map((h, i) => `<circle cx="${x(i)}" cy="${y(h.v)}" r="${i ? 3.5 : 6}" fill="#f5cf3d"/>`).join("")}${labels}
-      <text x="${W - R}" y="${T - 10}" text-anchor="end" fill="#a9bce8" font-size="14">Bars: chance of rain or snow</text></svg></div></div>`]);
+      </svg></div></div>`]);
   }
   const ticker = `Now ${r(cur.temperature_2m)}${deg} and ${cond.toLowerCase()} · Humidity ${r(cur.relative_humidity_2m)}% · Today's high ${r(d.daily.temperature_2m_max[0])}${deg} · Updated ${clock(wxCache[`${ch.weather.lat},${ch.weather.lon},${ch.weather.units}`]?.at || Date.now())}`;
   return { pages, ticker };
@@ -1957,7 +1969,7 @@ let osdT = 0, idleT = 0, toastT = 0;
 function showOSD(num, name) {
   $("#osdNum").textContent = num; $("#osdName").textContent = name || "";
   document.body.classList.add("osd-on");
-  clearTimeout(osdT); osdT = setTimeout(() => document.body.classList.remove("osd-on"), 3500);
+  clearTimeout(osdT); osdT = setTimeout(() => document.body.classList.remove("osd-on"), 5000);
 }
 function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.classList.add("on");
@@ -2035,7 +2047,9 @@ function toggleFullscreen() {
 let digits = "", digitT = 0;
 const UP_KEYS = ["ArrowUp", "PageUp", "ChannelUp", "MediaTrackNext"], DOWN_KEYS = ["ArrowDown", "PageDown", "ChannelDown", "MediaTrackPrevious"];
 const BACK_KEYS = ["Escape", "Backspace", "BrowserBack", "GoBack"];
-const QUICK_KEYS = ["ContextMenu", "Home", "BrowserHome", "GoHome", "Settings", "Info", "q", "Q"];
+const QUICK_KEYS = ["ContextMenu", "Home", "BrowserHome", "GoHome", "Settings", "q", "Q"];
+const INFO_KEYS = ["Info", "ArrowLeft", "ArrowRight", "i", "I"];
+const MUTE_KEYS = ["AudioVolumeMute", "VolumeMute", "m", "M"];
 let okTimer = 0, okHeld = false;
 addEventListener("keyup", e => {
   if (e.key !== "Enter" && e.key !== " ") return;
@@ -2085,7 +2099,8 @@ addEventListener("keydown", e => {
     }, 1200);
   }
   else if (k === "g" || k === "G") $("#guide").hidden ? openGuide() : closePanels();
-  else if (k === "m" || k === "M") $('[data-act="mute"]').click();
+  else if (MUTE_KEYS.includes(k)) { e.preventDefault(); state.muted = !state.muted; needUnmute = false; save(); applyVolume(); }
+  else if (INFO_KEYS.includes(k)) { e.preventDefault(); showOSD(pad(cur + 1), chs()[cur]?.name); }
   else if (k === "f" || k === "F") toggleFullscreen();
 });
 
@@ -2870,6 +2885,8 @@ refreshCatalog();
     if (piConfig.repo) repo = piConfig.repo;
     $$('[data-act="history"]').forEach(b => b.hidden = true);
     if (!state.piSetup) { state.preload = piConfig.preload || "off"; state.piSetup = true; }
+    state.volume = 100;
+    document.body.classList.add("tv");
     save();
     $("#powerKeyWrap").hidden = !!state.apiKey;
     await loadPiLibrary();
