@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793547737778,
+  "updated": 1793547868388,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -82,7 +82,8 @@
       "sources": [
         "@discovery",
         "@OutdoorBoys",
-        "@PolissyaBushcraft"
+        "@PolissyaBushcraft",
+        "@OvensRockyMountainBushcraft"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -248,6 +249,28 @@
       "maxLen": 0,
       "linkOpts": {},
       "breaks": "off",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
+    },
+    {
+      "id": "fetvplxm",
+      "name": "Lifestyle",
+      "sources": [
+        "@harry.wwallace",
+        "@salinaalsworth_ak"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 50,
+      "scanMode": "recent",
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
       "kind": "tv",
       "display": "video",
       "timeMode": "all",
