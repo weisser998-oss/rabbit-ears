@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793548127373,
+  "updated": 1793548678937,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -13,36 +13,54 @@
         "https://youtube.com/playlist?list=PL7RtZMiaOk8jQosb7kCBpsWqE7szfd3gc&si=bf5U8RusYT75XqHL",
         "@CityPlannerPlays",
         "@GenerationalFumble",
-        "@Grantyy"
+        "@Grantyy",
+        "@NaturalCauzes",
+        "@AreanFilms",
+        "https://www.youtube.com/playlist?list=PLrOLTLC7N_iBn5KW6Tt3IqXI0KFCBt2NR",
+        "@ThatFoolishGrrl"
       ],
-      "shuffle": "partial",
+      "shuffle": "full",
       "blockSize": 4,
       "order": "oldest",
       "scanCount": 50,
       "scanMode": "recent",
       "minLen": 300,
-      "maxLen": 0,
+      "maxLen": 7200,
       "linkOpts": {
-        "@CityPlannerPlays": {
-          "pick": "recent:50",
-          "minLen": 300,
-          "maxLen": 3600,
-          "shuffle": "full",
-          "blockSize": 4
-        },
-        "@GenerationalFumble": {
-          "pick": "recent:50",
-          "minLen": 300,
-          "maxLen": 7200,
-          "shuffle": "full",
-          "blockSize": 4
-        },
         "@Grantyy": {
           "pick": "recent:50",
           "minLen": 300,
           "maxLen": 0,
           "shuffle": "full",
           "blockSize": 4
+        },
+        "https://youtube.com/playlist?list=PL7RtZMiaOk8jQosb7kCBpsWqE7szfd3gc&si=bf5U8RusYT75XqHL": {
+          "pick": "recent:50",
+          "minLen": 300,
+          "maxLen": 3600,
+          "shuffle": "partial",
+          "blockSize": 2
+        },
+        "https://www.youtube.com/playlist?list=PLxBP4SL7zdxpRxe1EvOVfFtHgENMDoFMN": {
+          "pick": "recent:50",
+          "minLen": 300,
+          "maxLen": 3600,
+          "shuffle": "partial",
+          "blockSize": 2
+        },
+        "https://youtube.com/playlist?list=PLdx-MmfUterw3siGQKvn7hnE6_nMscQ_t&si=FAPOOUMH99esRkFx": {
+          "pick": "recent:50",
+          "minLen": 300,
+          "maxLen": 7200,
+          "shuffle": "partial",
+          "blockSize": 2
+        },
+        "https://youtube.com/playlist?list=PLwiTZDxPg_I1beHjYIwuqZoXD6KjLnUCQ&si=ND4ZjZoIrvHHd7mq": {
+          "pick": "recent:50",
+          "minLen": 300,
+          "maxLen": 7200,
+          "shuffle": "partial",
+          "blockSize": 2
         }
       },
       "breaks": "off",
