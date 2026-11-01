@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793547868388,
+  "updated": 1793548127373,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -10,7 +10,10 @@
         "https://youtube.com/playlist?list=PLwiTZDxPg_I1beHjYIwuqZoXD6KjLnUCQ&si=ND4ZjZoIrvHHd7mq",
         "https://youtube.com/playlist?list=PLdx-MmfUterw3siGQKvn7hnE6_nMscQ_t&si=FAPOOUMH99esRkFx",
         "https://www.youtube.com/playlist?list=PLxBP4SL7zdxpRxe1EvOVfFtHgENMDoFMN",
-        "https://youtube.com/playlist?list=PL7RtZMiaOk8jQosb7kCBpsWqE7szfd3gc&si=bf5U8RusYT75XqHL"
+        "https://youtube.com/playlist?list=PL7RtZMiaOk8jQosb7kCBpsWqE7szfd3gc&si=bf5U8RusYT75XqHL",
+        "@CityPlannerPlays",
+        "@GenerationalFumble",
+        "@Grantyy"
       ],
       "shuffle": "partial",
       "blockSize": 4,
@@ -19,7 +22,29 @@
       "scanMode": "recent",
       "minLen": 300,
       "maxLen": 0,
-      "linkOpts": {},
+      "linkOpts": {
+        "@CityPlannerPlays": {
+          "pick": "recent:50",
+          "minLen": 300,
+          "maxLen": 3600,
+          "shuffle": "full",
+          "blockSize": 4
+        },
+        "@GenerationalFumble": {
+          "pick": "recent:50",
+          "minLen": 300,
+          "maxLen": 7200,
+          "shuffle": "full",
+          "blockSize": 4
+        },
+        "@Grantyy": {
+          "pick": "recent:50",
+          "minLen": 300,
+          "maxLen": 0,
+          "shuffle": "full",
+          "blockSize": 4
+        }
+      },
       "breaks": "off",
       "kind": "tv",
       "display": "video",
