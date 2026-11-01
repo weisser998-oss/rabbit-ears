@@ -38,6 +38,7 @@ Swipe up or down on the picture to change channels, and tap it to show the contr
 - **Live schedule.** Every channel runs on a clock-based schedule, so when you tune in, the show is already partway through. The next show starts from the beginning. The **Guide** shows the next three hours for every channel.
 - **Daily lineup.** Each broadcast day starts at 4 AM. That's when channels rescan their links and get the day's order.
 - **Pre-loading.** The channels above and below the one you're watching play silently in the background, so switching to them is instant. You can turn this down or off in Settings to save data.
+- **No pausing.** Phones pause by themselves when an earbud comes out or headphones are unplugged. Rabbit Ears picks straight back up where the channel is now, like live TV. If the phone won't allow that, it asks you to tap the picture.
 - **Dead air.** If a video refuses to play (removed, blocked from embedding, or blocked in your country), the channel fills that slot with another of its videos. That device skips the video for a day, then tries again. **Settings → Retry skipped videos** tries them all right away, which is useful after turning a VPN on.
 
 ## Commercial breaks
@@ -64,6 +65,27 @@ To publish lineup changes automatically, give Rabbit Ears a GitHub token on the 
 From then on, saving in Settings updates every device. Without a token, tap **Download lineup.json** and upload that file to your repository the same way you upload `index.html`.
 
 The token can only change files in this one repository, but treat it like a password: only add it on your own devices.
+
+## Time-of-day programming
+
+Any channel can change what it plays through the day. In its settings, set **Programming** to *Changes by time of day*, then **Add time block**. Give each block a name ("Morning Cartoons"), a start and end time, and its own links. Outside the blocks, the channel plays its main lineup. A block with no links is off the air. Blocks can run past midnight; the broadcast day still starts at 4 AM.
+
+## Radio channels
+
+Set a channel's **Picture** to *Radio* and the video is covered by a now-playing card with the song, the artist and the video's thumbnail. YouTube still sends the video, so it doesn't save data.
+
+## Local Forecast (weather channel)
+
+In Settings, tap **Add weather channel**, type your town (like `Portland, ME` or `Paris, France`) and tap **Find location**. It rotates through current conditions, today and tonight, a 5-day forecast and the next 12 hours, with a ticker along the bottom. You can add background music links. Forecasts come from Open-Meteo (free, no key) and refresh every 15 minutes.
+
+## On-screen extras
+
+In **Settings**, on each device:
+- **Channel logo**: the channel number and name, faintly, in the corner.
+- **"Now" and "Up next" cards**: the show's name for a few seconds when it starts, and what's next in its last 15 seconds.
+- **Subtitles**: turns on YouTube subtitles wherever a video has them.
+
+**History** (phone and computer only) lists what you've watched, with a link to open each video on YouTube where you left off.
 
 ## Your own video files
 
@@ -108,7 +130,10 @@ Open **Settings** to edit the lineup. Each channel has:
 - **Links**: one per line. Accepts a channel (`@handle` or link), a playlist, or a single video.
 - **Shuffle**: Complete, None (upload order), or Partial (N videos in a row from the same link, in order, then a random jump).
 - **Videos to scan per link**, and whether to take the **most recent** or a **random** selection.
-- **Skip videos under 1 minute** to keep Shorts out.
+- **Shortest / Longest**: leave out videos outside a length range. The default is 5 minutes and longer, with no maximum.
+- **Settings per link**: tap a link to open its options. Untick **Use the channel's settings** to give that link its own "Which videos", "Shortest" and "Longest". Handy for a playlist of full-length playthroughs on a channel that otherwise caps videos at 30 minutes.
+
+Channels are folded up in Settings to keep the list short. Tap one to open it.
 
 Keyboard: `↑`/`↓` change channel, number keys jump to a channel, `G` guide, `M` mute, `F` full screen.
 

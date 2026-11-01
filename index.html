@@ -95,6 +95,88 @@ body.no-signal #osd { opacity: 0 !important; }
 #osd .num { font-size: clamp(56px, 9vw, 104px); line-height: .8; }
 #osd .name { font-size: clamp(22px, 3vw, 34px); text-transform: uppercase; letter-spacing: .05em; }
 
+/* ---------- station logo and lower-third cards ---------- */
+#stage { container-type: size; }
+#bug {
+  position: absolute; z-index: 2; right: 4cqw; bottom: 6cqh; pointer-events: none;
+  display: flex; align-items: baseline; gap: .5cqw; opacity: .55;
+  color: #fff; font-family: var(--font-osd); text-shadow: 0 0 4px rgba(0,0,0,.8);
+  transition: opacity .3s;
+}
+#bug .bug-num { font-size: max(16px, 6cqh); line-height: 1; }
+#bug .bug-name { font-size: max(10px, 3cqh); text-transform: uppercase; letter-spacing: .06em; }
+body.landscape.ui-on #bug, body.static #bug { opacity: 0; }
+#lower {
+  position: absolute; z-index: 2; left: 4cqw; bottom: 9cqh; max-width: min(70cqw, 560px); pointer-events: none;
+  background: rgba(8, 10, 12, .82); border-left: 4px solid var(--accent); padding: 1.6cqh 2cqw;
+  opacity: 0; transform: translateY(8px); transition: opacity .35s, transform .35s;
+}
+#lower.on { opacity: 1; transform: none; }
+body.landscape.ui-on #lower { opacity: 0; }
+.lower-label { font-size: max(10px, 2.4cqh); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.lower-title { font-size: max(13px, 4cqh); font-weight: 800; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.lower-meta { font-size: max(10px, 2.6cqh); color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* ---------- radio channels: the video is covered by a now-playing card ---------- */
+#radio {
+  position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; gap: 4cqw; padding: 6cqh 7cqw;
+  background: radial-gradient(ellipse at 30% 40%, #1d2430 0%, #07090c 75%); overflow: hidden;
+}
+.radio-art {
+  flex: none; width: 34cqh; height: 34cqh; border-radius: 6px; background: var(--field) center / cover no-repeat;
+  box-shadow: 0 1cqh 4cqh rgba(0,0,0,.6); display: grid; place-items: center; color: var(--osd); font: 12cqh/1 var(--font-osd);
+}
+.radio-body { min-width: 0; display: grid; gap: 1.2cqh; }
+.radio-onair { font-size: max(10px, 2.6cqh); font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--live); }
+.radio-title { font-size: max(15px, 6cqh); font-weight: 800; line-height: 1.15; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.radio-by { font-size: max(11px, 3.2cqh); color: var(--dim); }
+.eq { display: flex; align-items: flex-end; gap: .6cqw; height: 8cqh; margin-top: 1cqh; }
+.eq i { width: 1.1cqw; min-width: 3px; background: var(--osd); height: 30%; animation: eq 1.1s ease-in-out infinite alternate; }
+.eq i:nth-child(3n) { animation-duration: .8s; } .eq i:nth-child(4n+1) { animation-duration: 1.4s; } .eq i:nth-child(5n+2) { animation-duration: .95s; }
+.eq i:nth-child(2n) { animation-delay: -.4s; } .eq i:nth-child(3n+1) { animation-delay: -.7s; }
+@keyframes eq { from { height: 12%; } to { height: 100%; } }
+
+/* ---------- weather channel ---------- */
+#weather {
+  --wx-top: #0c2c74; --wx-bottom: #1b5bc4; --wx-panel: rgba(4, 18, 58, .72); --wx-gold: #f5cf3d; --wx-text: #f2f5ff; --wx-dim: #a9bce8;
+  position: absolute; inset: 0; z-index: 2; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden;
+  background: linear-gradient(to bottom, var(--wx-top), var(--wx-bottom)); color: var(--wx-text);
+}
+.wx-head {
+  display: flex; align-items: baseline; gap: 2cqw; padding: 3cqh 4cqw 1.5cqh;
+  background: linear-gradient(to bottom, rgba(0,0,0,.35), transparent);
+}
+.wx-brand { font-weight: 800; font-size: max(12px, 4.4cqh); letter-spacing: .06em; text-transform: uppercase; color: var(--wx-gold); }
+.wx-place { flex: 1; min-width: 0; font-size: max(11px, 3.4cqh); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx-clock { font: max(14px, 5cqh)/1 var(--font-osd); font-variant-numeric: tabular-nums; }
+.wx-main { min-height: 0; padding: 1cqh 4cqw; display: grid; }
+.wx-page { display: grid; align-content: center; gap: 2cqh; animation: wxin .5s ease; }
+@keyframes wxin { from { opacity: 0; transform: translateX(3cqw); } }
+.wx-panel { background: var(--wx-panel); border: 1px solid rgba(169,188,232,.25); border-radius: 1cqh; padding: 2.4cqh 2.6cqw; }
+.wx-now { display: grid; grid-template-columns: auto auto 1fr; gap: 3cqw; align-items: center; }
+.wx-now svg { width: 26cqh; height: 26cqh; }
+.wx-temp { font: max(36px, 24cqh)/.8 var(--font-osd); }
+.wx-cond { font-size: max(13px, 5cqh); font-weight: 800; }
+.wx-facts { display: grid; grid-template-columns: auto auto; gap: .6cqh 2.4cqw; font-size: max(11px, 3.4cqh); }
+.wx-facts dt { color: var(--wx-dim); } .wx-facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.wx-days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.4cqw; }
+.wx-day { text-align: center; display: grid; justify-items: center; gap: .8cqh; }
+.wx-day .d { font-weight: 800; font-size: max(11px, 3.6cqh); text-transform: uppercase; color: var(--wx-gold); }
+.wx-day svg { width: 13cqh; height: 13cqh; }
+.wx-day .c { font-size: max(9px, 2.6cqh); color: var(--wx-dim); min-height: 2lh; }
+.wx-day .hl { font: max(14px, 6cqh)/1 var(--font-osd); font-variant-numeric: tabular-nums; }
+.wx-day .hl span { color: var(--wx-dim); }
+.wx-day .p { font-size: max(9px, 2.6cqh); color: var(--wx-dim); }
+.wx-today { display: grid; grid-template-columns: 1fr 1fr; gap: 2cqw; }
+.wx-today h3 { margin: 0 0 1cqh; font-size: max(12px, 4cqh); color: var(--wx-gold); text-transform: uppercase; letter-spacing: .06em; }
+.wx-today p { margin: 0; font-size: max(12px, 4cqh); line-height: 1.35; }
+.wx-today .big { font: max(30px, 13cqh)/1 var(--font-osd); }
+.wx-chart svg { width: 100%; height: 44cqh; display: block; }
+.wx-msg { align-self: center; justify-self: center; text-align: center; font-size: max(13px, 4.4cqh); max-width: 70cqw; }
+.wx-ticker { background: rgba(0,0,0,.45); border-top: 2px solid var(--wx-gold); padding: 1.4cqh 4cqw; font-size: max(11px, 3.4cqh); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.portrait .wx-head { padding-top: 2cqh; }
+@media (prefers-reduced-motion: reduce) { .eq i { animation: none; height: 50%; } .wx-page { animation: none; } }
+
 /* ---------- landscape controls ---------- */
 .ui { opacity: 0; pointer-events: none; transition: opacity .25s; }
 body.ui-on .ui { opacity: 1; pointer-events: auto; }
@@ -163,6 +245,8 @@ body.portrait #dock {
   padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
   border-bottom: 1px solid var(--line);
 }
+.dock-controls { flex-wrap: wrap; row-gap: 8px; }
+.dock-controls .btn { padding-inline: 11px; }
 .dock-controls .chbtn { width: 48px; height: 48px; }
 .dock-controls .spacer { flex: 1; }
 #epgDock { flex: 1; min-height: 0; display: flex; }
@@ -247,7 +331,7 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .hint a { color: var(--accent); }
 .hint ol { margin: 4px 0 0; padding-left: 18px; }
 .status { font-size: 13px; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--field); }
-input[type=text], input[type=password], input[type=number], select, textarea {
+input[type=text], input[type=password], input[type=number], input[type=time], select, textarea {
   width: 100%; background: var(--field); border: 1px solid var(--line); border-radius: 6px;
   padding: 9px 10px; font-weight: 400; font-size: 16px; min-height: 42px;
 }
@@ -263,6 +347,20 @@ textarea { resize: vertical; font-family: ui-monospace, "SF Mono", Menlo, monosp
 .ch-card[data-shuffle="full"] .only-ordered { display: none; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 label.btn { display: inline-flex; align-items: center; font-size: 13px; }
+.ch-toggle {
+  flex: none; width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer;
+  background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+}
+.ch-toggle .chev { font-size: 22px; line-height: 1; transition: transform .2s; }
+.ch-card.open .ch-toggle .chev { transform: rotate(90deg); }
+.ch-summary { text-align: left; background: none; border: 0; padding: 0; color: var(--dim); font-size: 13px; cursor: pointer; }
+.ch-card.open .ch-summary { display: none; }
+.ch-card:not(.open) .ch-tools { display: none; }
+.ch-body { display: grid; gap: 12px; }
+.src-item { display: grid; gap: 6px; }
+.src-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.src-custom { color: var(--accent); }
+.src-opts { margin-left: 14px; padding: 10px 12px; border-left: 2px solid var(--accent); display: grid; gap: 10px; }
 .fieldname { font-size: 13px; font-weight: 600; }
 .src-list { display: grid; gap: 6px; }
 .src-row {
@@ -292,6 +390,26 @@ label.btn { display: inline-flex; align-items: center; font-size: 13px; }
 .file-row .fd { color: var(--dim); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .file-row .btn { min-height: 34px; padding: 5px 10px; }
 .err { color: var(--danger); font-size: 13px; margin: 0; }
+
+#history {
+  top: 0; right: 0; bottom: 0; width: min(520px, 100%); border-width: 0 0 0 1px;
+  padding-top: calc(18px + env(safe-area-inset-top, 0px)); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px));
+}
+.hist-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.hist-row .btn, .hist-row > .hist-sub { grid-column: 2; justify-self: start; min-height: 32px; padding: 5px 10px; font-size: 12.5px; text-decoration: none; display: inline-flex; align-items: center; }
+.hist-time { color: var(--dim); font-size: 12.5px; font-variant-numeric: tabular-nums; grid-row: span 2; align-self: start; padding-top: 2px; }
+.hist-text { display: grid; min-width: 0; }
+.hist-title { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-sub { color: var(--dim); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.blocks { display: grid; gap: 10px; }
+.ch-card:not([data-timemode="blocks"]) .only-blocks { display: none; }
+.blk-card { border: 1px dashed var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; }
+.blk-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.blk-head .f-bname { flex: 1 1 180px; min-width: 0; font-weight: 600; }
+.blk-head input[type=time] { width: auto; min-width: 132px; flex: 0 1 150px; }
+.blk-head .to { color: var(--dim); font-size: 13px; }
+.wx-found { font-size: 13px; color: var(--osd); margin: 0; }
 
 /* ---------- power-on screen ---------- */
 #power {
@@ -341,6 +459,22 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
 <div id="app">
   <div id="stage">
     <div id="players"></div>
+    <div id="radio" hidden>
+      <div class="radio-art" id="radioArt"></div>
+      <div class="radio-body">
+        <div class="radio-onair">On the air · <span id="radioCh"></span></div>
+        <div class="radio-title" id="radioTitle"></div>
+        <div class="radio-by" id="radioBy"></div>
+        <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+    <div id="weather" hidden>
+      <div class="wx-head"><span class="wx-brand" id="wxPage">Local Forecast</span><span class="wx-place" id="wxPlace"></span><span class="wx-clock" id="wxClock"></span></div>
+      <div class="wx-main" id="wxMain"></div>
+      <div class="wx-ticker"><span id="wxTicker"></span></div>
+    </div>
+    <div id="bug" hidden><span class="bug-num" id="bugNum"></span><span class="bug-name" id="bugName"></span></div>
+    <div id="lower" aria-live="polite"><div class="lower-label" id="lowerLabel"></div><div class="lower-title" id="lowerTitle"></div><div class="lower-meta" id="lowerMeta"></div></div>
     <div id="shield"></div>
     <canvas id="static" width="240" height="135"></canvas>
     <div id="tube"></div>
@@ -360,6 +494,7 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
       <button class="chbtn" data-ch-step="1" aria-label="Channel up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>
       <span class="spacer"></span>
       <button class="btn" data-act="mute">Mute</button>
+      <button class="btn" data-act="history">History</button>
       <button class="btn" data-act="fs">Full screen</button>
       <button class="btn" data-act="settings">Settings</button>
     </div>
@@ -377,6 +512,7 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
   <div id="now"><div class="title-line" id="nowTitle">Tuning…</div><div class="meta-line" id="nowBy"></div></div>
   <div class="controls">
     <button class="btn" data-act="guide">Guide</button>
+    <button class="btn" data-act="history">History</button>
     <button class="btn" data-act="mute">Mute</button>
     <input type="range" id="vol" min="0" max="100" aria-label="Volume">
     <button class="btn" data-act="fs">Full screen</button>
@@ -387,6 +523,11 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
 <div id="guide" class="panel" hidden>
   <div class="panel-head"><h2>Guide</h2><button class="btn" data-close>Close</button></div>
   <div id="guideBody"></div>
+</div>
+
+<div id="history" class="panel" hidden>
+  <div class="panel-head"><h2>Recently watched</h2><div class="row"><button type="button" class="btn" id="clearHist">Clear</button><button type="button" class="btn" data-close>Close</button></div></div>
+  <div id="histList"></div>
 </div>
 
 <form id="settings" class="panel" hidden>
@@ -406,10 +547,13 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
     </label>
     <p class="hint">Pre-loaded channels play silently in the background so switching to them is instant. Each one uses about as much data as the channel you're watching.</p>
     <label class="check"><input type="checkbox" id="staticSound"> Play static sound between channels</label>
+    <label class="check"><input type="checkbox" id="showLogo"> Show the channel logo in the corner</label>
+    <label class="check"><input type="checkbox" id="showUpNext"> Show "Now" and "Up next" cards</label>
+    <label class="check"><input type="checkbox" id="captions"> Show YouTube subtitles when a video has them</label>
   </section>
 
   <section>
-    <div class="panel-head"><h2>Lineup</h2><button type="button" class="btn" id="addCh">Add channel</button></div>
+    <div class="panel-head"><h2>Lineup</h2><div class="row"><button type="button" class="btn" id="addWx">Add weather channel</button><button type="button" class="btn" id="addCh">Add channel</button></div></div>
     <div id="chList" style="display:grid;gap:14px"></div>
   </section>
 
@@ -533,13 +677,20 @@ const BAD_KEY = "rabbit-ears-bad-v1";
 try { localStorage.removeItem("rabbit-ears-cache-v1"); localStorage.removeItem("rabbit-ears-cache-v2"); } catch {}
 
 function newChannel(over = {}) {
-  return { id: uid(), name: "New channel", sources: [], shuffle: "full", blockSize: 3, order: "oldest",
-           scanCount: 50, scanMode: "recent", skipShort: true, breaks: "between", ...over };
+  const ch = { id: uid(), name: "New channel", sources: [], shuffle: "full", blockSize: 3, order: "oldest",
+               scanCount: 50, scanMode: "recent", minLen: 300, maxLen: 0, linkOpts: {}, breaks: "between",
+               kind: "tv", display: "video", timeMode: "all", blocks: [], weather: null, ...over };
+  // Lineups from before length limits: "skip Shorts" off means no minimum.
+  if (over.minLen == null && over.skipShort === false) ch.minLen = 0;
+  delete ch.skipShort;
+  ch.linkOpts ||= {};
+  return ch;
 }
 function defaults() {
   // Example lineup: swap the links for your own in Settings.
   return {
     apiKey: "", ghToken: "", volume: 80, muted: false, staticSound: true, lastChannel: 0,
+    showLogo: true, showUpNext: true, captions: false,
     preload: navigator.connection?.saveData ? "off" : "both",
     ads: [], breakLen: 2, lineupUpdated: 0, catalog: [], deviceId: uid(),
     channels: [
@@ -568,7 +719,7 @@ const isBad = id => { const t = bad.get(id); return t != null && Date.now() - t 
 const saveBad = () => store(BAD_KEY, Object.fromEntries([...bad].slice(-500)));
 const markBad = id => { bad.set(id, Date.now()); saveBad(); };
 const chs = () => state.channels;
-const adsChannel = () => ({ id: "__ads", sources: state.ads, scanCount: 150, scanMode: "random", skipShort: false });
+const adsChannel = () => ({ id: "__ads", sources: state.ads, scanCount: 150, scanMode: "random", minLen: 0, maxLen: 0, linkOpts: {} });
 
 /* ---------- your own video files ----------
    On a phone or computer, added files are stored in this browser (IndexedDB).
@@ -725,10 +876,19 @@ function seconds(iso) {
   return (+m[1] || 0) * 86400 + (+m[2] || 0) * 3600 + (+m[3] || 0) * 60 + (+m[4] || 0);
 }
 
-// Up to ch.scanCount playable videos from one link, as of the start of broadcast day `ds`.
+// A link uses its channel's settings unless it has its own.
+function linkSettings(ch, raw) {
+  const o = ch.linkOpts?.[raw];
+  if (!o) return { scanMode: ch.scanMode, scanCount: ch.scanCount, minLen: ch.minLen || 0, maxLen: ch.maxLen || 0 };
+  return { ...pickSettings(o.pick), minLen: +o.minLen || 0, maxLen: +o.maxLen || 0 };
+}
+const lengthOk = (dur, ls) => dur > 0 && dur >= ls.minLen && (!ls.maxLen || dur <= ls.maxLen);
+
+// Up to the link's video count of playable videos, as of the start of broadcast day `ds`.
 // Videos published after the day started wait until tomorrow, and "random" picks use a seed made
 // from the lineup and the date, so every device gets the same list.
-async function scanSource(src, raw, ch, ds) {
+async function scanSource(src, raw, chIn, ds) {
+  const ch = linkSettings(chIn, raw);
   let cands;
   if (src.type === "video") cands = [{ id: src.id, at: "" }];
   else {
@@ -751,7 +911,7 @@ async function scanSource(src, raw, ch, ds) {
       if (!v || v.status?.embeddable === false || v.status?.privacyStatus === "private") continue;
       if (v.snippet.liveBroadcastContent !== "none") continue;
       const dur = seconds(v.contentDetails.duration);
-      if (!dur || (ch.skipShort && dur <= 60)) continue;
+      if (!lengthOk(dur, ch)) continue;
       out.push({ id: v.id, title: v.snippet.title, by: v.snippet.channelTitle, at: v.snippet.publishedAt || c.at || "", dur });
       if (out.length >= ch.scanCount) break;
     }
@@ -761,9 +921,9 @@ async function scanSource(src, raw, ch, ds) {
 
 /* ---------- scanned lists, one per channel per broadcast day ---------- */
 
-const scanKey = ch => JSON.stringify([ch.sources, ch.scanCount, ch.scanMode, ch.skipShort, hasLocal(ch) ? effSig : 0]);
+const scanKey = ch => JSON.stringify([ch.sources, ch.scanCount, ch.scanMode, ch.minLen, ch.maxLen, ch.linkOpts || {}, hasLocal(ch) ? effSig : 0]);
 const needsYouTube = ch => ch.sources.some(r => { const s = parseSource(r); return s && s.type !== "local"; });
-const queueKey = ch => JSON.stringify([ch.shuffle, ch.blockSize, ch.order, ch.breaks]);
+const queueKey = ch => JSON.stringify([ch.shuffle, ch.blockSize, ch.order, ch.breaks, ch.timeMode, ch.timeMode === "blocks" ? ch.blocks : 0, ch.kind]);
 const scans = {};   // cache key -> { key, promise } while scanning
 const scanErr = {}; // channel id -> message from the last failed scan
 
@@ -785,15 +945,16 @@ function ensureEntry(ch, ds) {
       if (!src) continue;
       if (src.type === "unknown") { errs.push(`"${raw}" isn't a channel, playlist or video link.`); continue; }
       if (src.type === "local") {
-        const want = src.folder.toLowerCase(), before = videos.length;
+        const want = src.folder.toLowerCase(), before = videos.length, ls = linkSettings(ch, raw);
         for (const f of effCatalog) {
           if (want && f.folder.toLowerCase() !== want) continue;
+          if (!lengthOk(f.dur, ls)) continue;
           const id = "local:" + f.path;
           if (seen.has(id)) continue;
           seen.add(id);
           videos.push({ id, local: true, path: f.path, title: prettyName(f.name), by: f.folder || "Your videos", at: naturalKey(f.path), dur: f.dur, src: i });
         }
-        if (videos.length === before) errs.push(want ? `No video files in a folder called "${src.folder}" yet.` : "No video files added yet.");
+        if (videos.length === before) errs.push(want ? `No video files in "${src.folder}" fit this channel's length limits yet.` : "No video files that fit this channel's length limits yet.");
         continue;
       }
       try {
@@ -815,26 +976,70 @@ function ensureEntry(ch, ds) {
   return promise;
 }
 
-// A channel's schedule for one broadcast day needs its own list and the commercials list.
+// A channel's broadcast day is split into segments: its main lineup, plus any time blocks with their own links.
+const NO_ADS = { key: "", videos: [] };
+function daySegments(ch, ds) {
+  const de = nextDay(ds);
+  if (ch.timeMode !== "blocks" || !ch.blocks?.length || ch.kind === "weather") return [{ start: ds, end: de, block: -1, ch }];
+  const at = hhmm => {
+    const [h, m] = hhmm.split(":").map(Number), d = new Date(ds);
+    d.setHours(h, m, 0, 0);
+    if (d.getTime() < ds) { d.setDate(d.getDate() + 1); d.setHours(h, m, 0, 0); } // after midnight belongs to the same broadcast day
+    return d.getTime();
+  };
+  const marks = [];
+  ch.blocks.forEach((b, i) => {
+    if (!/^\d\d:\d\d$/.test(b.start || "") || !/^\d\d:\d\d$/.test(b.end || "")) return;
+    const s = at(b.start); let e = at(b.end);
+    if (e <= s) e = de;
+    marks.push([s, Math.min(e, de), i]);
+  });
+  // Where blocks overlap, the one listed later wins.
+  const pts = [...new Set([ds, de, ...marks.flatMap(m => [m[0], m[1]])])].sort((a, b) => a - b), segs = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1], m = [...marks].reverse().find(m => m[0] <= a && b <= m[1]), owner = m ? m[2] : -1;
+    const last = segs[segs.length - 1];
+    if (last && last.block === owner) last.end = b; else segs.push({ start: a, end: b, block: owner });
+  }
+  return segs.map(g => ({ ...g, ch: g.block < 0 ? ch : { ...ch, id: `${ch.id}#${g.block}`, sources: ch.blocks[g.block].sources || [], linkOpts: ch.blocks[g.block].linkOpts || {}, blockName: ch.blocks[g.block].name || "" } }));
+}
+const needsAds = ch => ch.kind !== "weather" && ch.breaks !== "off" && state.ads.length > 0;
+
 async function getSched(ch, ds) {
-  const [e, ads] = await Promise.all([
-    ensureEntry(ch, ds),
-    ch.breaks !== "off" && state.ads.length ? ensureEntry(adsChannel(), ds).catch(() => ({ key: "", videos: [] })) : { key: "", videos: [] },
-  ]);
-  return { ch, e, ads, ds };
+  try {
+    const ads = needsAds(ch) ? await ensureEntry(adsChannel(), ds).catch(() => NO_ADS) : NO_ADS;
+    const segs = daySegments(ch, ds);
+    let any = false, firstErr = null;
+    for (const g of segs) {
+      g.ads = ads; g.e = null;
+      if (!g.ch.sources.length) continue;
+      try { g.e = await ensureEntry(g.ch, ds); any = true; } catch (e) { firstErr ||= e; }
+    }
+    if (!any && ch.kind !== "weather") throw firstErr || new Error("This channel has no links yet. Add some in Settings.");
+    return { ch, ds, segs };
+  } catch (e) { scanErr[ch.id] = e.message; throw e; }
 }
 function schedFor(ch, ds) {
-  const day = dayId(ds), e = cache[`${ch.id}@${day}`];
-  if (!e || e.key !== scanKey(ch)) return null;
-  let ads = { key: "", videos: [] };
-  if (ch.breaks !== "off" && state.ads.length) {
+  const day = dayId(ds);
+  let ads = NO_ADS;
+  if (needsAds(ch)) {
     const a = cache[`__ads@${day}`];
     if (!a || a.key !== scanKey(adsChannel())) return null;
     ads = a;
   }
-  return { ch, e, ads, ds };
+  const segs = daySegments(ch, ds);
+  let any = false;
+  for (const g of segs) {
+    g.ads = ads; g.e = null;
+    if (!g.ch.sources.length) continue;
+    const e = cache[`${g.ch.id}@${day}`];
+    if (e && e.key === scanKey(g.ch)) { g.e = e; any = true; }
+    else if (!scanErr[g.ch.id] || scans[`${g.ch.id}@${day}`]) return null; // not scanned yet (a failed block is just off the air)
+  }
+  if (!any && ch.kind !== "weather") return null;
+  return { ch, ds, segs };
 }
-const isScanning = (ch, ds) => !!scans[`${ch.id}@${dayId(ds)}`] || !!scans[`__ads@${dayId(ds)}`];
+const isScanning = (ch, ds) => daySegments(ch, ds).some(g => scans[`${g.ch.id}@${dayId(ds)}`]) || !!scans[`__ads@${dayId(ds)}`];
 
 /* ---------- schedules ---------- */
 
@@ -853,17 +1058,17 @@ function buildQueue(ch, videos, rand) {
   return shuffle(blocks, rand).flat();
 }
 
-// One pass through a channel's lineup is a "cycle": an ordered list of items (show segments and commercials)
+// One pass through a segment's lineup is a "cycle": an ordered list of items (show segments and commercials)
 // with times relative to the cycle start, plus guide blocks (whole shows and breaks between them).
 const cycles = new Map();
-function cycle(s, k) {
-  const { ch, e, ads, ds } = s;
-  const key = `${dayId(ds)}|${scanKey(ch)}|${queueKey(ch)}|${ads.key}|${state.breakLen}|${k}`;
+function cycle(g, k) {
+  const { ch, e, ads } = g;
+  const key = `${g.start}|${scanKey(ch)}|${queueKey(ch)}|${ads.key}|${state.breakLen}|${k}`;
   let c = cycles.get(key);
   if (c) return c;
   const rand = seeded(hashStr(key));
   const q = buildQueue(ch, e.videos, rand);
-  const pool = ch.breaks === "off" ? [] : ads.videos;
+  const pool = ch.breaks === "off" || ch.kind === "weather" ? [] : ads.videos;
   const items = [], blocks = [];
   let t = 0;
   const addBreak = (show, mid) => {
@@ -908,40 +1113,59 @@ function cycle(s, k) {
   return c;
 }
 
-// Walk the day's cycles to the one containing t.
-function cycleAt(s, t) {
-  let base = s.ds;
+// Walk a segment's cycles to the one containing t.
+function cycleAt(g, t) {
+  let base = g.start;
   for (let k = 0; k < 2000; k++) {
-    const cy = cycle(s, k);
+    const cy = cycle(g, k);
     if (t < base + cy.total) return { cy, base };
     base += cy.total;
   }
   throw new Error("Schedule too long");
 }
+const segAt = (s, t) => s.segs.find(g => t >= g.start && t < g.end) || s.segs[s.segs.length - 1];
 function itemAt(s, t) {
-  const { cy, base } = cycleAt(s, t), de = nextDay(s.ds), off = t - base, its = cy.items;
+  const g = segAt(s, t);
+  if (!g.e) return { kind: "offair", start: g.start, end: g.end, spanStart: g.start, spanEnd: g.end, seg: g };
+  const { cy, base } = cycleAt(g, t), off = t - base, its = cy.items;
   let lo = 0, hi = its.length - 1;
   while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (its[mid].rel <= off) lo = mid; else hi = mid - 1; }
   const it = its[lo], start = base + it.rel;
   return {
-    ...it, start, end: Math.min(start + it.len * 1000, de),
+    ...it, start, end: Math.min(start + it.len * 1000, g.end), seg: g,
     spanStart: it.kind === "show" ? base + it.s0 : start,
-    spanEnd: Math.min(it.kind === "show" ? base + it.s1 : base + it.bEnd, de),
-    bEnd: it.bEnd != null ? Math.min(base + it.bEnd, de) : null,
+    spanEnd: Math.min(it.kind === "show" ? base + it.s1 : base + it.bEnd, g.end),
+    bEnd: it.bEnd != null ? Math.min(base + it.bEnd, g.end) : null,
   };
 }
 function blocksBetween(s, t0, t1) {
-  const out = [], de = Math.min(nextDay(s.ds), t1);
-  let { cy, base } = cycleAt(s, t0), k = 0;
-  while (base < de && k++ < 200) {
-    for (const b of cy.blocks) {
-      const start = base + b.start, end = Math.min(base + b.end, nextDay(s.ds));
-      if (end > t0 && start < de) out.push({ ...b, start, end });
+  const out = [];
+  for (const g of s.segs) {
+    const a = Math.max(t0, g.start), b = Math.min(t1, g.end);
+    if (a >= b) continue;
+    if (!g.e) { out.push({ kind: "offair", start: g.start, end: g.end, seg: g }); continue; }
+    let { cy, base } = cycleAt(g, a), k = 0;
+    while (base < b && k++ < 200) {
+      for (const bl of cy.blocks) {
+        const start = base + bl.start, end = Math.min(base + bl.end, g.end);
+        if (end > a && start < b) out.push({ ...bl, start, end, seg: g });
+      }
+      base += cy.total;
+      if (base < b) ({ cy } = cycleAt(g, base));
     }
-    base += cy.total;
-    if (base < de) ({ cy } = cycleAt(s, base));
   }
   return out;
+}
+// The next show (not a commercial) starting at or after t, for "Up next".
+function nextShow(s, t) {
+  const end = nextDay(s.ds);
+  for (let k = 0; k < 80 && t < end; k++) {
+    const it = itemAt(s, t);
+    if (it.kind === "show" && it.from === 0 && it.start >= t - 1000) return it;
+    if (it.kind === "offair") return null;
+    t = it.end;
+  }
+  return null;
 }
 
 /* ---------- static ---------- */
@@ -1032,6 +1256,7 @@ function makeSlot() {
   if (ytReady) s.player = new YT.Player(host, {
     width: "100%", height: "100%",
     playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, playsinline: 1, mute: 1,
+                  cc_load_policy: state.captions ? 1 : 0, cc_lang_pref: (navigator.language || "en").slice(0, 2),
                   ...(location.protocol.startsWith("http") ? { origin: location.origin } : {}) },
     events: {
       onReady: () => {
@@ -1045,6 +1270,9 @@ function makeSlot() {
   });
   video.addEventListener("playing", () => { if (s.mode === "local") onSlotPlaying(s); });
   video.addEventListener("ended", () => { if (s.mode === "local") advance(s, true); });
+  video.addEventListener("pause", () => {
+    if (s.mode === "local" && s.it && video.getAttribute("src") && !video.ended && video.currentTime < s.endSec - 1.5) unexpectedPause(s);
+  });
   video.addEventListener("timeupdate", () => { if (s.mode === "local" && s.it && video.currentTime >= s.endSec - 0.3) advance(s, true); });
   video.addEventListener("error", () => { if (s.mode === "local" && video.getAttribute("src")) onSlotError(s); });
   slots.push(s);
@@ -1099,14 +1327,27 @@ function loadInto(s, sch, it, v, startSec, endSec, filler = false) {
   if (s === active) { applyVolume(); watch(s); } else s.player.mute();
 }
 
+// Nothing to play in this slot until `it.end`: a time block with no videos, or a weather channel with no music.
+function parkSlot(s, sch, it) {
+  s.chId = sch.ch.id; s.sch = sch; s.it = it; s.v = null; s.filler = false; s.seq++;
+  clearTimeout(s.timer);
+  s.timer = setTimeout(() => advance(s, true), Math.max(1000, it.end - Date.now() + 500));
+  stopLocal(s); if (s.ready) s.player.stopVideo();
+  if (s !== active) return;
+  updateNow(); renderGuide();
+  if (sch.ch.kind === "weather") { staticOff(seq); scheduleNeighbors(); }
+  else noSignal(`Nothing on this channel until ${clock(it.end)}.`, "OFF THE AIR");
+}
+
 function playAt(s, sch, t = Date.now()) {
   const it = itemAt(sch, t);
+  if (it.kind === "offair") return parkSlot(s, sch, it);
   if (!skipVideo(it.v)) {
     const into = Math.max(0, (Date.now() - it.start) / 1000);
     return loadInto(s, sch, it, it.v, into < 4 ? it.from : Math.floor(it.from + into), it.from + it.len);
   }
   // The scheduled video can't play here: fill its slot with something else until it's over.
-  const pool = (it.kind === "ad" ? sch.ads.videos : sch.e.videos).filter(v => !skipVideo(v));
+  const pool = (it.kind === "ad" ? it.seg.ads.videos : it.seg.e.videos).filter(v => !skipVideo(v));
   if (!pool.length) {
     if (s === active) noSignal(!ytReady && !it.v.local ? "Couldn't load the YouTube player. Check the internet connection."
       : it.v.local && !canPlay(it.v) ? "This channel's video files aren't on this device." : "None of this channel's videos would play.");
@@ -1136,7 +1377,11 @@ async function advance(s, ended) {
 
 function onSlotPlaying(s) {
   if (s !== active) return;
+  needResume = false;
   clearTimeout(watchB);
+  $("#nosignal").hidden = true;
+  document.body.classList.remove("no-signal");
+  recordHistory(s);
   document.body.classList.remove("tap-through");
   staticOff(seq);
   scheduleNeighbors();
@@ -1144,8 +1389,27 @@ function onSlotPlaying(s) {
 function onSlotState(s, st) {
   if (st === YT.PlayerState.PLAYING) onSlotPlaying(s);
   if (st === YT.PlayerState.ENDED) advance(s, true);
-  // Some players pause at endSeconds instead of reporting ENDED.
-  if (st === YT.PlayerState.PAUSED && s.it && slotTime(s) >= s.endSec - 1.5) advance(s, true);
+  if (st === YT.PlayerState.PAUSED && s.it) {
+    // Some players pause at endSeconds instead of reporting ENDED; any other pause wasn't asked for.
+    if (slotTime(s) >= s.endSec - 1.5) advance(s, true); else unexpectedPause(s);
+  }
+}
+
+// Live TV doesn't pause. Phones pause by themselves when headphones are unplugged or an earbud comes out,
+// so pick back up where the channel is now. If the phone won't allow that without a tap, ask for one.
+let needResume = false;
+function unexpectedPause(s) {
+  if (s !== active || !s.v) return;
+  const sq = s.seq;
+  setTimeout(() => {
+    if (s !== active || s.seq !== sq || slotStarting(s) || document.hidden) return;
+    resync(s);
+    setTimeout(() => {
+      if (s !== active || s.seq !== sq || slotStarting(s)) return;
+      needResume = true;
+      toast("Paused by your phone. Tap the picture to keep watching.");
+    }, 2500);
+  }, 800);
 }
 function onSlotError(s) {
   if (!s.v) return;
@@ -1159,12 +1423,14 @@ function activate(s) {
   active = s;
   for (const o of slots) o.el.classList.toggle("on", o === s);
   applyVolume();
+  updateOverlays();
 }
 
 // Bring a pre-loaded slot back in line with its schedule before showing it.
 function resync(s) {
   if (!s.it) return false;
   if (Date.now() >= s.it.end) { advance(s, false); return false; }
+  if (!s.v) return true; // off the air, or the weather with no music: nothing to sync
   if (s.mode === "yt" && !s.ready) return false;
   if (!s.filler) {
     const want = s.it.from + (Date.now() - s.it.start) / 1000;
@@ -1211,7 +1477,8 @@ async function tune(i) {
   if (s && s.it) {
     // Pre-loaded: it's already playing in the background.
     activate(s); updateNow(); renderGuide();
-    if (resync(s)) staticOff(mySeq); else watch(s);
+    if (s.it.kind === "offair" && ch.kind !== "weather") noSignal(`Nothing on this channel until ${clock(s.it.end)}.`, "OFF THE AIR");
+    else if (resync(s)) { staticOff(mySeq); recordHistory(s); } else watch(s);
     scheduleNeighbors();
     return;
   }
@@ -1224,7 +1491,8 @@ async function tune(i) {
   try { sch = await getSched(ch, dayStart(Date.now())); }
   catch (err) { if (mySeq === seq) noSignal(err.message); return; }
   if (mySeq !== seq || active !== s) return;
-  if (sch.e.errs.length) toast(`Skipped ${sch.e.errs.length === 1 ? "a link" : sch.e.errs.length + " links"} on ${ch.name}. ${sch.e.errs[0]}`);
+  const errs = [...new Set(sch.segs.flatMap(g => g.e?.errs || []))];
+  if (errs.length) toast(`Skipped ${errs.length === 1 ? "a link" : errs.length + " links"} on ${ch.name}. ${errs[0]}`);
   playAt(s, sch);
 }
 
@@ -1256,6 +1524,12 @@ function scheduleNeighbors() {
       } catch {}
     }
   }, 1500);
+}
+
+// Start over with fresh players (needed when the subtitle setting changes).
+function resetPlayers() {
+  for (const s of slots) { clearTimeout(s.timer); stopLocal(s); s.player?.destroy(); s.el.remove(); }
+  slots.length = 0; active = null;
 }
 
 let prefetching = false;
@@ -1299,16 +1573,250 @@ function setNow(title, meta) {
   $("#dockCh").textContent = ch?.name || "";
 }
 function updateNow() {
-  const s = active, it = s?.it;
+  const s = active, it = s?.it, ch = chById(s?.chId);
+  updateOverlays();
   if (!it) return setNow("Tuning…", "");
+  if (ch?.kind === "weather") {
+    const place = ch.weather?.label || "Add your location in Settings";
+    return setNow(`Local Forecast · ${place}`, s.v ? `Music: ${s.v.title}` : "");
+  }
+  if (it.kind === "offair") return setNow("Off the air", `Back at ${clock(it.end)}`);
   if (it.kind === "ad") {
     const back = clock(it.bEnd);
     return setNow("Commercial break", it.mid ? `Back to ${it.show.title} at ${back}`
       : it.show ? `Up next at ${back}: ${it.show.title}` : `Back at ${back}`);
   }
-  if (s.filler) return setNow(s.v.title, `${s.v.by} · Filling in until ${clock(it.end)}`);
-  setNow(it.v.title, `${it.v.by} · ${clock(it.spanStart)}–${clock(it.spanEnd)}`);
+  const block = it.seg?.ch.blockName ? `${it.seg.ch.blockName} · ` : "";
+  if (s.filler) return setNow(s.v.title, `${block}${s.v.by} · Filling in until ${clock(it.end)}`);
+  setNow(it.v.title, `${block}${it.v.by} · ${clock(it.spanStart)}–${clock(it.spanEnd)}`);
 }
+
+/* ---------- what's drawn over the picture: station logo, "Up next", radio card, weather ---------- */
+
+function updateOverlays() {
+  const s = active, ch = chById(s?.chId), it = s?.it;
+  const weather = ch?.kind === "weather", radio = !weather && ch?.display === "radio" && it && it.kind !== "offair";
+  $("#weather").hidden = !weather;
+  $("#radio").hidden = !radio;
+  $("#bug").hidden = !state.showLogo || !ch || weather;
+  if (ch) { $("#bugNum").textContent = pad(cur + 1); $("#bugName").textContent = ch.name; }
+  if (radio) {
+    const v = s.v;
+    $("#radioCh").textContent = ch.name;
+    $("#radioTitle").textContent = it.kind === "ad" ? "Commercial break" : v?.title || "";
+    $("#radioBy").textContent = it.kind === "ad" ? "" : v?.by || "";
+    const art = $("#radioArt");
+    art.style.backgroundImage = v && !v.local && it.kind !== "ad" ? `url("https://i.ytimg.com/vi/${v.id}/hqdefault.jpg")` : "";
+    art.textContent = v && !v.local && it.kind !== "ad" ? "" : "♪";
+  }
+  if (weather) renderWeather(true);
+}
+
+// "Now" for a few seconds when a show starts, "Up next" in the last 15 seconds of one.
+let lowerKey = "";
+function showLower(key, label, title, meta) {
+  if (lowerKey === key) return;
+  lowerKey = key;
+  $("#lowerLabel").textContent = label; $("#lowerTitle").textContent = title; $("#lowerMeta").textContent = meta;
+  $("#lower").classList.add("on");
+}
+function hideLower() { if (lowerKey) { lowerKey = ""; $("#lower").classList.remove("on"); } }
+setInterval(() => {
+  const s = active, it = s?.it, ch = chById(s?.chId), now = Date.now();
+  if (!state.showUpNext || !$("#power").hidden || !it || !ch || ch.kind === "weather" || it.kind !== "show" || s.filler || document.body.classList.contains("static")) return hideLower();
+  if (it.end === it.spanEnd && it.end - now <= 15000 && it.end - now > 1000) {
+    if (it._next === undefined) it._next = s.sch && it.end < nextDay(s.sch.ds) ? nextShow(s.sch, it.end) : null;
+    if (it._next) return showLower(`next|${it.start}`, "Up next", it._next.v.title, `${clock(it._next.start)} on ${ch.name}`);
+  }
+  if (it.start === it.spanStart && now - it.start >= 1500 && now - it.start < 9000) return showLower(`now|${it.start}`, ch.display === "radio" ? "Now playing" : "Now", it.v.title, ch.name);
+  hideLower();
+}, 1000);
+
+/* weather channel: forecast from Open-Meteo (free, no key needed) */
+
+const WX_KEY = "rabbit-ears-weather-v1";
+const wxCache = load(WX_KEY) || {};
+let wxPage = 0, wxPageT = 0, wxFetching = null;
+const isMetric = ch => ch.weather?.units === "metric";
+
+function wxCode(code, day = true) {
+  const c = +code;
+  if (c === 0) return [day ? "Sunny" : "Clear", day ? "sun" : "moon"];
+  if (c === 1) return [day ? "Mostly sunny" : "Mostly clear", day ? "sun" : "moon"];
+  if (c === 2) return ["Partly cloudy", day ? "partly" : "partlyNight"];
+  if (c === 3) return ["Cloudy", "cloud"];
+  if (c === 45 || c === 48) return ["Fog", "fog"];
+  if (c >= 51 && c <= 57) return ["Drizzle", "rain"];
+  if (c === 66 || c === 67) return ["Freezing rain", "sleet"];
+  if (c >= 61 && c <= 65) return [c === 65 ? "Heavy rain" : "Rain", "rain"];
+  if (c >= 71 && c <= 77) return [c === 75 ? "Heavy snow" : "Snow", "snow"];
+  if (c >= 80 && c <= 82) return ["Showers", "rain"];
+  if (c === 85 || c === 86) return ["Snow showers", "snow"];
+  if (c >= 95) return [c > 95 ? "Storms with hail" : "Thunderstorms", "storm"];
+  return ["—", "cloud"];
+}
+function wxIcon(kind) {
+  const sun = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#f5cf3d"/>` +
+    [...Array(8)].map((_, i) => { const a = i * Math.PI / 4, x1 = x + Math.cos(a) * (r + 4), y1 = y + Math.sin(a) * (r + 4), x2 = x + Math.cos(a) * (r + 10), y2 = y + Math.sin(a) * (r + 10); return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f5cf3d" stroke-width="4" stroke-linecap="round"/>`; }).join("");
+  const moon = `<path d="M58 22a26 26 0 1 0 22 34A20 20 0 0 1 58 22z" fill="#e8ecf8"/>`;
+  const cloud = (dy = 0, fill = "#f2f5ff") => `<path transform="translate(0 ${dy})" d="M28 72h46a16 16 0 0 0 0-32 22 22 0 0 0-42-4A18 18 0 0 0 28 72z" fill="${fill}"/>`;
+  const drops = (col) => [30, 46, 62].map(x => `<line x1="${x}" y1="80" x2="${x - 5}" y2="92" stroke="${col}" stroke-width="4" stroke-linecap="round"/>`).join("");
+  const flakes = [30, 46, 62].map(x => `<circle cx="${x - 2}" cy="86" r="3.5" fill="#fff"/>`).join("");
+  const art = {
+    sun: sun(48, 48, 18), moon,
+    partly: sun(36, 34, 13) + cloud(6), partlyNight: `<g transform="translate(-14 -10) scale(.8)">${moon}</g>` + cloud(6),
+    cloud: cloud(-4, "#dfe6f7") + cloud(4), fog: cloud(-8) + [70, 80, 90].map(y => `<line x1="22" y1="${y}" x2="78" y2="${y}" stroke="#c9d3ea" stroke-width="4" stroke-linecap="round"/>`).join(""),
+    rain: cloud(-6) + drops("#6fb6ff"), sleet: cloud(-6) + drops("#6fb6ff") + `<circle cx="70" cy="88" r="3.5" fill="#fff"/>`,
+    snow: cloud(-6) + flakes, storm: cloud(-6, "#c3cbe0") + `<path d="M50 70l-10 16h9l-5 14 14-20h-9l6-10z" fill="#f5cf3d"/>`,
+  }[kind] || cloud();
+  return `<svg viewBox="0 0 96 100" aria-hidden="true">${art}</svg>`;
+}
+const compass = deg => ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+
+const US_STATES = Object.fromEntries(("al alabama|ak alaska|az arizona|ar arkansas|ca california|co colorado|ct connecticut|de delaware|fl florida|ga georgia|hi hawaii|id idaho|il illinois|in indiana|ia iowa|ks kansas|ky kentucky|la louisiana|me maine|md maryland|ma massachusetts|mi michigan|mn minnesota|ms mississippi|mo missouri|mt montana|ne nebraska|nv nevada|nh new hampshire|nj new jersey|nm new mexico|ny new york|nc north carolina|nd north dakota|oh ohio|ok oklahoma|or oregon|pa pennsylvania|ri rhode island|sc south carolina|sd south dakota|tn tennessee|tx texas|ut utah|vt vermont|va virginia|wa washington|wv west virginia|wi wisconsin|wy wyoming|dc district of columbia")
+  .split("|").map(s => [s.slice(0, 2), s.slice(3)]));
+async function geocode(text) {
+  const [name, ...rest] = text.split(",").map(s => s.trim()).filter(Boolean);
+  if (!name) throw new Error("Type a city or town.");
+  const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=10&language=en&format=json`);
+  if (!r.ok) throw new Error("Couldn't reach the weather service. Try again in a minute.");
+  const list = (await r.json()).results || [];
+  let hint = rest.join(" ").toLowerCase().replace(/\./g, "").trim();
+  hint = US_STATES[hint] || hint;
+  // "Portland, Maine", "Portland, ME", "Paris, France" or "Paris, FR" all work.
+  const fits = p => [p.admin1, p.admin2, p.country].some(x => x && (x.toLowerCase() === hint || x.toLowerCase().startsWith(hint + " ") || (hint.length > 3 && x.toLowerCase().startsWith(hint))))
+    || (p.country_code || "").toLowerCase() === hint;
+  const match = hint ? list.find(fits) : list[0];
+  if (!match) throw new Error(`Couldn't find "${text}". Try just the city name, or add the state or country after a comma.`);
+  return { lat: match.latitude, lon: match.longitude, label: [match.name, match.admin1, match.country_code === "US" ? "" : match.country].filter(Boolean).join(", ") };
+}
+
+async function fetchWeather(ch) {
+  const w = ch.weather;
+  if (!w?.lat) return null;
+  const key = `${w.lat},${w.lon},${w.units}`;
+  const c = wxCache[key];
+  if (c && Date.now() - c.at < 15 * 60e3) return c;
+  if (wxFetching) return wxFetching;
+  const metric = isMetric(ch);
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${w.lat}&longitude=${w.lon}` +
+    "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m" +
+    "&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset" +
+    `&temperature_unit=${metric ? "celsius" : "fahrenheit"}&wind_speed_unit=${metric ? "kmh" : "mph"}&timezone=auto&forecast_days=7`;
+  wxFetching = (async () => {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw 0;
+      const d = await r.json();
+      wxCache[key] = { at: Date.now(), d };
+      for (const k of Object.keys(wxCache)) if (k !== key) delete wxCache[k];
+      store(WX_KEY, wxCache);
+      return wxCache[key];
+    } catch { return c || null; } finally { wxFetching = null; }
+  })();
+  return wxFetching;
+}
+
+function wxPages(ch, d) {
+  const metric = isMetric(ch), deg = "°", spd = metric ? "km/h" : "mph";
+  const cur = d.current, [cond, icon] = wxCode(cur.weather_code, cur.is_day);
+  const day = i => new Date(d.daily.time[i] + "T12:00").toLocaleDateString([], { weekday: "short" });
+  const r = Math.round;
+  const pages = [];
+  pages.push(["Current Conditions", `<div class="wx-page"><div class="wx-panel wx-now">${wxIcon(icon)}
+    <div><div class="wx-temp">${r(cur.temperature_2m)}${deg}</div><div class="wx-cond">${cond}</div></div>
+    <dl class="wx-facts"><dt>Feels like</dt><dd>${r(cur.apparent_temperature)}${deg}</dd><dt>Humidity</dt><dd>${r(cur.relative_humidity_2m)}%</dd>
+      <dt>Wind</dt><dd>${r(cur.wind_speed_10m) ? `${compass(cur.wind_direction_10m)} ${r(cur.wind_speed_10m)} ${spd}` : "Calm"}</dd>
+      <dt>Sunset</dt><dd>${clock(Date.parse(d.daily.sunset[0]))}</dd></dl></div></div>`]);
+  const [tc] = wxCode(d.daily.weather_code[0]);
+  const nightCodes = d.hourly.time.map((t, i) => [t, i]).filter(([t]) => t.startsWith(d.daily.time[0]) && +t.slice(11, 13) >= 18).map(([, i]) => d.hourly.weather_code[i]);
+  const [nc] = wxCode(nightCodes.length ? Math.max(...nightCodes) : d.daily.weather_code[1], false);
+  pages.push(["Today's Forecast", `<div class="wx-page"><div class="wx-today">
+    <div class="wx-panel"><h3>Today</h3><div class="big">${r(d.daily.temperature_2m_max[0])}${deg}</div><p>${tc}. ${d.daily.precipitation_probability_max[0] ?? 0}% chance of rain or snow.</p></div>
+    <div class="wx-panel"><h3>Tonight</h3><div class="big">${r(d.daily.temperature_2m_min[1] ?? d.daily.temperature_2m_min[0])}${deg}</div><p>${nc}. Sunrise tomorrow at ${clock(Date.parse(d.daily.sunrise[1] || d.daily.sunrise[0]))}.</p></div>
+  </div></div>`]);
+  pages.push(["Extended Forecast", `<div class="wx-page"><div class="wx-panel wx-days">${[1, 2, 3, 4, 5].filter(i => d.daily.time[i]).map(i => {
+    const [c, ic] = wxCode(d.daily.weather_code[i]);
+    return `<div class="wx-day"><div class="d">${day(i)}</div>${wxIcon(ic)}<div class="c">${c}</div><div class="hl">${r(d.daily.temperature_2m_max[i])}${deg} <span>${r(d.daily.temperature_2m_min[i])}${deg}</span></div><div class="p">${d.daily.precipitation_probability_max[i] ?? 0}% precip</div></div>`;
+  }).join("")}</div></div>`]);
+  // Next 12 hours as a temperature line, drawn to scale.
+  const nowIdx = Math.max(0, d.hourly.time.findIndex(t => Date.parse(t) >= Date.now() - 36e5));
+  const hrs = d.hourly.time.slice(nowIdx, nowIdx + 13).map((t, i) => ({ t: Date.parse(t), v: d.hourly.temperature_2m[nowIdx + i], p: d.hourly.precipitation_probability[nowIdx + i] ?? 0 }));
+  if (hrs.length > 2) {
+    const W = 640, H = 220, L = 40, R = 36, T = 30, B = 46;
+    const lo = Math.floor(Math.min(...hrs.map(h => h.v)) - 2), hi = Math.ceil(Math.max(...hrs.map(h => h.v)) + 2);
+    const x = i => L + i * (W - L - R) / (hrs.length - 1), y = v => T + (hi - v) * (H - T - B) / (hi - lo || 1);
+    const line = hrs.map((h, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(h.v).toFixed(1)}`).join(" ");
+    const bars = hrs.map((h, i) => `<rect x="${(x(i) - 7).toFixed(1)}" y="${(H - B - h.p * .5).toFixed(1)}" width="14" height="${(h.p * .5).toFixed(1)}" fill="#6fb6ff" opacity=".55"/>`).join("");
+    const labels = hrs.map((h, i) => i % 3 ? "" : `<text x="${x(i)}" y="${H - B + 22}" text-anchor="middle" fill="#a9bce8" font-size="15">${new Date(h.t).toLocaleTimeString([], { hour: "numeric" })}</text>
+      <text x="${x(i)}" y="${y(h.v) - 12}" text-anchor="middle" fill="#f2f5ff" font-size="18" font-weight="700">${r(h.v)}${deg}</text>`).join("");
+    pages.push(["Next 12 Hours", `<div class="wx-page"><div class="wx-panel wx-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Temperature for the next 12 hours">
+      <line x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}" stroke="#a9bce8" stroke-opacity=".4"/>${bars}
+      <path d="${line}" fill="none" stroke="#f5cf3d" stroke-width="4" stroke-linejoin="round"/>${hrs.map((h, i) => `<circle cx="${x(i)}" cy="${y(h.v)}" r="${i ? 3.5 : 6}" fill="#f5cf3d"/>`).join("")}${labels}
+      <text x="${W - R}" y="${T - 10}" text-anchor="end" fill="#a9bce8" font-size="14">Bars: chance of rain or snow</text></svg></div></div>`]);
+  }
+  const ticker = `Now ${r(cur.temperature_2m)}${deg} and ${cond.toLowerCase()} · Humidity ${r(cur.relative_humidity_2m)}% · Today's high ${r(d.daily.temperature_2m_max[0])}${deg} · Updated ${clock(wxCache[`${ch.weather.lat},${ch.weather.lon},${ch.weather.units}`]?.at || Date.now())}`;
+  return { pages, ticker };
+}
+
+async function renderWeather(fresh = false) {
+  const ch = chById(active?.chId);
+  if (!ch || ch.kind !== "weather" || $("#weather").hidden) return;
+  $("#wxPlace").textContent = ch.weather?.label || "";
+  $("#wxClock").textContent = clock(Date.now());
+  if (!ch.weather?.lat) {
+    $("#wxPage").textContent = "Local Forecast";
+    $("#wxMain").innerHTML = `<div class="wx-msg">Set your town in Settings → ${esc(ch.name)} → Location, and the forecast appears here.</div>`;
+    $("#wxTicker").textContent = "";
+    return;
+  }
+  const c = await fetchWeather(ch);
+  if (chById(active?.chId) !== ch) return;
+  if (!c) {
+    $("#wxMain").innerHTML = `<div class="wx-msg">Couldn't get the forecast right now. Trying again in a few minutes.</div>`;
+    return;
+  }
+  const { pages, ticker } = wxPages(ch, c.d);
+  if (!fresh) wxPage = (wxPage + 1) % pages.length;
+  wxPage %= pages.length;
+  $("#wxPage").textContent = pages[wxPage][0];
+  $("#wxMain").innerHTML = pages[wxPage][1];
+  $("#wxTicker").textContent = ticker;
+}
+// Next page every 10 seconds; the clock keeps time in between.
+setInterval(() => { if (!$("#weather").hidden) { wxPageT = (wxPageT + 1) % 10; if (wxPageT === 0) renderWeather(); else $("#wxClock").textContent = clock(Date.now()); } }, 1000);
+
+/* ---------- history (phones and computers) ---------- */
+
+const HIST_KEY = "rabbit-ears-history-v1";
+let history_ = load(HIST_KEY) || [];
+function recordHistory(s) {
+  if (piConfig || !s?.v || !s.it || s.it.kind === "offair") return;
+  const ch = chById(s.chId);
+  if (!ch || ch.kind === "weather" && !s.v) return;
+  const top = history_[0];
+  if (top && top.id === s.v.id && top.ch === ch.name) return;
+  history_.unshift({ id: s.v.id, title: s.it.kind === "ad" ? `Commercial: ${s.v.title}` : s.v.title, by: s.v.by, local: !!s.v.local, ch: ch.name, at: Date.now(),
+                     from: Math.floor(s.it.from + Math.max(0, (Date.now() - s.it.start) / 1000)) });
+  history_ = history_.slice(0, 300);
+  store(HIST_KEY, history_);
+  if (!$("#history").hidden) renderHistory();
+}
+function renderHistory() {
+  const day = t => { const d = new Date(t), today = new Date(); return d.toDateString() === today.toDateString() ? "" : d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + " · "; };
+  $("#histList").innerHTML = history_.map(h => `<div class="hist-row">
+      <span class="hist-time">${day(h.at)}${clock(h.at)}</span>
+      <span class="hist-text"><span class="hist-title">${esc(h.title)}</span><span class="hist-sub">${esc(h.ch)} · ${esc(h.by)}</span></span>
+      ${h.local ? `<span class="hist-sub">Your file</span>` : `<a class="btn" href="https://www.youtube.com/watch?v=${encodeURIComponent(h.id)}&t=${h.from || 0}s" target="_blank" rel="noopener">Watch on YouTube</a>`}
+    </div>`).join("") || `<p class="hint">Nothing yet. What you watch shows up here.</p>`;
+}
+function openHistory() {
+  $("#guide").hidden = $("#settings").hidden = true;
+  $("#history").hidden = false;
+  document.body.classList.add("panel-open");
+  renderHistory();
+}
+$("#clearHist").onclick = () => { history_ = []; store(HIST_KEY, history_); renderHistory(); };
 
 /* ---------- guide ---------- */
 
@@ -1334,17 +1842,25 @@ function renderGuide() {
   for (let t = t0; t < t1; t += 18e5) times += `<span style="left:${x(t)}px;width:${30 * ppm}px">${clock(t)}</span>`;
   const rows = chs().map((ch, i) => {
     let track = "";
+    if (ch.kind === "weather") {
+      const label = `Local Forecast${ch.weather?.label ? ` · ${ch.weather.label}` : ""}`;
+      track = `<button class="prog now" data-ch="${i}" style="left:0;width:${W - 3}px" aria-label="${esc(label)}"><span class="t">${esc(label)}</span><span class="h">Current conditions and the 5-day forecast, all day</span></button>`;
+    }
     // The window can cross 4 AM, where one broadcast day hands over to the next.
-    for (let t = t0; t < t1;) {
+    for (let t = t0; t < t1 && ch.kind !== "weather";) {
       const ds = dayStart(t), segEnd = Math.min(t1, nextDay(ds)), sch = schedFor(ch, ds);
       if (sch) {
         for (const b of blocksBetween(sch, t, segEnd)) {
           const l = x(Math.max(b.start, t0)), w = x(Math.min(b.end, t1)) - l - 3;
+          if (b.kind === "offair") {
+            track += `<div class="epg-msg" style="left:${l}px;width:${Math.max(3, w)}px">${w >= 70 ? "Off the air" : ""}</div>`;
+            continue;
+          }
           if (b.kind === "ad") {
             track += `<button class="prog ad" data-ch="${i}" style="left:${l}px;width:${Math.max(3, w)}px" title="Commercial break" aria-label="Commercial break ${clock(b.start)}">${w >= 50 ? `<span class="t">Ads</span>` : ""}</button>`;
             continue;
           }
-          const isNow = b.start <= now && now < b.end, label = `${b.v.title} · ${clock(b.start)}–${clock(b.end)}`;
+          const isNow = b.start <= now && now < b.end, label = `${b.seg?.ch.blockName ? b.seg.ch.blockName + ": " : ""}${b.v.title} · ${clock(b.start)}–${clock(b.end)}`;
           const state2 = isBad(b.v.id) ? " bad" : b.v.local && !canPlay(b.v) ? " missing" : "";
           track += `<button class="prog${isNow ? " now" : ""}${state2}" data-ch="${i}" style="left:${l}px;width:${Math.max(4, w)}px" title="${esc(label)}" aria-label="${esc(label)}">`
             + (w >= 40 ? `<span class="t">${esc(b.v.title)}</span>` : "")
@@ -1391,7 +1907,7 @@ function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.classList.add("on");
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 4500);
 }
-const panelOpen = () => !$("#guide").hidden || !$("#settings").hidden;
+const panelOpen = () => !$("#guide").hidden || !$("#settings").hidden || !$("#history").hidden;
 function wake(ms = 2500) {
   if (!$("#power").hidden) return;
   document.body.classList.add("ui-on");
@@ -1411,6 +1927,7 @@ let touch0 = null;
 $("#shield").addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") touch0 = { x: e.clientX, y: e.clientY, t: Date.now() }; });
 $("#shield").addEventListener("pointerup", e => {
   if (needUnmute) { needUnmute = false; applyVolume(); toast("Sound on."); }
+  if (needResume && active) { needResume = false; resync(active); slotPlay(active); }
   if (!touch0 || e.pointerType === "mouse") return;
   const dx = e.clientX - touch0.x, dy = e.clientY - touch0.y; touch0 = null;
   if (Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx) * 1.5) { tune(cur + (dy < 0 ? 1 : -1)); return; }
@@ -1429,7 +1946,7 @@ function openGuide() {
   document.body.classList.add("panel-open"); renderGuide();
 }
 function closePanels() {
-  $("#guide").hidden = $("#settings").hidden = true;
+  $("#guide").hidden = $("#settings").hidden = $("#history").hidden = true;
   document.body.classList.remove("panel-open");
   if (!isPortrait()) wake();
 }
@@ -1441,6 +1958,7 @@ document.addEventListener("click", e => {
   if (!b || b.closest("#chList")) return;
   const act = b.dataset.act;
   if (act === "guide") $("#guide").hidden ? openGuide() : closePanels();
+  if (act === "history") $("#history").hidden ? openHistory() : closePanels();
   if (act === "settings") openSettings();
   if (act === "mute") { state.muted = !state.muted; needUnmute = false; save(); applyVolume(); }
   if (act === "fs") toggleFullscreen();
@@ -1599,7 +2117,11 @@ const NAMES_KEY = "rabbit-ears-names-v1";
 const names = load(NAMES_KEY) || {}; // "handle:@x" | "channelId:UC…" | "playlist:PL…" | "video:…" -> { title, sub, thumb } or { err, at }
 const srcKey = s => s && s.type !== "local" && s.type !== "unknown" ? `${s.type}:${s.id}` : null;
 let draftAds = [];
-const editorList = id => id === "ads" ? draftAds : draft[+id.slice(3)].sources;
+function editorList(id) {
+  if (id === "ads") return draftAds;
+  const [kind, i, j] = id.split("-");
+  return kind === "b" ? draft[+i].blocks[+j].sources : draft[+i].sources;
+}
 
 // Store links in a tidy form: tracking bits like ?si= are dropped.
 function cleanSource(raw) {
@@ -1625,13 +2147,43 @@ function srcInfo(raw) {
   return { kind: kind === "playlist" || kind === "video" ? kind : "channel", title: fallback, sub: state.apiKey ? `${label} · looking up name…` : label };
 }
 
+// Length choices for channels and links (seconds; 0 = no limit).
+const MIN_LENS = [[0, "Any length"], [60, "1 minute"], [300, "5 minutes"], [600, "10 minutes"], [1200, "20 minutes"]];
+const MAX_LENS = [[0, "No limit"], [600, "10 minutes"], [1200, "20 minutes"], [1800, "30 minutes"], [3600, "1 hour"], [7200, "2 hours"], [10800, "3 hours"]];
+const shortLen = s => s >= 3600 ? `${s / 3600} hr` : `${s / 60} min`;
+const lenText = (min, max) => min && max ? `${shortLen(min)}–${shortLen(max)}` : min ? `${shortLen(min)} and longer` : max ? `up to ${shortLen(max)}` : "any length";
+const pickLabel = v => (PICKS.find(([k]) => k === v) || [, ""])[1];
+
+// The channel or time block an editor's links belong to (commercials have no per-link settings).
+function editorOwner(id) {
+  if (id === "ads") return null;
+  const [kind, i, j] = id.split("-");
+  return kind === "b" ? draft[+i].blocks[+j] : draft[+i];
+}
+const editorChannel = id => id === "ads" ? null : draft[+id.split("-")[1]];
+const openLinks = new Set(); // "editorId|link" rows showing their options
+
 function sourceRows(id, list) {
+  const owner = editorOwner(id), ch = editorChannel(id);
+  const opt = (v, cur, label) => `<option value="${v}" ${String(v) === String(cur) ? "selected" : ""}>${label}</option>`;
   return list.map((raw, j) => {
-    const info = srcInfo(raw);
+    const info = srcInfo(raw), o = owner?.linkOpts?.[raw], open = owner && openLinks.has(`${id}|${raw}`);
     const pic = info.thumb ? `<img src="${esc(info.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : info.kind === "local" ? "▤" : info.kind === "playlist" ? "≡" : info.kind === "video" ? "▶" : "@";
-    return `<div class="src-row" title="${esc(raw)}"><span class="src-thumb ${info.kind}">${pic}</span>
-      <span class="src-text"><span class="src-name">${esc(info.title)}</span><span class="src-sub${info.err ? " err" : ""}">${esc(info.sub)}</span></span>
-      <button type="button" class="btn src-del" data-src-del="${j}" data-editor="${id}" aria-label="Remove ${esc(info.title)}">×</button></div>`;
+    const own = o ? `Own settings: ${info.kind === "local" ? "" : pickLabel(o.pick) + ", "}${lenText(+o.minLen, +o.maxLen)}` : "";
+    const body = `<span class="src-thumb ${info.kind}">${pic}</span>
+        <span class="src-text"><span class="src-name">${esc(info.title)}</span><span class="src-sub${info.err ? " err" : ""}">${esc(info.sub)}</span>${own ? `<span class="src-sub src-custom">${esc(own)}</span>` : ""}</span>`;
+    const ls = o || { pick: ch && pickFor(ch), minLen: ch?.minLen || 0, maxLen: ch?.maxLen || 0 };
+    const panel = !open ? "" : `<div class="src-opts">
+        <label class="check"><input type="checkbox" data-lo="default" data-editor="${id}" data-j="${j}" ${o ? "" : "checked"}> Use the channel's settings</label>
+        <div class="grid" ${o ? "" : "hidden"}>
+          ${info.kind === "local" ? "" : `<label>Which videos<select data-lo="pick" data-editor="${id}" data-j="${j}">${PICKS.map(([v, l]) => opt(v, ls.pick, l)).join("")}</select></label>`}
+          <label>Shortest<select data-lo="minLen" data-editor="${id}" data-j="${j}">${MIN_LENS.map(([v, l]) => opt(v, ls.minLen, l)).join("")}</select></label>
+          <label>Longest<select data-lo="maxLen" data-editor="${id}" data-j="${j}">${MAX_LENS.map(([v, l]) => opt(v, ls.maxLen, l)).join("")}</select></label>
+        </div>
+      </div>`;
+    return `<div class="src-item"><div class="src-row" title="${esc(raw)}">
+        ${owner ? `<button type="button" class="src-open" data-src-open="${j}" data-editor="${id}" aria-expanded="${!!open}" aria-label="${esc(info.title)}: show its settings">${body}</button>` : body}
+        <button type="button" class="btn src-del" data-src-del="${j}" data-editor="${id}" aria-label="Remove ${esc(info.title)}">×</button></div>${panel}</div>`;
   }).join("") || `<p class="hint">Nothing added yet.</p>`;
 }
 const sourceEditor = (id, list) => `<div class="src-editor" data-editor-box="${id}" style="display:grid;gap:8px">${sourceEditorInner(id, list)}</div>`;
@@ -1677,8 +2229,34 @@ document.addEventListener("click", e => {
     if (!addSource(id, input.value)) return;
     input.value = "";
   }
-  if (del) editorList(id).splice(+del.dataset.srcDel, 1);
+  if (del) {
+    const [raw] = editorList(id).splice(+del.dataset.srcDel, 1), owner = editorOwner(id);
+    if (owner?.linkOpts) delete owner.linkOpts[raw];
+  }
   if (fold) editorList(id).push(`local:${fold.dataset.srcFolder}`);
+  redrawEditor(id);
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-src-open]");
+  if (!b) return;
+  const id = b.dataset.editor, key = `${id}|${editorList(id)[+b.dataset.srcOpen]}`;
+  openLinks.has(key) ? openLinks.delete(key) : openLinks.add(key);
+  redrawEditor(id);
+});
+document.addEventListener("change", e => {
+  const el = e.target.closest("[data-lo]");
+  if (!el) return;
+  const id = el.dataset.editor, raw = editorList(id)[+el.dataset.j], owner = editorOwner(id), ch = editorChannel(id);
+  readChannels();
+  owner.linkOpts ||= {};
+  if (el.dataset.lo === "default") {
+    // Starting custom settings from the channel's current ones.
+    if (el.checked) delete owner.linkOpts[raw];
+    else owner.linkOpts[raw] = { pick: pickFor(ch), minLen: ch.minLen || 0, maxLen: ch.maxLen || 0 };
+  } else {
+    owner.linkOpts[raw] ||= { pick: pickFor(ch), minLen: ch.minLen || 0, maxLen: ch.maxLen || 0 };
+    owner.linkOpts[raw][el.dataset.lo] = el.dataset.lo === "pick" ? el.value : +el.value;
+  }
   redrawEditor(id);
 });
 document.addEventListener("keydown", e => {
@@ -1748,6 +2326,15 @@ function pickSettings(v) {
 }
 
 let draft = [];
+const openCards = new Set(); // channels whose settings are expanded
+function cardSummary(ch) {
+  if (ch.kind === "weather") return ch.weather?.label ? `Forecast for ${ch.weather.label}` : "Location not set yet";
+  const n = ch.sources.length;
+  return [`${n} ${n === 1 ? "link" : "links"}`, { full: "Shuffled", none: "In order", partial: `${ch.blockSize} in a row` }[ch.shuffle],
+          pickLabel(pickFor(ch)), lenText(ch.minLen, ch.maxLen),
+          ch.timeMode === "blocks" && ch.blocks.length ? `${ch.blocks.length} time ${ch.blocks.length === 1 ? "block" : "blocks"}` : "",
+          ch.display === "radio" ? "Radio" : ""].filter(Boolean).join(" · ");
+}
 const shuffleHint = ch => ({
   full: "Every video plays in random order.",
   none: "Videos play in upload order, with all links merged together.",
@@ -1756,9 +2343,9 @@ const shuffleHint = ch => ({
 
 function renderChannels() {
   const opt = (v, cur, label) => `<option value="${v}" ${v === cur ? "selected" : ""}>${label}</option>`;
-  $("#chList").innerHTML = draft.map((ch, i) => `
-    <fieldset class="ch-card" data-i="${i}" data-shuffle="${ch.shuffle}">
+  const head = (ch, i) => `
       <div class="ch-head">
+        <button type="button" class="ch-toggle" data-act="toggle" aria-expanded="${openCards.has(ch.id)}" aria-label="Show or hide ${esc(ch.name)}'s settings"><span class="chev">›</span></button>
         <span class="ch-num">${pad(i + 1)}</span>
         <input type="text" id="name-${ch.id}" class="f-name" aria-label="Channel name" value="${esc(ch.name)}">
         <div class="ch-tools">
@@ -1767,7 +2354,33 @@ function renderChannels() {
           <button type="button" class="btn danger" data-act="del">Delete</button>
         </div>
       </div>
+      <button type="button" class="ch-summary" data-act="toggle">${esc(cardSummary(ch))}</button>`;
+  const lenOpt = (list, cur) => list.map(([v, l]) => opt(v, cur || 0, l)).join("");
+  const weatherCard = (ch, i) => `
+    <fieldset class="ch-card${openCards.has(ch.id) ? " open" : ""}" data-i="${i}" data-kind="weather">
+      ${head(ch, i)}
+      <div class="ch-body" ${openCards.has(ch.id) ? "" : "hidden"}>
+      <div class="grid">
+        <label for="loc-${ch.id}">Location
+          <input type="text" id="loc-${ch.id}" class="f-loc" value="${esc(ch.weather?.place || "")}" placeholder="City, state or country" autocapitalize="words">
+        </label>
+        <label for="units-${ch.id}">Units
+          <select id="units-${ch.id}" class="f-units">${opt("us", ch.weather?.units || "us", "°F and mph")}${opt("metric", ch.weather?.units || "us", "°C and km/h")}</select>
+        </label>
+      </div>
+      <div class="row"><button type="button" class="btn" data-act="findloc">Find location</button><p class="wx-found" data-wx-found>${ch.weather?.label ? `Forecast for ${esc(ch.weather.label)}` : ""}</p></div>
+      <p class="err" data-wx-err hidden></p>
+      <div class="fieldname">Background music (optional)</div>
+      ${sourceEditor(`ch-${i}`, ch.sources)}
+      <p class="hint">Plays these links quietly behind the forecast, shuffled. Leave it empty for a silent forecast.</p>
+      </div>
+    </fieldset>`;
+  const tvCard = (ch, i) => `
+    <fieldset class="ch-card${openCards.has(ch.id) ? " open" : ""}" data-i="${i}" data-shuffle="${ch.shuffle}" data-timemode="${ch.timeMode}">
+      ${head(ch, i)}
+      <div class="ch-body" ${openCards.has(ch.id) ? "" : "hidden"}>
       <div class="fieldname">What's on this channel</div>
+      <p class="hint">Tap a link to give it its own settings.</p>
       ${sourceEditor(`ch-${i}`, ch.sources)}
       <div class="grid">
         <label for="shuf-${ch.id}">Shuffle
@@ -1784,31 +2397,93 @@ function renderChannels() {
         <label for="pick-${ch.id}">Which videos
           <select id="pick-${ch.id}" class="f-pick">${PICKS.map(([v, label]) => opt(v, pickFor(ch), label)).join("")}</select>
         </label>
+        <label for="min-${ch.id}">Shortest
+          <select id="min-${ch.id}" class="f-min">${lenOpt(MIN_LENS, ch.minLen)}</select>
+        </label>
+        <label for="max-${ch.id}">Longest
+          <select id="max-${ch.id}" class="f-max">${lenOpt(MAX_LENS, ch.maxLen)}</select>
+        </label>
         <label for="brk-${ch.id}">Commercial breaks
           <select id="brk-${ch.id}" class="f-breaks">
             ${opt("off", ch.breaks, "Off")}${opt("between", ch.breaks, "Between shows")}${opt("during", ch.breaks, "Between and during shows")}
           </select>
         </label>
+        <label for="disp-${ch.id}">Picture
+          <select id="disp-${ch.id}" class="f-display">${opt("video", ch.display, "Show the video")}${opt("radio", ch.display, "Radio (song info instead)")}</select>
+        </label>
+        <label for="tm-${ch.id}">Programming
+          <select id="tm-${ch.id}" class="f-timemode">${opt("all", ch.timeMode, "Same all day")}${opt("blocks", ch.timeMode, "Changes by time of day")}</select>
+        </label>
       </div>
       <p class="hint f-hint">${esc(shuffleHint(ch))}</p>
-      <label class="check"><input type="checkbox" id="short-${ch.id}" class="f-short" ${ch.skipShort ? "checked" : ""}> Skip videos under 1 minute (Shorts)</label>
-    </fieldset>`).join("") || `<p class="hint">No channels yet. Add one to start your lineup.</p>`;
+      <div class="blocks only-blocks">
+        <p class="hint">Each time block plays its own links. Outside the blocks, the channel plays what's listed above.</p>
+        ${(ch.blocks || []).map((b, j) => `
+          <div class="blk-card" data-j="${j}">
+            <div class="blk-head">
+              <input type="text" class="f-bname" id="bname-${ch.id}-${j}" value="${esc(b.name || "")}" placeholder="Block name, like Morning Cartoons" aria-label="Block name">
+              <input type="time" class="f-bstart" id="bstart-${ch.id}-${j}" value="${esc(b.start || "")}" aria-label="Starts at">
+              <span class="to">to</span>
+              <input type="time" class="f-bend" id="bend-${ch.id}-${j}" value="${esc(b.end || "")}" aria-label="Ends at">
+              <button type="button" class="btn src-del" data-act="delblock" data-j="${j}" aria-label="Remove this time block">×</button>
+            </div>
+            ${sourceEditor(`b-${i}-${j}`, b.sources || [])}
+          </div>`).join("")}
+        <div class="row"><button type="button" class="btn" data-act="addblock">Add time block</button></div>
+      </div>
+      </div>
+    </fieldset>`;
+  $("#chList").innerHTML = draft.map((ch, i) => ch.kind === "weather" ? weatherCard(ch, i) : tvCard(ch, i)).join("")
+    || `<p class="hint">No channels yet. Add one to start your lineup.</p>`;
 }
 
 function readChannels() {
   $$(".ch-card").forEach(card => {
     const ch = draft[+card.dataset.i], q = s => card.querySelector(s);
+    const name = q(".f-name").value.trim() || "Untitled";
+    if (ch.kind === "weather") {
+      const place = q(".f-loc").value.trim(), units = q(".f-units").value;
+      // A changed town needs looking up again (done on Save, or with Find location).
+      ch.weather = place === ch.weather?.place ? { ...ch.weather, units } : { place, units };
+      ch.name = name;
+      return;
+    }
     const clamp = (v, lo, hi, d) => Math.min(hi, Math.max(lo, Math.round(+v) || d));
     Object.assign(ch, {
-      name: q(".f-name").value.trim() || "Untitled",
+      name,
       shuffle: q(".f-shuffle").value,
       blockSize: clamp(q(".f-block").value, 2, 50, 3),
       order: q(".f-order").value,
       ...pickSettings(q(".f-pick").value),
       breaks: q(".f-breaks").value,
-      skipShort: q(".f-short").checked,
+      display: q(".f-display").value,
+      timeMode: q(".f-timemode").value,
+      minLen: +q(".f-min").value,
+      maxLen: +q(".f-max").value,
+    });
+    card.querySelectorAll(".blk-card").forEach(bc => {
+      const b = ch.blocks[+bc.dataset.j];
+      b.name = bc.querySelector(".f-bname").value.trim();
+      b.start = bc.querySelector(".f-bstart").value;
+      b.end = bc.querySelector(".f-bend").value;
     });
   });
+}
+
+async function findLocation(card) {
+  const ch = draft[+card.dataset.i], found = card.querySelector("[data-wx-found]"), err = card.querySelector("[data-wx-err]");
+  readChannels();
+  if (!ch.weather?.place) { err.textContent = "Type your city or town first."; err.hidden = false; return false; }
+  found.textContent = "Looking it up…"; err.hidden = true;
+  try {
+    const g = await geocode(ch.weather.place);
+    ch.weather = { ...ch.weather, ...g };
+    found.textContent = `Forecast for ${g.label}`;
+    return true;
+  } catch (e) {
+    found.textContent = ""; err.textContent = e.message; err.hidden = false;
+    return false;
+  }
 }
 
 function openSettings() {
@@ -1818,6 +2493,9 @@ function openSettings() {
   $("#ghToken").value = state.ghToken;
   $("#preload").value = state.preload;
   $("#staticSound").checked = state.staticSound;
+  $("#showLogo").checked = state.showLogo;
+  $("#showUpNext").checked = state.showUpNext;
+  $("#captions").checked = state.captions;
   draftAds = [...state.ads];
   $("#adsEditor").innerHTML = sourceEditor("ads", draftAds);
   $("#breakLen").value = String(state.breakLen);
@@ -1840,18 +2518,40 @@ $("#chList").addEventListener("change", e => {
 });
 $("#chList").addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
+  if (b.dataset.act === "toggle") {
+    const card = b.closest(".ch-card"), ch = draft[+card.dataset.i], open = !openCards.has(ch.id);
+    open ? openCards.add(ch.id) : openCards.delete(ch.id);
+    card.classList.toggle("open", open);
+    card.querySelector(".ch-body").hidden = !open;
+    card.querySelector(".ch-toggle").setAttribute("aria-expanded", open);
+    if (!open) { readChannels(); card.querySelector(".ch-summary").textContent = cardSummary(ch); }
+    return;
+  }
   readChannels();
   const i = +b.closest(".ch-card").dataset.i, act = b.dataset.act;
   if (act === "del") {
     if (b.dataset.armed) draft.splice(i, 1);
     else { b.dataset.armed = "1"; b.textContent = "Confirm delete"; return; }
   }
+  if (act === "findloc") { findLocation(b.closest(".ch-card")); return; }
   if (act === "up" && i > 0) [draft[i - 1], draft[i]] = [draft[i], draft[i - 1]];
   if (act === "down" && i < draft.length - 1) [draft[i + 1], draft[i]] = [draft[i], draft[i + 1]];
+  if (act === "addblock") draft[i].blocks.push({ name: "", start: "", end: "", sources: [], linkOpts: {} });
+  if (act === "delblock") draft[i].blocks.splice(+b.dataset.j, 1);
   renderChannels();
+  resolveNames();
 });
+$("#addWx").onclick = () => {
+  readChannels();
+  const wx = newChannel({ name: "Local Forecast", kind: "weather", shuffle: "full", breaks: "off", minLen: 0,
+                          weather: { place: "", units: /^en-US|^en-LR|^my/.test(navigator.language || "") ? "us" : "metric" } });
+  openCards.add(wx.id); draft.push(wx);
+  renderChannels();
+  $("#chList").lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  $("#chList").lastElementChild?.querySelector(".f-loc")?.focus();
+};
 $("#addCh").onclick = () => {
-  readChannels(); draft.push(newChannel()); renderChannels();
+  readChannels(); const ch = newChannel(); openCards.add(ch.id); draft.push(ch); renderChannels();
   $("#chList").lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   $("#chList").lastElementChild?.querySelector(".f-name")?.select();
 };
@@ -1972,10 +2672,15 @@ async function shareLineup(fromButton, quiet = false) {
 $("#publishBtn").onclick = () => { state.ghToken = $("#ghToken").value.trim(); save(); shareLineup(true); };
 $("#downloadBtn").onclick = () => { readChannels(); downloadLineup(); };
 
-$("#settings").addEventListener("submit", e => {
+$("#settings").addEventListener("submit", async e => {
   e.preventDefault();
   takePendingLinks();
   readChannels();
+  // Weather channels need their town looked up before saving; stay in Settings if it can't be found.
+  for (const card of $$('.ch-card[data-kind="weather"]')) {
+    const ch = draft[+card.dataset.i];
+    if (ch.weather?.place && !ch.weather.lat && !(await findLocation(card))) { card.scrollIntoView({ block: "center" }); return; }
+  }
   const oldSig = lineupSig(), oldAds = scanKey(adsChannel()), oldBreak = state.breakLen;
   const oldById = new Map(chs().map(c => [c.id, scanKey(c) + queueKey(c)]));
   const keyChanged = state.apiKey !== $("#apiKey").value.trim();
@@ -1984,6 +2689,10 @@ $("#settings").addEventListener("submit", e => {
   state.ghToken = $("#ghToken").value.trim();
   state.preload = $("#preload").value;
   state.staticSound = $("#staticSound").checked;
+  state.showLogo = $("#showLogo").checked;
+  state.showUpNext = $("#showUpNext").checked;
+  const captionsChanged = state.captions !== $("#captions").checked;
+  state.captions = $("#captions").checked;
   state.ads = [...draftAds];
   state.breakLen = +$("#breakLen").value;
   state.channels = draft;
@@ -1998,6 +2707,7 @@ $("#settings").addEventListener("submit", e => {
   for (const s of slots) if (s.chId && (changed(s.chId) || keyChanged)) clearSlot(s);
   closePanels();
   toast("Saved.");
+  if (captionsChanged) resetPlayers();
   if (lineupChanged || (state.ghToken && JSON.stringify(myFiles.map(f => f.path)) !== JSON.stringify((state.catalog || []).filter(f => f.owner === myOwner()).map(f => f.path)))) {
     state.lineupUpdated = Date.now(); save(); shareLineup(false);
   }
@@ -2026,6 +2736,7 @@ refreshCatalog();
     if (piConfig.apiKey && !state.apiKey) state.apiKey = piConfig.apiKey;
     if (piConfig.ghToken && !state.ghToken) state.ghToken = piConfig.ghToken;
     if (piConfig.repo) repo = piConfig.repo;
+    $$('[data-act="history"]').forEach(b => b.hidden = true);
     if (!state.piSetup) { state.preload = piConfig.preload || "off"; state.piSetup = true; }
     save();
     $("#powerKeyWrap").hidden = !!state.apiKey;
