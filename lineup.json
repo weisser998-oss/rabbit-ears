@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793552590836,
+  "updated": 1793552871534,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -44,7 +44,9 @@
         "@NaturalCauzes",
         "@AreanFilms",
         "https://www.youtube.com/playlist?list=PLrOLTLC7N_iBn5KW6Tt3IqXI0KFCBt2NR",
-        "@ThatFoolishGrrl"
+        "@ThatFoolishGrrl",
+        "https://www.youtube.com/channel/UCIgVp1qzrkOP2-C_QX0ixcA",
+        "@Skyesicles"
       ],
       "shuffle": "full",
       "blockSize": 4,
@@ -88,6 +90,13 @@
           "maxLen": 7200,
           "shuffle": "partial",
           "blockSize": 2
+        },
+        "https://www.youtube.com/channel/UCIgVp1qzrkOP2-C_QX0ixcA": {
+          "pick": "recent:50",
+          "minLen": 300,
+          "maxLen": 10800,
+          "shuffle": "full",
+          "blockSize": 4
         }
       },
       "breaks": "off",
@@ -190,7 +199,8 @@
         "@AstrumEarth",
         "@NatGeo",
         "@bbcearth",
-        "https://www.youtube.com/playlist?list=PLP6xA_SBHbyg"
+        "https://www.youtube.com/playlist?list=PLP6xA_SBHbyg",
+        "@NaturalWorldFacts"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -318,8 +328,9 @@
         "https://www.youtube.com/channel/UCiSm3vMn29PvaYVRtRlQSMg",
         "@Recipetineats",
         "@CSaffitz",
-        "@dishpodcast",
-        "@mattymatheson"
+        "@mattymatheson",
+        "@FallowChefs",
+        "@InsiderFood"
       ],
       "shuffle": "full",
       "blockSize": 3,
