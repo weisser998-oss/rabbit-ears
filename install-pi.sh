@@ -155,6 +155,47 @@ EOF
   SHARED=1
 fi
 
+echo
+HIDE="$(ask 'Hide the mouse pointer on the Pi? (Y/n): ')"
+if [[ ! "$HIDE" =~ ^[Nn] ]]; then
+  say "Hiding the mouse pointer"
+  # A cursor theme whose pointers are all a single transparent pixel.
+  python3 - <<'PY'
+import struct
+from pathlib import Path
+d = Path.home() / ".local/share/icons/rabbit-ears-blank"
+(d / "cursors").mkdir(parents=True, exist_ok=True)
+(d / "index.theme").write_text("[Icon Theme]\nName=rabbit-ears-blank\nComment=Invisible pointer for Rabbit Ears\n")
+IMG = 0xfffd0002
+sizes = [24, 32, 48, 64]
+header = 16 + 12 * len(sizes)
+chunks, toc, pos = b"", b"", header
+for s in sizes:
+    chunk = struct.pack("<9I", 36, IMG, s, 1, 1, 1, 0, 0, 0) + struct.pack("<I", 0)  # 1x1, fully transparent
+    toc += struct.pack("<3I", IMG, s, pos)
+    chunks += chunk; pos += len(chunk)
+data = b"Xcur" + struct.pack("<3I", 16, 0x10000, len(sizes)) + toc + chunks
+names = ("left_ptr default arrow top_left_arrow pointer hand1 hand2 pointing_hand text xterm ibeam watch wait progress "
+         "left_ptr_watch crosshair cross move grabbing grab all-scroll not-allowed col-resize row-resize "
+         "n-resize s-resize e-resize w-resize ne-resize nw-resize se-resize sw-resize ew-resize ns-resize "
+         "nesw-resize nwse-resize sb_h_double_arrow sb_v_double_arrow fleur question_arrow help context-menu").split()
+for n in names:
+    (d / "cursors" / n).write_bytes(data)
+PY
+  mkdir -p "$HOME/.config/labwc"
+  touch "$HOME/.config/labwc/environment"
+  sed -i '/^XCURSOR_THEME=/d;/^XCURSOR_SIZE=/d' "$HOME/.config/labwc/environment"
+  printf 'XCURSOR_THEME=rabbit-ears-blank\nXCURSOR_SIZE=24\n' >> "$HOME/.config/labwc/environment"
+  if [ -f "$HOME/.config/wayfire.ini" ] && ! grep -q "rabbit-ears-blank" "$HOME/.config/wayfire.ini"; then
+    printf '\n[input]\ncursor_theme = rabbit-ears-blank\ncursor_size = 24\n' >> "$HOME/.config/wayfire.ini"
+  fi
+  HIDDEN=1
+else
+  # Bring the normal pointer back.
+  sed -i '/^XCURSOR_THEME=rabbit-ears-blank/d;/^XCURSOR_SIZE=24$/d' "$HOME/.config/labwc/environment" 2>/dev/null || true
+  sed -i '/cursor_theme = rabbit-ears-blank/d' "$HOME/.config/wayfire.ini" 2>/dev/null || true
+fi
+
 say "Keeping the screen on"
 sudo raspi-config nonint do_blanking 1 2>/dev/null || true
 
