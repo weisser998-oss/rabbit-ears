@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793547005690,
+  "updated": 1793547070709,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -264,12 +264,12 @@
       "shuffle": "full",
       "blockSize": 3,
       "order": "oldest",
-      "scanCount": 50,
+      "scanCount": 1000,
       "scanMode": "recent",
       "minLen": 300,
       "maxLen": 0,
       "linkOpts": {},
-      "breaks": "between",
+      "breaks": "off",
       "kind": "tv",
       "display": "video",
       "timeMode": "all",
