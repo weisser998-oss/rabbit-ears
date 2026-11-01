@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793549332153,
+  "updated": 1793549626309,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -147,7 +147,8 @@
       "id": "6qrf7ls2",
       "name": "History Channel",
       "sources": [
-        "@history"
+        "@history",
+        "@OTRontheroad"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -171,7 +172,8 @@
         "@hgtv",
         "@Homeworthy",
         "@Homesteadyshow",
-        "https://www.youtube.com/channel/UChmxGAJgT_FnZNW_7CRP2Og"
+        "https://www.youtube.com/channel/UChmxGAJgT_FnZNW_7CRP2Og",
+        "@Archdigest"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -200,7 +202,10 @@
         "@Ottolenghi",
         "@andy_cooks",
         "https://www.youtube.com/channel/UCiSm3vMn29PvaYVRtRlQSMg",
-        "@Recipetineats"
+        "@Recipetineats",
+        "@CSaffitz",
+        "@dishpodcast",
+        "@mattymatheson"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -319,7 +324,9 @@
         "@FlatTireFarmHomesteadingAlaska",
         "@BeyondBabish",
         "@isabelleheikens",
-        "@Kath_Arun"
+        "@Kath_Arun",
+        "@christinesnotebook",
+        "@jenilee.thepioneerhome"
       ],
       "shuffle": "full",
       "blockSize": 3,
