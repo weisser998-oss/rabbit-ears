@@ -206,6 +206,30 @@ HandleSuspendKey=ignore
 HandleHibernateKey=ignore
 EOF
 
+# The desktop (labwc) shows a shutdown menu for the power button; make it ignore the button instead.
+if [ -f /etc/xdg/labwc/rc.xml ] || [ -f "$HOME/.config/labwc/rc.xml" ]; then
+  python3 - <<'PY'
+import shutil, xml.etree.ElementTree as ET
+from pathlib import Path
+user = Path.home() / ".config/labwc/rc.xml"
+user.parent.mkdir(parents=True, exist_ok=True)
+src = user if user.exists() else Path("/etc/xdg/labwc/rc.xml")
+if user.exists():
+    shutil.copy(user, user.with_name("rc.xml.before-rabbit-ears"))
+tree = ET.parse(src, parser=ET.XMLParser(target=ET.TreeBuilder(insert_comments=True)))
+root = tree.getroot()
+kb = root.find("keyboard")
+if kb is None:
+    kb = ET.SubElement(root, "keyboard")
+for b in list(kb.findall("keybind")):
+    if b.get("key") == "XF86PowerOff":
+        kb.remove(b)
+ET.SubElement(ET.SubElement(kb, "keybind", {"key": "XF86PowerOff"}), "action", {"name": "None"})
+tree.write(user, encoding="utf-8", xml_declaration=True)
+PY
+  pkill -HUP -x labwc 2>/dev/null || true
+fi
+
 say "Keeping the screen on"
 sudo raspi-config nonint do_blanking 1 2>/dev/null || true
 
