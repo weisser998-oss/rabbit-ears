@@ -73,6 +73,12 @@ body.tv, body.tv * { cursor: none !important; }
 body.tv #guide [data-close] { display: none; }
 /* Full screen, like a cable guide: the channel keeps playing (and is heard) underneath, but isn't seen. */
 body.tv #guide { top: 0; height: 100%; border: 0; padding-top: 3%; }
+/* A narrow channel column (number, with the name small underneath) leaves more room for what's on next. */
+body.tv { --chw: 80px; }
+body.tv .epg-ch { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; padding: 0 8px; }
+body.tv .epg-ch .n { font-size: 28px; }
+body.tv .epg-ch .nm { display: block; max-width: 100%; font-size: 10.5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.tv .epg-corner { padding-left: 8px; }
 body.tv .epg-scroll { scrollbar-width: none; }
 body.tv .epg-scroll::-webkit-scrollbar { display: none; }
 body.tv #app, body.tv .panel, body.tv #quick, body.tv .ui, body.tv .slot { pointer-events: none !important; }
