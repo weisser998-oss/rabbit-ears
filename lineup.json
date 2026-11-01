@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793552092697,
+  "updated": 1793552590836,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -111,7 +111,10 @@
         "https://www.youtube.com/channel/UCPD_bxCRGpmmeQcbe2kpPaA",
         "@sooootruepod",
         "@smoshpit",
-        "https://www.youtube.com/playlist?list=PLiLGUJazj9SBIreoFLB1gUyfAGVziL46p"
+        "https://www.youtube.com/playlist?list=PLiLGUJazj9SBIreoFLB1gUyfAGVziL46p",
+        "@dontbeuglypodcast",
+        "@mythicalkitchen",
+        "@WIRED"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -242,7 +245,8 @@
         "@HeyHistorically",
         "@this_is_history",
         "@BBCTimestamp",
-        "@townsends"
+        "@townsends",
+        "@PhilomenaCunkOn"
       ],
       "shuffle": "full",
       "blockSize": 3,
