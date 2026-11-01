@@ -1,7 +1,34 @@
 {
   "rabbitEars": 3,
-  "updated": 1793550887401,
+  "updated": 1793552025653,
   "channels": [
+    {
+      "id": "mkdgz5vj",
+      "name": "Local Forecast",
+      "sources": [
+        "https://youtu.be/JKoGhlBU84A"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 50,
+      "scanMode": "recent",
+      "minLen": 0,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "off",
+      "kind": "weather",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": {
+        "place": "Hannover",
+        "units": "metric",
+        "lat": 52.37052,
+        "lon": 9.73322,
+        "label": "Hanover, Lower Saxony, Germany"
+      }
+    },
     {
       "id": "kmq1dc9v",
       "name": "Gaming",
@@ -82,7 +109,9 @@
         "@TwoHotTakes",
         "@royalcourt",
         "https://www.youtube.com/channel/UCPD_bxCRGpmmeQcbe2kpPaA",
-        "https://youtu.be/G6ID6U4Xd7k"
+        "@sooootruepod",
+        "@smoshpit",
+        "https://www.youtube.com/playlist?list=PLiLGUJazj9SBIreoFLB1gUyfAGVziL46p"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -90,6 +119,31 @@
       "scanCount": 1000,
       "scanMode": "recent",
       "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
+    },
+    {
+      "id": "jzlvc3lu",
+      "name": "Short Films",
+      "sources": [
+        "https://www.youtube.com/playlist?list=PLavyPOiDcdKSMxBsbvSHzi88jh89i0pKx",
+        "https://www.youtube.com/playlist?list=PLavyPOiDcdKTc4wWVmwjEpqOMJpqYDHj0",
+        "https://www.youtube.com/playlist?list=PLavyPOiDcdKRzUXBGDg_HmDlOyoIimY09",
+        "https://www.youtube.com/playlist?list=PLTESC91c_raE",
+        "https://www.youtube.com/playlist?list=PLvIJiLY_6AE7Zp3C_HcHCCf2u5kI7SI1W"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 50,
+      "scanMode": "recent",
+      "minLen": 0,
       "maxLen": 0,
       "linkOpts": {},
       "breaks": "between",
@@ -279,96 +333,6 @@
       "weather": null
     },
     {
-      "id": "f3812fcf",
-      "name": "TLC",
-      "sources": [
-        "@tlc"
-      ],
-      "shuffle": "full",
-      "blockSize": 3,
-      "order": "oldest",
-      "scanCount": 1000,
-      "scanMode": "recent",
-      "minLen": 300,
-      "maxLen": 0,
-      "linkOpts": {},
-      "breaks": "between",
-      "kind": "tv",
-      "display": "video",
-      "timeMode": "all",
-      "blocks": [],
-      "weather": null
-    },
-    {
-      "id": "d6mzvto2",
-      "name": "PBS",
-      "sources": [
-        "@pbs"
-      ],
-      "shuffle": "full",
-      "blockSize": 3,
-      "order": "oldest",
-      "scanCount": 1000,
-      "scanMode": "recent",
-      "minLen": 300,
-      "maxLen": 0,
-      "linkOpts": {},
-      "breaks": "between",
-      "kind": "tv",
-      "display": "video",
-      "timeMode": "all",
-      "blocks": [],
-      "weather": null
-    },
-    {
-      "id": "mkdgz5vj",
-      "name": "Local Forecast",
-      "sources": [
-        "https://youtu.be/JKoGhlBU84A"
-      ],
-      "shuffle": "full",
-      "blockSize": 3,
-      "order": "oldest",
-      "scanCount": 50,
-      "scanMode": "recent",
-      "minLen": 0,
-      "maxLen": 0,
-      "linkOpts": {},
-      "breaks": "off",
-      "kind": "weather",
-      "display": "video",
-      "timeMode": "all",
-      "blocks": [],
-      "weather": {
-        "place": "Hannover",
-        "units": "metric",
-        "lat": 52.37052,
-        "lon": 9.73322,
-        "label": "Hanover, Lower Saxony, Germany"
-      }
-    },
-    {
-      "id": "dt7iob0y",
-      "name": "VHS",
-      "sources": [
-        "https://archive.org/details/@thevhsdude"
-      ],
-      "shuffle": "full",
-      "blockSize": 3,
-      "order": "oldest",
-      "scanCount": 1000,
-      "scanMode": "recent",
-      "minLen": 300,
-      "maxLen": 0,
-      "linkOpts": {},
-      "breaks": "off",
-      "kind": "tv",
-      "display": "video",
-      "timeMode": "all",
-      "blocks": [],
-      "weather": null
-    },
-    {
       "id": "fetvplxm",
       "name": "Lifestyle",
       "sources": [
@@ -393,6 +357,70 @@
       "maxLen": 0,
       "linkOpts": {},
       "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
+    },
+    {
+      "id": "f3812fcf",
+      "name": "TLC",
+      "sources": [
+        "@tlc"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 1000,
+      "scanMode": "recent",
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
+    },
+    {
+      "id": "d6mzvto2",
+      "name": "PBS",
+      "sources": [
+        "@pbs",
+        "@JuliaChildonPBS"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 1000,
+      "scanMode": "recent",
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
+    },
+    {
+      "id": "dt7iob0y",
+      "name": "VHS",
+      "sources": [
+        "https://archive.org/details/@thevhsdude"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 1000,
+      "scanMode": "recent",
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "off",
       "kind": "tv",
       "display": "video",
       "timeMode": "all",
