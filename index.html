@@ -64,11 +64,17 @@ button { touch-action: manipulation; }
 @container (max-aspect-ratio: 16/9) {
   .slot iframe { top: -6%; height: 112%; }
   /* On the Pi, the remote does everything, so YouTube's "More videos" row is cropped too. */
-  body.tv .slot iframe { top: -12%; height: 124%; }
+  body.tv .slot iframe { top: -18%; height: 136%; }
 }
 /* On the Pi the mouse does nothing at all: no pointer, no clicks, no hover (so YouTube's own controls never show).
    The remote and keyboard do everything. */
 body.tv, body.tv * { cursor: none !important; }
+/* The guide on the Pi: no Close button (Back closes it), no scrollbars, and more of the picture left showing. */
+body.tv #guide [data-close] { display: none; }
+/* Full screen, like a cable guide: the channel keeps playing (and is heard) underneath, but isn't seen. */
+body.tv #guide { top: 0; height: 100%; border: 0; padding-top: 3%; }
+body.tv .epg-scroll { scrollbar-width: none; }
+body.tv .epg-scroll::-webkit-scrollbar { display: none; }
 body.tv #app, body.tv .panel, body.tv #quick, body.tv .ui, body.tv .slot { pointer-events: none !important; }
 .slot video { display: none; background: #000; object-fit: contain; }
 .slot.local video { display: block; }
