@@ -57,13 +57,25 @@ button { touch-action: manipulation; }
 #stage { position: fixed; inset: 0; background: #000; overflow: hidden; }
 .slot { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .slot.on { opacity: 1; z-index: 1; pointer-events: auto; }
+.slot { overflow: hidden; }
 .slot iframe, .slot > div, .slot video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* When the screen is no wider than a widescreen video, make the YouTube player a bit taller than the screen so its
+   title bar and Share button sit just off the edge. The video only has black bars there, so none of the picture is lost. */
+@container (max-aspect-ratio: 16/9) {
+  .slot iframe { top: -6%; height: 112%; }
+  /* On the Pi, the remote does everything, so YouTube's "More videos" row is cropped too. */
+  body.tv .slot iframe { top: -12%; height: 124%; }
+}
+/* On the Pi the mouse does nothing at all: no pointer, no clicks, no hover (so YouTube's own controls never show).
+   The remote and keyboard do everything. */
+body.tv, body.tv * { cursor: none !important; }
+body.tv #app, body.tv .panel, body.tv #quick, body.tv .ui, body.tv .slot { pointer-events: none !important; }
 .slot video { display: none; background: #000; object-fit: contain; }
 .slot.local video { display: block; }
 .slot.local iframe { visibility: hidden; }
 #shield { position: absolute; inset: 0; z-index: 2; touch-action: none; }
 /* Leave the bottom-right corner uncovered so YouTube's "Skip ad" button can be tapped. */
-body.yt-active #shield { clip-path: polygon(0 0, 100% 0, 100% 70%, 66% 70%, 66% 100%, 0 100%); }
+body.yt-active:not(.tv) #shield { clip-path: polygon(0 0, 100% 0, 100% 70%, 66% 70%, 66% 100%, 0 100%); }
 body.tap-through #shield { pointer-events: none; }
 #static {
   position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3;
@@ -1986,9 +1998,18 @@ function wake(ms = 2500) {
   }, ms);
 }
 function sleepUI() { clearTimeout(idleT); document.body.classList.remove("ui-on"); }
-addEventListener("pointermove", e => { if (e.pointerType === "mouse") wake(); }, { passive: true });
-addEventListener("pointerdown", e => { if (e.pointerType === "mouse") wake(); }, { passive: true });
-addEventListener("wheel", () => wake(), { passive: true });
+const tvMode = () => document.body.classList.contains("tv");
+addEventListener("pointermove", e => { if (e.pointerType === "mouse" && !tvMode()) wake(); }, { passive: true });
+addEventListener("pointerdown", e => { if (e.pointerType === "mouse" && !tvMode()) wake(); }, { passive: true });
+addEventListener("wheel", () => { if (!tvMode()) wake(); }, { passive: true });
+// On the Pi, swallow every mouse click and scroll before anything (including YouTube) sees it.
+for (const ev of ["click", "dblclick", "mousedown", "mouseup", "contextmenu", "wheel", "auxclick"]) {
+  addEventListener(ev, e => {
+    // Clicks made with the remote or keyboard (OK on a focused button) report detail 0; let those through.
+    const fromKeys = (ev === "click" || ev === "auxclick") && e.detail === 0;
+    if (tvMode() && e.isTrusted && !fromKeys) { e.preventDefault(); e.stopPropagation(); }
+  }, { capture: true, passive: false });
+}
 
 // Touch on the picture: swipe up/down changes channel, a tap shows or hides the controls.
 let touch0 = null;
