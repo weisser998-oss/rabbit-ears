@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793550485336,
+  "updated": 1793550887401,
   "channels": [
     {
       "id": "kmq1dc9v",
@@ -76,16 +76,19 @@
       "sources": [
         "@CinemaSins",
         "@vanityfair",
-        "https://www.youtube.com/playlist?list=PLAzrgbu8gEMIIK3r4Se1dOZWSZzUSadfZ",
         "https://www.youtube.com/playlist?list=PLmMXd0nY6NHwTnljzl6Qxqnfw0LkwL5Ue",
         "@thebasementyard",
-        "@deepdiveproductions"
+        "@deepdiveproductions",
+        "@TwoHotTakes",
+        "@royalcourt",
+        "https://www.youtube.com/channel/UCPD_bxCRGpmmeQcbe2kpPaA",
+        "https://youtu.be/G6ID6U4Xd7k"
       ],
       "shuffle": "full",
       "blockSize": 3,
       "order": "oldest",
-      "scanCount": 50,
-      "scanMode": "random",
+      "scanCount": 1000,
+      "scanMode": "recent",
       "minLen": 300,
       "maxLen": 0,
       "linkOpts": {},
