@@ -39,6 +39,7 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
+html { background: var(--bg); }
 body {
   margin: 0; overflow: hidden; overscroll-behavior: none;
   background: var(--bg); color: var(--fg);
@@ -552,6 +553,19 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
     <label class="check"><input type="checkbox" id="showLogo"> Show the channel logo in the corner</label>
     <label class="check"><input type="checkbox" id="showUpNext"> Show "Now" and "Up next" cards</label>
     <label class="check"><input type="checkbox" id="captions"> Show YouTube subtitles when a video has them</label>
+    <div class="grid">
+      <label for="uiScale">Text and button size
+        <select id="uiScale">
+          <option value="1">Normal</option><option value="1.25">Large</option><option value="1.5">Extra large</option><option value="1.8">Huge</option>
+        </select>
+      </label>
+      <label for="edge">Fit to screen edges
+        <select id="edge">
+          <option value="0">Use the whole screen</option><option value="2">Shrink a little</option><option value="4">Shrink more</option><option value="7">Shrink a lot</option>
+        </select>
+      </label>
+    </div>
+    <p class="hint">For small screens, or TVs that cut off the edges of the picture. These apply to this device only.</p>
   </section>
 
   <section>
@@ -692,7 +706,7 @@ function defaults() {
   // Example lineup: swap the links for your own in Settings.
   return {
     apiKey: "", ghToken: "", volume: 80, muted: false, staticSound: true, lastChannel: 0,
-    showLogo: true, showUpNext: true, captions: false,
+    showLogo: true, showUpNext: true, captions: false, uiScale: 1, edge: 0,
     preload: navigator.connection?.saveData ? "off" : "both",
     ads: [], breakLen: 2, lineupUpdated: 0, catalog: [], deviceId: uid(),
     channels: [
@@ -1458,20 +1472,26 @@ function resync(s) {
 function watch(s) {
   clearTimeout(watchA); clearTimeout(watchB);
   const sq = s.seq;
+  // A slow device (like a Raspberry Pi) can take several seconds to start a video, so try again with sound
+  // before deciding the browser blocked it. The Pi's browser always allows sound, so it never mutes there.
   watchA = setTimeout(() => {
     if (s !== active || s.seq !== sq || slotStarting(s)) return;
-    s.video.muted = true; if (s.ready) s.player.mute();
     slotPlay(s);
-    if (!state.muted) { needUnmute = true; toast("Your browser blocked sound. Tap anywhere to turn it on."); }
-  }, 3000);
+    watchA = setTimeout(() => {
+      if (s !== active || s.seq !== sq || slotStarting(s)) return;
+      if (!piConfig) { s.video.muted = true; if (s.ready) s.player.mute(); }
+      slotPlay(s);
+      if (!piConfig && !state.muted) { needUnmute = true; toast("Your browser blocked sound. Tap anywhere to turn it on."); }
+    }, 4000);
+  }, 4000);
   watchB = setTimeout(() => {
-    if (s !== active || s.seq !== sq || slotStarting(s)) return;
+    if (s !== active || s.seq !== sq || slotStarting(s) || piConfig) return;
     seq++;
     document.body.classList.remove("static"); noiseOff();
     document.body.classList.add("tap-through");
     if (s.mode === "local") s.video.controls = true;
     toast("Tap the picture to start playback.");
-  }, 7000);
+  }, 14000);
 }
 
 async function tune(i) {
@@ -1997,6 +2017,7 @@ addEventListener("keydown", e => {
   const k = e.key;
   if (!$("#power").hidden) { if (k === "Enter" || k === " ") { e.preventDefault(); $("#powerBtn").click(); } return; }
   wake();
+  if (needUnmute) { needUnmute = false; applyVolume(); toast("Sound on."); }
   if (BACK_KEYS.includes(k)) { e.preventDefault(); return closePanels(); }
   if (!$("#settings").hidden) return;
   const guideOpen = !$("#guide").hidden;
@@ -2509,6 +2530,8 @@ function openSettings() {
   $("#showLogo").checked = state.showLogo;
   $("#showUpNext").checked = state.showUpNext;
   $("#captions").checked = state.captions;
+  $("#uiScale").value = String(state.uiScale);
+  $("#edge").value = String(state.edge);
   draftAds = [...state.ads];
   $("#adsEditor").innerHTML = sourceEditor("ads", draftAds);
   $("#breakLen").value = String(state.breakLen);
@@ -2706,6 +2729,8 @@ $("#settings").addEventListener("submit", async e => {
   state.showUpNext = $("#showUpNext").checked;
   const captionsChanged = state.captions !== $("#captions").checked;
   state.captions = $("#captions").checked;
+  state.uiScale = +$("#uiScale").value;
+  state.edge = +$("#edge").value;
   state.ads = [...draftAds];
   state.breakLen = +$("#breakLen").value;
   state.channels = draft;
@@ -2728,6 +2753,19 @@ $("#settings").addEventListener("submit", async e => {
   tune(idx === -1 ? Math.min(cur, chs().length - 1) : idx);
   prefetch();
 });
+
+/* ---------- screen size ---------- */
+
+function applyScreen(scale = state.uiScale, edge = state.edge) {
+  document.documentElement.style.zoom = scale && scale !== 1 ? scale : "";
+  document.body.style.transform = edge ? `scale(${1 - 2 * edge / 100})` : "";
+  renderGuide();
+}
+// Preview while choosing; Cancel puts it back.
+$("#uiScale").addEventListener("change", () => applyScreen(+$("#uiScale").value, +$("#edge").value));
+$("#edge").addEventListener("change", () => applyScreen(+$("#uiScale").value, +$("#edge").value));
+$$("#settings [data-close]").forEach(b => b.addEventListener("click", () => applyScreen()));
+applyScreen();
 
 /* ---------- power on ---------- */
 
