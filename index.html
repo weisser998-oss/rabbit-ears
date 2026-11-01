@@ -2746,8 +2746,9 @@ refreshCatalog();
     } catch {}
   }
   if (piConfig) {
-    if (piConfig.apiKey && !state.apiKey) state.apiKey = piConfig.apiKey;
-    if (piConfig.ghToken && !state.ghToken) state.ghToken = piConfig.ghToken;
+    // A key or token changed in the Pi's settings file (by re-running the installer) replaces the one saved here.
+    if (piConfig.apiKey && piConfig.apiKey !== state.piApiKey) state.apiKey = state.piApiKey = piConfig.apiKey;
+    if (piConfig.ghToken && piConfig.ghToken !== state.piGhToken) state.ghToken = state.piGhToken = piConfig.ghToken;
     if (piConfig.repo) repo = piConfig.repo;
     $$('[data-act="history"]').forEach(b => b.hidden = true);
     if (!state.piSetup) { state.preload = piConfig.preload || "off"; state.piSetup = true; }
