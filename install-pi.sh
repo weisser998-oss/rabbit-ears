@@ -1,7 +1,7 @@
 #!/bin/bash
 # Rabbit Ears installer for Raspberry Pi (Raspberry Pi OS with desktop).
 # Run it from the Pi's Terminal:
-#   curl -fsSL https://weisser998-oss.github.io/rabbit-ears/install-pi.sh | bash
+#   curl -fsSL "https://weisser998-oss.github.io/rabbit-ears/install-pi.sh?v=$(date +%s)" | bash
 # Running it again updates the helper and lets you change the keys.
 set -e
 
@@ -31,7 +31,7 @@ fi
 
 say "Downloading the Rabbit Ears helper"
 mkdir -p "$DIR" "$HOME/Videos/RabbitEars"
-curl -fsSL "${SITE}rabbit-ears-pi.py" -o "$DIR/rabbit-ears-pi.py"
+curl -fsSL "${SITE}rabbit-ears-pi.py?v=$(date +%s)" -o "$DIR/rabbit-ears-pi.py"
 
 say "Settings"
 OLD_KEY="$(python3 -c "import json;print(json.load(open('$DIR/config.json')).get('apiKey',''))" 2>/dev/null || true)"
@@ -195,6 +195,16 @@ else
   sed -i '/^XCURSOR_THEME=rabbit-ears-blank/d;/^XCURSOR_SIZE=24$/d' "$HOME/.config/labwc/environment" 2>/dev/null || true
   sed -i '/cursor_theme = rabbit-ears-blank/d' "$HOME/.config/wayfire.ini" 2>/dev/null || true
 fi
+
+say "Letting the remote's power button put Rabbit Ears to rest instead of shutting down"
+sudo mkdir -p /etc/systemd/logind.conf.d
+sudo tee /etc/systemd/logind.conf.d/rabbit-ears.conf >/dev/null <<EOF
+[Login]
+HandlePowerKey=ignore
+HandlePowerKeyLongPress=ignore
+HandleSuspendKey=ignore
+HandleHibernateKey=ignore
+EOF
 
 say "Keeping the screen on"
 sudo raspi-config nonint do_blanking 1 2>/dev/null || true

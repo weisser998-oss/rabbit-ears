@@ -177,20 +177,20 @@ body.landscape.ui-on:not(.tv) #lower, body.osd-on.tv #lower { opacity: 0; }
   background: linear-gradient(to bottom, var(--wx-top), var(--wx-bottom)); color: var(--wx-text);
 }
 .wx-head {
-  display: flex; align-items: baseline; gap: 2cqw; padding: 3cqh 4cqw 1.5cqh;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: 2cqw; padding: 3cqh 4cqw 1.5cqh;
   background: linear-gradient(to bottom, rgba(0,0,0,.35), transparent);
 }
 .wx-brand { font-weight: 800; font-size: max(14px, 6.4cqh); letter-spacing: .04em; text-transform: uppercase; color: var(--wx-gold); }
 .wx-place { flex: 1 1 0; min-width: 0; font-size: max(13px, 5cqh); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wx-brand, .wx-clock { flex: none; white-space: nowrap; }
-.wx-clock { font: max(18px, 8cqh)/1 var(--font-osd); font-variant-numeric: tabular-nums; }
+.wx-clock { font: 800 max(24px, 11cqh)/1 var(--font-ui); font-variant-numeric: tabular-nums; }
 .wx-main { min-height: 0; padding: 1cqh 4cqw; display: grid; }
 .wx-page { display: grid; align-content: center; gap: 2cqh; animation: wxin .5s ease; }
 @keyframes wxin { from { opacity: 0; transform: translateX(3cqw); } }
 .wx-panel { background: var(--wx-panel); border: 1px solid rgba(169,188,232,.25); border-radius: 1cqh; padding: 2.4cqh 2.6cqw; }
 .wx-now { display: grid; grid-template-columns: auto 1fr; gap: 1.5cqh 4cqw; align-items: center; }
 .wx-now svg { width: 24cqh; height: 24cqh; }
-.wx-temp { font: max(44px, 27cqh)/.8 var(--font-osd); }
+.wx-temp { font: 800 max(40px, 24cqh)/.9 var(--font-ui); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 .wx-cond { font-size: max(18px, 7.4cqh); font-weight: 800; line-height: 1.1; }
 .wx-facts { grid-column: 1 / -1; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqw; text-align: center; border-top: 1px solid rgba(169,188,232,.25); padding-top: 1.5cqh; }
 .wx-facts dt { color: var(--wx-dim); font-size: max(13px, 4.6cqh); }
@@ -200,13 +200,13 @@ body.landscape.ui-on:not(.tv) #lower, body.osd-on.tv #lower { opacity: 0; }
 .wx-day .d { font-weight: 800; font-size: max(16px, 7cqh); text-transform: uppercase; color: var(--wx-gold); }
 .wx-day svg { width: 18cqh; height: 18cqh; }
 .wx-day .c { font-size: max(13px, 4.6cqh); font-weight: 600; min-height: 2lh; line-height: 1.15; }
-.wx-day .hl { font: max(22px, 10cqh)/1 var(--font-osd); font-variant-numeric: tabular-nums; }
+.wx-day .hl { font: 800 max(18px, 8cqh)/1.1 var(--font-ui); font-variant-numeric: tabular-nums; display: grid; }
 .wx-day .hl span { color: var(--wx-dim); }
 .wx-day .p { display: none; }
 .wx-today { display: grid; grid-template-columns: 1fr 1fr; gap: 2cqw; }
 .wx-today h3 { margin: 0 0 1cqh; font-size: max(16px, 6.4cqh); color: var(--wx-gold); text-transform: uppercase; letter-spacing: .04em; }
 .wx-today p { margin: 0; font-size: max(15px, 5.6cqh); line-height: 1.3; }
-.wx-today .big { font: max(40px, 20cqh)/1 var(--font-osd); }
+.wx-today .big { font: 800 max(34px, 16cqh)/1 var(--font-ui); font-variant-numeric: tabular-nums; }
 .wx-chart svg { width: 100%; height: 56cqh; display: block; }
 .wx-msg { align-self: center; justify-self: center; text-align: center; font-size: max(16px, 6cqh); max-width: 80cqw; }
 .wx-ticker { background: rgba(0,0,0,.45); border-top: 2px solid var(--wx-gold); padding: 1.6cqh 4cqw; font-size: max(14px, 5.4cqh); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -295,8 +295,9 @@ body.portrait #dock {
 .epg-corner {
   position: sticky; left: 0; z-index: 5; width: var(--chw); flex: none; background: var(--panel-solid);
   font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim);
-  display: flex; align-items: center; padding-left: 12px;
+  display: flex; flex-direction: column; justify-content: center; padding-left: 12px; line-height: 1.15;
 }
+.epg-clock { color: var(--fg); font-size: 13px; letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .epg-times { position: relative; width: var(--w); height: 34px; flex: none; }
 .epg-times span {
   position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding-left: 8px;
@@ -487,6 +488,9 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
 .q-row.sel .q-arrow { color: var(--fg); }
 .q-hint { font-size: .62em; color: var(--dim); text-align: center; }
 
+#rest { position: fixed; inset: -10%; z-index: 30; background: #000; cursor: none; }
+.q-go { font: inherit; font-size: .85em; font-weight: 800; color: var(--accent); background: none; border: 2px solid var(--accent); border-radius: 8px; padding: .15em .6em; cursor: pointer; }
+
 #toast {
   position: fixed; z-index: 11; left: 50%; transform: translateX(-50%);
   bottom: calc(110px + env(safe-area-inset-bottom, 0px)); width: max-content; max-width: calc(100% - 32px);
@@ -534,6 +538,7 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
     <div id="nosignal" hidden><div class="box"><div class="big" id="nsBig">NO SIGNAL</div><div class="why" id="whyText"></div></div></div>
     <div id="osd"><div class="num" id="osdNum">--</div><div class="name" id="osdName"></div><div class="ep"><div class="t" id="osdTitle"></div><div class="m" id="osdMeta"></div></div></div>
     <div id="muted" hidden>MUTE</div>
+    <div id="rest" hidden></div>
   </div>
 
   <div id="dock">
@@ -1119,6 +1124,7 @@ const isScanning = (ch, ds) => daySegments(ch, ds).some(g => scans[`${g.ch.id}@$
 function buildQueue(ch, videos, rand) {
   const asc = (a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id);
   const sorter = ch.order === "newest" ? (a, b) => asc(b, a) : asc;
+  if (Object.values(ch.linkOpts || {}).some(o => o?.shuffle)) return mixedQueue(ch, videos, rand, sorter);
   if (ch.shuffle === "full") return shuffle([...videos], rand);
   if (ch.shuffle === "none") return [...videos].sort(sorter);
   // Partial: runs of N consecutive videos from the same link stay in order; the runs are shuffled.
@@ -1129,6 +1135,29 @@ function buildQueue(ch, videos, rand) {
     for (let i = 0; i < list.length; i += n) blocks.push(list.slice(i, i + n));
   }
   return shuffle(blocks, rand).flat();
+}
+
+// When links have their own order: each link is cut into units (single videos, or groups of N in order),
+// all the units are shuffled together, and links set to "In order" get their units put back in sequence
+// in the places they landed, so they still play in order, spread through the channel.
+function mixedQueue(ch, videos, rand, sorter) {
+  const bySrc = new Map(), units = [], ordered = [];
+  for (const v of videos) (bySrc.get(v.src) || bySrc.set(v.src, []).get(v.src)).push(v);
+  for (const [src, list] of bySrc) {
+    list.sort(sorter);
+    const o = ch.linkOpts?.[ch.sources[src]];
+    const mode = o?.shuffle || (ch.shuffle === "none" ? "none" : ch.shuffle);
+    const n = mode === "partial" ? Math.max(1, (o?.shuffle ? o.blockSize : ch.blockSize) | 0) : 1;
+    for (let i = 0; i < list.length; i += n) units.push({ src, vids: list.slice(i, i + n) });
+    if (mode === "none") ordered.push(src);
+  }
+  shuffle(units, rand);
+  for (const src of ordered) {
+    const at = units.map((u, i) => u.src === src ? i : -1).filter(i => i >= 0);
+    const inOrder = at.map(i => units[i]).sort((a, b) => sorter(a.vids[0], b.vids[0]));
+    at.forEach((i, k) => { units[i] = inOrder[k]; });
+  }
+  return units.flatMap(u => u.vids);
 }
 
 // One pass through a segment's lineup is a "cycle": an ordered list of items (show segments and commercials)
@@ -1552,6 +1581,7 @@ function watch(s) {
 }
 
 async function tune(i) {
+  if (resting) return;
   const list = chs();
   if (!list.length) { noSignal("No channels yet. Add one in Settings."); return; }
   cur = ((i % list.length) + list.length) % list.length;
@@ -1970,8 +2000,10 @@ function renderGuide() {
     return `<div class="epg-row${i === cur ? " cur" : ""}${sel}"><button class="epg-ch" data-ch="${i}"><span class="n">${pad(i + 1)}</span><span class="nm">${esc(ch.name)}</span></button><div class="epg-track">${track}</div></div>`;
   }).join("");
   const day = new Date(now).toLocaleDateString([], { weekday: "short" });
+  clearInterval(renderGuide.clockT);
+  renderGuide.clockT = setInterval(() => $$(".epg-clock").forEach(c => c.textContent = clock(Date.now())), 5000);
   host.innerHTML = `<div class="epg-scroll"><div class="epg" style="--w:${W}px">
-    <div class="epg-head"><div class="epg-corner">${day}</div><div class="epg-times">${times}</div></div>
+    <div class="epg-head"><div class="epg-corner"><span>${day}</span><span class="epg-clock">${clock(now)}</span></div><div class="epg-times">${times}</div></div>
     ${rows}
     <div class="epg-now" style="left:calc(var(--chw) + ${x(now)}px)"></div>
   </div></div>`;
@@ -2083,6 +2115,7 @@ const BACK_KEYS = ["Escape", "Backspace", "BrowserBack", "GoBack"];
 const QUICK_KEYS = ["ContextMenu", "Home", "BrowserHome", "GoHome", "Settings", "q", "Q"];
 const INFO_KEYS = ["Info", "ArrowLeft", "ArrowRight", "i", "I"];
 const MUTE_KEYS = ["AudioVolumeMute", "VolumeMute", "m", "M"];
+const POWER_KEYS = ["Power", "PowerOff", "Standby", "Sleep", "WakeUp"];
 let okTimer = 0, okHeld = false;
 addEventListener("keyup", e => {
   if (e.key !== "Enter" && e.key !== " ") return;
@@ -2095,6 +2128,8 @@ addEventListener("keydown", e => {
   if (e.target.closest("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key;
   if (!$("#power").hidden) { if (k === "Enter" || k === " ") { e.preventDefault(); $("#powerBtn").click(); } return; }
+  if (POWER_KEYS.includes(k) && !(piConfig && piPowerWatched)) { e.preventDefault(); return resting ? wakeFromRest() : rest(); }
+  if (resting) { e.preventDefault(); if (!e.repeat) wakeFromRest(); return; }
   wake();
   if (needUnmute) { needUnmute = false; applyVolume(); toast("Sound on."); }
   if (BACK_KEYS.includes(k)) { e.preventDefault(); return closePanels(); }
@@ -2103,7 +2138,7 @@ addEventListener("keydown", e => {
     e.preventDefault();
     if (k === "ArrowUp" || k === "ArrowDown") { qSel = (qSel + (k === "ArrowDown" ? 1 : -1) + QUICK.length) % QUICK.length; renderQuick(); }
     else if (k === "ArrowLeft" || k === "ArrowRight") stepQuick(qSel, k === "ArrowRight" ? 1 : -1);
-    else if ((k === "Enter" || k === " ") && !e.repeat) closePanels();
+    else if ((k === "Enter" || k === " ") && !e.repeat) { if (QUICK[qSel].action) QUICK[qSel].run(); else closePanels(); }
     else if (QUICK_KEYS.includes(k)) closePanels();
     return;
   }
@@ -2181,7 +2216,7 @@ async function pullLineup() {
   } catch {}
 }
 function lineupReplaced(curId) {
-  if (!$("#power").hidden) return;
+  if (!$("#power").hidden || resting) return;
   for (const s of slots) clearSlot(s);
   const idx = chs().findIndex(c => c.id === curId);
   tune(idx === -1 ? Math.min(cur, chs().length - 1) : idx);
@@ -2287,6 +2322,8 @@ function editorOwner(id) {
 }
 const editorChannel = id => id === "ads" ? null : draft[+id.split("-")[1]];
 const openLinks = new Set(); // "editorId|link" rows showing their options
+const linkDefaults = ch => ({ pick: ch ? pickFor(ch) : "recent:50", minLen: ch?.minLen || 0, maxLen: ch?.maxLen || 0,
+                              shuffle: ch?.shuffle || "full", blockSize: ch?.blockSize || 3 });
 
 function sourceRows(id, list) {
   const owner = editorOwner(id), ch = editorChannel(id);
@@ -2294,14 +2331,18 @@ function sourceRows(id, list) {
   return list.map((raw, j) => {
     const info = srcInfo(raw), o = owner?.linkOpts?.[raw], open = owner && openLinks.has(`${id}|${raw}`);
     const pic = info.thumb ? `<img src="${esc(info.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : info.kind === "local" ? "▤" : info.kind === "playlist" ? "≡" : info.kind === "video" ? "▶" : "@";
-    const own = o ? `Own settings: ${info.kind === "local" ? "" : pickLabel(o.pick) + ", "}${lenText(+o.minLen, +o.maxLen)}` : "";
+    const orderText = o?.shuffle ? { full: "shuffled", none: "in order", partial: `groups of ${o.blockSize || 3}` }[o.shuffle] + ", " : "";
+    const own = o ? `Own settings: ${orderText}${info.kind === "local" ? "" : pickLabel(o.pick) + ", "}${lenText(+o.minLen, +o.maxLen)}` : "";
     const body = `<span class="src-thumb ${info.kind}">${pic}</span>
         <span class="src-text"><span class="src-name">${esc(info.title)}</span><span class="src-sub${info.err ? " err" : ""}">${esc(info.sub)}</span>${own ? `<span class="src-sub src-custom">${esc(own)}</span>` : ""}</span>`;
-    const ls = o || { pick: ch && pickFor(ch), minLen: ch?.minLen || 0, maxLen: ch?.maxLen || 0 };
+    const ls = { ...linkDefaults(ch), ...(o || {}) };
+    if (!ls.shuffle) ls.shuffle = ch?.shuffle || "full";
     const panel = !open ? "" : `<div class="src-opts">
         <label class="check"><input type="checkbox" data-lo="default" data-editor="${id}" data-j="${j}" ${o ? "" : "checked"}> Use the channel's settings</label>
         <div class="grid" ${o ? "" : "hidden"}>
           ${info.kind === "local" ? "" : `<label>Which videos<select data-lo="pick" data-editor="${id}" data-j="${j}">${PICKS.map(([v, l]) => opt(v, ls.pick, l)).join("")}</select></label>`}
+          <label>Order<select data-lo="shuffle" data-editor="${id}" data-j="${j}">${[["full", "Shuffled"], ["partial", "In groups"], ["none", "In order"]].map(([v, l]) => opt(v, ls.shuffle, l)).join("")}</select></label>
+          ${ls.shuffle === "partial" ? `<label>Videos in a row<input type="number" inputmode="numeric" min="2" max="50" value="${ls.blockSize || 3}" data-lo="blockSize" data-editor="${id}" data-j="${j}"></label>` : ""}
           <label>Shortest<select data-lo="minLen" data-editor="${id}" data-j="${j}">${MIN_LENS.map(([v, l]) => opt(v, ls.minLen, l)).join("")}</select></label>
           <label>Longest<select data-lo="maxLen" data-editor="${id}" data-j="${j}">${MAX_LENS.map(([v, l]) => opt(v, ls.maxLen, l)).join("")}</select></label>
         </div>
@@ -2377,10 +2418,11 @@ document.addEventListener("change", e => {
   if (el.dataset.lo === "default") {
     // Starting custom settings from the channel's current ones.
     if (el.checked) delete owner.linkOpts[raw];
-    else owner.linkOpts[raw] = { pick: pickFor(ch), minLen: ch.minLen || 0, maxLen: ch.maxLen || 0 };
+    else owner.linkOpts[raw] = linkDefaults(ch);
   } else {
-    owner.linkOpts[raw] ||= { pick: pickFor(ch), minLen: ch.minLen || 0, maxLen: ch.maxLen || 0 };
-    owner.linkOpts[raw][el.dataset.lo] = el.dataset.lo === "pick" ? el.value : +el.value;
+    owner.linkOpts[raw] ||= linkDefaults(ch);
+    const k = el.dataset.lo;
+    owner.linkOpts[raw][k] = k === "pick" || k === "shuffle" ? el.value : k === "blockSize" ? Math.min(50, Math.max(2, Math.round(+el.value) || 3)) : +el.value;
   }
   redrawEditor(id);
 });
@@ -2869,16 +2911,21 @@ const QUICK = [
   { label: "Subtitles", get: () => state.captions, opts: [[false, "Off"], [true, "On"]], set: v => { state.captions = v; resetPlayers(); tune(cur); } },
   { label: "Channel logo", get: () => state.showLogo, opts: [[true, "On"], [false, "Off"]], set: v => { state.showLogo = v; updateOverlays(); } },
   { label: "\u201cUp next\u201d cards", get: () => state.showUpNext, opts: [[true, "On"], [false, "Off"]], set: v => { state.showUpNext = v; } },
+  // Reloading picks up channel changes made on other devices, new local files and any new version of Rabbit Ears.
+  { label: "Get changes from my phone", action: "Press OK", run: () => { toast("Refreshing…"); setTimeout(() => location.reload(), 300); } },
 ];
 let qSel = 0;
 function renderQuick() {
   $("#qList").innerHTML = QUICK.map((q, i) => {
+    if (q.action) return `<div class="q-row${i === qSel ? " sel" : ""}" data-q="${i}"><span class="q-label">${q.label}</span>
+      <span class="q-val"><button type="button" class="q-go" data-qrun="${i}">${q.action}</button></span></div>`;
     const val = (q.opts.find(o => o[0] === q.get()) || q.opts[0])[1];
     return `<div class="q-row${i === qSel ? " sel" : ""}" data-q="${i}"><span class="q-label">${q.label}</span>
       <span class="q-val"><button type="button" class="q-arrow" data-qstep="-1" data-q="${i}" aria-label="Previous choice for ${q.label}">◀</button><span class="q-now">${val}</span><button type="button" class="q-arrow" data-qstep="1" data-q="${i}" aria-label="Next choice for ${q.label}">▶</button></span></div>`;
   }).join("");
 }
 function stepQuick(i, d) {
+  if (QUICK[i].action) return;
   const q = QUICK[i], at = Math.max(0, q.opts.findIndex(o => o[0] === q.get()));
   q.set(q.opts[(at + d + q.opts.length) % q.opts.length][0]);
   save(); renderQuick();
@@ -2890,10 +2937,46 @@ function openQuick() {
   renderQuick();
 }
 $("#qList").addEventListener("click", e => {
-  const b = e.target.closest("[data-qstep]"), row = e.target.closest("[data-q]");
+  const b = e.target.closest("[data-qstep]"), row = e.target.closest("[data-q]"), go = e.target.closest("[data-qrun]");
+  if (go) return QUICK[+go.dataset.qrun].run();
   if (row) qSel = +row.dataset.q;
   if (b) stepQuick(+b.dataset.q, +b.dataset.qstep); else renderQuick();
 });
+
+/* ---------- rest mode ----------
+   The remote's power button blanks the screen and stops every player, so nothing streams in the background.
+   Any button brings it back, tuned to wherever the current channel is now. */
+
+let resting = false, piPowerSeen = null, piPowerWatched = false;
+function rest() {
+  if (resting) return;
+  resting = true;
+  closePanels(); hideLower();
+  clearTimeout(neighborT); clearTimeout(watchA); clearTimeout(watchB);
+  seq++;
+  resetPlayers();
+  document.body.classList.remove("static", "no-signal", "osd-on"); noiseOff();
+  cancelAnimationFrame(staticRAF); staticRAF = 0;
+  $("#nosignal").hidden = true;
+  updateOverlays();
+  $("#rest").hidden = false;
+}
+function wakeFromRest() {
+  if (!resting) return;
+  resting = false;
+  $("#rest").hidden = true;
+  tune(cur);
+  prefetch();
+}
+// On the Pi, the helper watches the power button (the browser usually never sees it).
+async function pollPowerButton() {
+  try {
+    const j = await (await fetch("/api/power", { cache: "no-store" })).json();
+    piPowerWatched = !!j.watching;
+    if (piPowerSeen !== null && j.presses > piPowerSeen) resting ? wakeFromRest() : rest();
+    piPowerSeen = j.presses;
+  } catch {}
+}
 
 /* ---------- power on ---------- */
 
@@ -2924,6 +3007,7 @@ refreshCatalog();
     $("#powerKeyWrap").hidden = !!state.apiKey;
     await loadPiLibrary();
     setInterval(loadPiLibrary, 60e3);
+    setInterval(pollPowerButton, 1000);
     // A remote's Back button would otherwise leave the page.
     history.pushState({ rabbitEars: 1 }, "");
     addEventListener("popstate", () => { closePanels(); history.pushState({ rabbitEars: 1 }, ""); });

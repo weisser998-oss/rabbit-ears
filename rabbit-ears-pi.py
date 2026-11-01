@@ -7,12 +7,15 @@ Runs at http://localhost:8090 and:
   - converts videos that aren't MP4 into MP4 in the background,
   - hands the app its settings (API key, GitHub token) from ~/.rabbit-ears/config.json.
 """
+import glob
 import hashlib
 import json
 import mimetypes
 import os
 import re
+import select
 import shutil
+import struct
 import subprocess
 import threading
 import time
@@ -37,6 +40,7 @@ DIRECT_AUDIO = {None, "aac", "mp3", "opus", "vorbis"}
 SCAN_EVERY = 60
 
 library = {"files": [], "converting": [], "by_path": {}}
+power = {"presses": 0, "watching": False}
 lock = threading.Lock()
 
 
@@ -179,6 +183,50 @@ def convert(src, dst, info):
     return False
 
 
+# ---------- the remote's power button ----------
+# The system is set (by the installer) to ignore the power button instead of shutting down.
+# This watches every keyboard-like device for it and counts presses; the app asks for the count
+# and switches between rest mode and watching.
+
+KEY_POWER, KEY_SLEEP, KEY_SUSPEND = 116, 142, 205
+EVENT = struct.Struct("llHHi")  # time (2 longs), type, code, value
+
+
+def power_loop():
+    files, last_scan, last_press = {}, 0, 0
+    while True:
+        if time.time() - last_scan > 10:  # remotes can be plugged in or paired later
+            last_scan = time.time()
+            for path in glob.glob("/dev/input/event*"):
+                if path not in files:
+                    try:
+                        files[path] = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+                    except OSError:
+                        pass
+            power["watching"] = bool(files)
+        if not files:
+            time.sleep(5)
+            continue
+        ready, _, _ = select.select(list(files.values()), [], [], 2)
+        for fd in ready:
+            try:
+                data = os.read(fd, EVENT.size * 64)
+            except OSError:  # device unplugged
+                for p, f in list(files.items()):
+                    if f == fd:
+                        os.close(fd)
+                        del files[p]
+                continue
+            for i in range(0, len(data) - EVENT.size + 1, EVENT.size):
+                _, _, typ, code, value = EVENT.unpack_from(data, i)
+                # One press can arrive as more than one key (some remotes send power and sleep together).
+                if typ == 1 and code in (KEY_POWER, KEY_SLEEP, KEY_SUSPEND) and value == 1 and time.time() - last_press > 0.6:
+                    last_press = time.time()
+                    with lock:
+                        power["presses"] += 1
+                    log("power button pressed")
+
+
 def library_loop():
     failed = set()
     while True:
@@ -220,6 +268,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"apiKey": CONFIG.get("apiKey", ""), "ghToken": CONFIG.get("ghToken", ""), "repo": repo,
                                    "preload": CONFIG.get("preload", "off"), "autostart": True,
                                    "mediaRoots": [str(r).replace(str(Path.home()), "~") for r in media_roots()]})
+        if path == "/api/power":
+            with lock:
+                return self.send_json(dict(power))
         if path == "/api/library":
             with lock:
                 files = [{k: v for k, v in f.items() if k != "_file"} for f in library["files"]]
@@ -308,6 +359,7 @@ def main():
     if not shutil.which("ffprobe"):
         log("ffprobe is missing: install it with  sudo apt install ffmpeg")
     threading.Thread(target=library_loop, daemon=True).start()
+    threading.Thread(target=power_loop, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     server.daemon_threads = True
     log(f"Rabbit Ears helper running at http://localhost:{PORT}/ for {SITE}")
