@@ -437,6 +437,23 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
 @media (hover: none) { .keys.desk { display: none; } }
 @media (hover: hover) { .keys.touch { display: none; } }
 
+#quick {
+  position: fixed; z-index: 9; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(94vw, 760px); max-height: 94vh; overflow: auto;
+  background: var(--panel-solid); border: 2px solid var(--line); border-radius: 14px;
+  padding: 3vmin 3.5vmin; display: grid; gap: 2vmin; font-size: clamp(16px, 4.6vmin, 34px);
+}
+.q-title { font-weight: 800; font-size: .8em; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.q-list { display: grid; gap: 1vmin; }
+.q-row { display: flex; align-items: center; justify-content: space-between; gap: 2vmin; padding: 1.2vmin 2vmin; border-radius: 10px; border: 2px solid transparent; }
+.q-row.sel { background: var(--field-hi); border-color: var(--accent); }
+.q-label { font-weight: 600; min-width: 0; }
+.q-val { display: flex; align-items: center; gap: 1.5vmin; white-space: nowrap; }
+.q-now { font-weight: 800; color: var(--accent); min-width: 6.5em; text-align: center; }
+.q-arrow { background: none; border: 0; padding: 0 .3em; font-size: .9em; color: var(--dim); cursor: pointer; }
+.q-row.sel .q-arrow { color: var(--fg); }
+.q-hint { font-size: .62em; color: var(--dim); text-align: center; }
+
 #toast {
   position: fixed; z-index: 11; left: 50%; transform: translateX(-50%);
   bottom: calc(110px + env(safe-area-inset-bottom, 0px)); width: max-content; max-width: calc(100% - 32px);
@@ -639,9 +656,15 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
       <input type="password" id="powerKey" autocomplete="off" spellcheck="false" placeholder="AIza…">
     </label>
     <button id="powerBtn" aria-label="Turn on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></button>
-    <p class="keys desk"><kbd>↑</kbd> <kbd>↓</kbd> change channel · <kbd>0–9</kbd> jump to a number · <kbd>G</kbd> guide · <kbd>M</kbd> mute · <kbd>F</kbd> full screen</p>
+    <p class="keys desk"><kbd>↑</kbd> <kbd>↓</kbd> change channel · <kbd>0–9</kbd> jump to a number · <kbd>G</kbd> guide · <kbd>M</kbd> mute · <kbd>F</kbd> full screen · <kbd>Q</kbd> or hold <kbd>OK</kbd> quick settings</p>
     <p class="keys touch">Swipe up or down on the picture to change channels. Turn your phone sideways for full-screen TV.</p>
   </div>
+</div>
+
+<div id="quick" hidden role="dialog" aria-label="Quick settings">
+  <div class="q-title">Quick settings</div>
+  <div class="q-list" id="qList"></div>
+  <div class="q-hint">▲ ▼ choose · ◀ ▶ change · OK or Back to close</div>
 </div>
 
 <div id="toast" role="status"></div>
@@ -1940,7 +1963,7 @@ function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.classList.add("on");
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 4500);
 }
-const panelOpen = () => !$("#guide").hidden || !$("#settings").hidden || !$("#history").hidden;
+const panelOpen = () => !$("#guide").hidden || !$("#settings").hidden || !$("#history").hidden || !$("#quick").hidden;
 function wake(ms = 2500) {
   if (!$("#power").hidden) return;
   document.body.classList.add("ui-on");
@@ -1979,7 +2002,7 @@ function openGuide() {
   document.body.classList.add("panel-open"); renderGuide();
 }
 function closePanels() {
-  $("#guide").hidden = $("#settings").hidden = $("#history").hidden = true;
+  $("#guide").hidden = $("#settings").hidden = $("#history").hidden = $("#quick").hidden = true;
   document.body.classList.remove("panel-open");
   if (!isPortrait()) wake();
 }
@@ -2012,6 +2035,15 @@ function toggleFullscreen() {
 let digits = "", digitT = 0;
 const UP_KEYS = ["ArrowUp", "PageUp", "ChannelUp", "MediaTrackNext"], DOWN_KEYS = ["ArrowDown", "PageDown", "ChannelDown", "MediaTrackPrevious"];
 const BACK_KEYS = ["Escape", "Backspace", "BrowserBack", "GoBack"];
+const QUICK_KEYS = ["ContextMenu", "Home", "BrowserHome", "GoHome", "Settings", "Info", "q", "Q"];
+let okTimer = 0, okHeld = false;
+addEventListener("keyup", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  if (okHeld) { okHeld = false; return; }
+  if (!okTimer) return;
+  clearTimeout(okTimer); okTimer = 0;
+  if (!$("#guide").hidden) { closePanels(); tune(guideSel); } else openGuide();
+});
 addEventListener("keydown", e => {
   if (e.target.closest("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key;
@@ -2020,6 +2052,15 @@ addEventListener("keydown", e => {
   if (needUnmute) { needUnmute = false; applyVolume(); toast("Sound on."); }
   if (BACK_KEYS.includes(k)) { e.preventDefault(); return closePanels(); }
   if (!$("#settings").hidden) return;
+  if (!$("#quick").hidden) {
+    e.preventDefault();
+    if (k === "ArrowUp" || k === "ArrowDown") { qSel = (qSel + (k === "ArrowDown" ? 1 : -1) + QUICK.length) % QUICK.length; renderQuick(); }
+    else if (k === "ArrowLeft" || k === "ArrowRight") stepQuick(qSel, k === "ArrowRight" ? 1 : -1);
+    else if ((k === "Enter" || k === " ") && !e.repeat) closePanels();
+    else if (QUICK_KEYS.includes(k)) closePanels();
+    return;
+  }
+  if (QUICK_KEYS.includes(k)) { e.preventDefault(); return openQuick(); }
   const guideOpen = !$("#guide").hidden;
   if (guideOpen && (k === "ArrowUp" || k === "ArrowDown")) {
     e.preventDefault();
@@ -2027,8 +2068,10 @@ addEventListener("keydown", e => {
     renderGuide();
   }
   else if ((k === "Enter" || k === " ") && !e.target.closest("button")) {
+    // A quick press of OK opens the guide (or tunes to the highlighted channel); holding it opens quick settings.
     e.preventDefault();
-    if (guideOpen) { closePanels(); tune(guideSel); } else openGuide();
+    if (e.repeat || okTimer) return;
+    okTimer = setTimeout(() => { okTimer = 0; okHeld = true; openQuick(); }, 700);
   }
   else if (UP_KEYS.includes(k)) { e.preventDefault(); tune(cur + 1); }
   else if (DOWN_KEYS.includes(k)) { e.preventDefault(); tune(cur - 1); }
@@ -2758,6 +2801,8 @@ $("#settings").addEventListener("submit", async e => {
 
 function applyScreen(scale = state.uiScale, edge = state.edge) {
   document.documentElement.style.zoom = scale && scale !== 1 ? scale : "";
+  // Quick settings is already sized from the screen, so it cancels out the text-size zoom.
+  $("#quick").style.zoom = scale && scale !== 1 ? 1 / scale : "";
   document.body.style.transform = edge ? `scale(${1 - 2 * edge / 100})` : "";
   renderGuide();
 }
@@ -2766,6 +2811,41 @@ $("#uiScale").addEventListener("change", () => applyScreen(+$("#uiScale").value,
 $("#edge").addEventListener("change", () => applyScreen(+$("#uiScale").value, +$("#edge").value));
 $$("#settings [data-close]").forEach(b => b.addEventListener("click", () => applyScreen()));
 applyScreen();
+
+/* ---------- quick settings (big and remote-friendly) ---------- */
+
+const QUICK = [
+  { label: "Text size", get: () => state.uiScale, opts: [[1, "Normal"], [1.25, "Large"], [1.5, "Extra large"], [1.8, "Huge"]], set: v => { state.uiScale = v; applyScreen(); } },
+  { label: "Screen edges", get: () => state.edge, opts: [[0, "Whole screen"], [2, "Shrink a little"], [4, "Shrink more"], [7, "Shrink a lot"]], set: v => { state.edge = v; applyScreen(); } },
+  { label: "Sound", get: () => state.muted, opts: [[false, "On"], [true, "Muted"]], set: v => { state.muted = v; needUnmute = false; applyVolume(); } },
+  { label: "Subtitles", get: () => state.captions, opts: [[false, "Off"], [true, "On"]], set: v => { state.captions = v; resetPlayers(); tune(cur); } },
+  { label: "Channel logo", get: () => state.showLogo, opts: [[true, "On"], [false, "Off"]], set: v => { state.showLogo = v; updateOverlays(); } },
+  { label: "\u201cUp next\u201d cards", get: () => state.showUpNext, opts: [[true, "On"], [false, "Off"]], set: v => { state.showUpNext = v; } },
+];
+let qSel = 0;
+function renderQuick() {
+  $("#qList").innerHTML = QUICK.map((q, i) => {
+    const val = (q.opts.find(o => o[0] === q.get()) || q.opts[0])[1];
+    return `<div class="q-row${i === qSel ? " sel" : ""}" data-q="${i}"><span class="q-label">${q.label}</span>
+      <span class="q-val"><button type="button" class="q-arrow" data-qstep="-1" data-q="${i}" aria-label="Previous choice for ${q.label}">◀</button><span class="q-now">${val}</span><button type="button" class="q-arrow" data-qstep="1" data-q="${i}" aria-label="Next choice for ${q.label}">▶</button></span></div>`;
+  }).join("");
+}
+function stepQuick(i, d) {
+  const q = QUICK[i], at = Math.max(0, q.opts.findIndex(o => o[0] === q.get()));
+  q.set(q.opts[(at + d + q.opts.length) % q.opts.length][0]);
+  save(); renderQuick();
+}
+function openQuick() {
+  closePanels();
+  $("#quick").hidden = false;
+  document.body.classList.add("panel-open");
+  renderQuick();
+}
+$("#qList").addEventListener("click", e => {
+  const b = e.target.closest("[data-qstep]"), row = e.target.closest("[data-q]");
+  if (row) qSel = +row.dataset.q;
+  if (b) stepQuick(+b.dataset.q, +b.dataset.qstep); else renderQuick();
+});
 
 /* ---------- power on ---------- */
 
