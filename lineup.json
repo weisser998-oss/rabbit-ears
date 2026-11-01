@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793552025653,
+  "updated": 1793552092697,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -390,6 +390,27 @@
       "sources": [
         "@pbs",
         "@JuliaChildonPBS"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 1000,
+      "scanMode": "recent",
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "between",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
+    },
+    {
+      "id": "e0e58m9r",
+      "name": "BBC Archive",
+      "sources": [
+        "@BBCArchive"
       ],
       "shuffle": "full",
       "blockSize": 3,
