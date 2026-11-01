@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793553823350,
+  "updated": 1793554824680,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -148,7 +148,9 @@
         "https://www.youtube.com/playlist?list=PLavyPOiDcdKTc4wWVmwjEpqOMJpqYDHj0",
         "https://www.youtube.com/playlist?list=PLavyPOiDcdKRzUXBGDg_HmDlOyoIimY09",
         "https://www.youtube.com/playlist?list=PLTESC91c_raE",
-        "https://www.youtube.com/playlist?list=PLvIJiLY_6AE7Zp3C_HcHCCf2u5kI7SI1W"
+        "https://www.youtube.com/playlist?list=PLvIJiLY_6AE7Zp3C_HcHCCf2u5kI7SI1W",
+        "https://www.youtube.com/playlist?list=PLVSU7VCNE4sLCuw1ZEGkUPB5wsd36CR7z",
+        "https://www.youtube.com/playlist?list=PLpCR3jx4VliBshj-S_lxbNEXVVmVCTS_u"
       ],
       "shuffle": "full",
       "blockSize": 3,
