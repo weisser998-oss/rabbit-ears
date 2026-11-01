@@ -1,15 +1,13 @@
 {
   "rabbitEars": 3,
-  "updated": 1793547070709,
+  "updated": 1793547737778,
   "channels": [
     {
       "id": "kmq1dc9v",
-      "name": "Video Game Playthroughs",
+      "name": "Gaming",
       "sources": [
         "https://youtube.com/@syntac?si=4tDe0-wHwpmbNR_G",
         "https://youtube.com/playlist?list=PLwiTZDxPg_I1beHjYIwuqZoXD6KjLnUCQ&si=ND4ZjZoIrvHHd7mq",
-        "https://youtube.com/playlist?list=PLFdQ3YMJDN9jbWIFvmjgvolBLieiUkP2o&si=CpfnVsLN4D2sDNCZ",
-        "https://youtube.com/playlist?list=PL-7t9DoIELCQwIKGAJpHHSmO30VxmLoy6&si=BAfwf2gj62-eWfZx",
         "https://youtube.com/playlist?list=PLdx-MmfUterw3siGQKvn7hnE6_nMscQ_t&si=FAPOOUMH99esRkFx",
         "https://www.youtube.com/playlist?list=PLxBP4SL7zdxpRxe1EvOVfFtHgENMDoFMN",
         "https://youtube.com/playlist?list=PL7RtZMiaOk8jQosb7kCBpsWqE7szfd3gc&si=bf5U8RusYT75XqHL"
@@ -79,34 +77,12 @@
       "weather": null
     },
     {
-      "id": "p0rw7jdn",
-      "name": "Outdoors",
-      "sources": [
-        "@mcqbushcraft",
-        "@primitiveskillsnet",
-        "@bertramcraftandwilderness",
-        "@outdoorboys"
-      ],
-      "shuffle": "full",
-      "blockSize": 3,
-      "order": "oldest",
-      "scanCount": 50,
-      "scanMode": "random",
-      "minLen": 300,
-      "maxLen": 0,
-      "linkOpts": {},
-      "breaks": "between",
-      "kind": "tv",
-      "display": "video",
-      "timeMode": "all",
-      "blocks": [],
-      "weather": null
-    },
-    {
       "id": "kaa6ihok",
       "name": "Discovery Channel",
       "sources": [
-        "@discovery"
+        "@discovery",
+        "@OutdoorBoys",
+        "@PolissyaBushcraft"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -148,7 +124,8 @@
       "id": "kbbi38i9",
       "name": "HGTV",
       "sources": [
-        "@hgtv"
+        "@hgtv",
+        "@Homeworthy"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -156,7 +133,7 @@
       "scanCount": 1000,
       "scanMode": "recent",
       "minLen": 300,
-      "maxLen": 0,
+      "maxLen": 7200,
       "linkOpts": {},
       "breaks": "between",
       "kind": "tv",
@@ -169,7 +146,8 @@
       "id": "xa0fd1f2",
       "name": "The Food Network",
       "sources": [
-        "@foodnetwork"
+        "@foodnetwork",
+        "@bonappetit"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -177,7 +155,7 @@
       "scanCount": 1000,
       "scanMode": "recent",
       "minLen": 300,
-      "maxLen": 0,
+      "maxLen": 7200,
       "linkOpts": {},
       "breaks": "between",
       "kind": "tv",
