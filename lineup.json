@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793695834320,
+  "updated": 1793695992139,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -487,7 +487,15 @@
         "https://archive.org/details/cn-disney-channel-tape-woc-december-2003",
         "https://archive.org/details/2025-12-28-18-01-34-1",
         "https://archive.org/details/VHSTape8",
-        "https://archive.org/details/blank-vhs-cn-2000s"
+        "https://archive.org/details/blank-vhs-cn-2000s",
+        "https://archive.org/details/nickelodeon-nicktoons-2001-woc",
+        "https://archive.org/details/disneychannel20060721",
+        "https://archive.org/details/rugrats-decade-in-diapers-volume-2-2001-vhs-rip_202304",
+        "https://archive.org/details/disneys-george-of-the-jungle-vhs-1997",
+        "https://archive.org/details/track-02-2_202309",
+        "https://archive.org/details/home-on-the-range-2004-dvd",
+        "https://archive.org/details/toy-story-1996-vhs-version-2_202504",
+        "https://archive.org/details/a-bugs-life-1999-vhs_202504"
       ],
       "shuffle": "full",
       "blockSize": 3,
