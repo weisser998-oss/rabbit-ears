@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793711558865,
+  "updated": 1793716796306,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -493,7 +493,12 @@
         "https://archive.org/details/ThanksgivingNight1997Tape",
         "https://archive.org/details/bbc-one-2008-05-indiana-jones-vhs",
         "https://archive.org/details/sky-movies-2007-the-hitchhikers-guide-to-the-galaxy-vhs",
-        "https://archive.org/details/dvd-6784-mr.-and-mrs.-smith-2005"
+        "https://archive.org/details/dvd-6784-mr.-and-mrs.-smith-2005",
+        "https://archive.org/details/sp97_20221202",
+        "https://archive.org/details/dvd-video-recorder_202207",
+        "https://archive.org/details/BlankVHSTape6hr02min",
+        "https://archive.org/details/2025-12-29-23-31-05-1",
+        "https://archive.org/details/fox-adult-swim-wb-stuff-20031998"
       ],
       "shuffle": "full",
       "blockSize": 3,
