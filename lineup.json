@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793690849016,
+  "updated": 1793695834320,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -483,7 +483,11 @@
         "https://archive.org/details/2025-07-26-16-16-01",
         "https://archive.org/details/rugrats-tales-from-the-crib-1996-vhs",
         "https://archive.org/details/evenstevensclips",
-        "https://archive.org/details/tv-2006-07-21"
+        "https://archive.org/details/tv-2006-07-21",
+        "https://archive.org/details/cn-disney-channel-tape-woc-december-2003",
+        "https://archive.org/details/2025-12-28-18-01-34-1",
+        "https://archive.org/details/VHSTape8",
+        "https://archive.org/details/blank-vhs-cn-2000s"
       ],
       "shuffle": "full",
       "blockSize": 3,
