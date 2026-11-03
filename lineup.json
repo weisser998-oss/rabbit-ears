@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793701892539,
+  "updated": 1793703268595,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -476,7 +476,18 @@
         "https://archive.org/details/holy-grail-interlaced",
         "https://archive.org/details/1995-jumangi-1996-columbia-tri-star-vhs-480p-h-264",
         "https://archive.org/details/men-in-black_202312",
-        "https://archive.org/details/2006-borat-hbo-720p"
+        "https://archive.org/details/2006-borat-hbo-720p",
+        "https://archive.org/details/the-mask-vhs-1995-1996",
+        "https://archive.org/details/vhs-tape-fast-times-at-ridgemont-high-videodrome",
+        "https://archive.org/details/star-wars-the-empire-strikes-back-1995-vhs-rip",
+        "https://archive.org/details/caddyshack-from-the-original-vhs-release-in-1983",
+        "https://archive.org/details/heathers-vhs-screener-mediahoarderz.com",
+        "https://archive.org/details/spaceballs-vhs",
+        "https://archive.org/details/23000_202601",
+        "https://archive.org/details/vts-01-1_20231007_2151",
+        "https://archive.org/details/14244_202601",
+        "https://archive.org/details/23500",
+        "https://archive.org/details/Theres_Something_About_Mary_FOX_WOC_2001-05-18.mkv"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -543,7 +554,16 @@
         "https://archive.org/details/tvcartoonnetworktoondisney2006",
         "https://archive.org/details/CNDump2",
         "https://archive.org/details/teenage-mutant-ninja-turtles-1990-vhs-rip",
-        "https://archive.org/details/2004-shrek-2-2004-dreamworks-vhs-480p-h-264"
+        "https://archive.org/details/2004-shrek-2-2004-dreamworks-vhs-480p-h-264",
+        "https://archive.org/details/2003-brother-bear",
+        "https://archive.org/details/m-201647",
+        "https://archive.org/details/1998-antz-1999-dreamworks-vhs-480p-h-264",
+        "https://archive.org/details/the-wild-thorrberrys-the-origin-of-donnie-2001-06-27-2023",
+        "https://archive.org/details/muppet-treasure-island-vhs-1996",
+        "https://archive.org/details/an-extremely-goofy-movie-2000-vhs_202505",
+        "https://archive.org/details/spacejam-trb-vhs-aud-tgyhujhygtfrtgyhyy",
+        "https://archive.org/details/openseasonnicknite10202016",
+        "https://archive.org/details/in-shot-20241231-102724293"
       ],
       "shuffle": "full",
       "blockSize": 3,
