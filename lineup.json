@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793703268595,
+  "updated": 1793711558865,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -487,7 +487,13 @@
         "https://archive.org/details/vts-01-1_20231007_2151",
         "https://archive.org/details/14244_202601",
         "https://archive.org/details/23500",
-        "https://archive.org/details/Theres_Something_About_Mary_FOX_WOC_2001-05-18.mkv"
+        "https://archive.org/details/Theres_Something_About_Mary_FOX_WOC_2001-05-18.mkv",
+        "https://archive.org/details/dvd-6688-wedding-crashers-2005",
+        "https://archive.org/details/1986-the-adventures-of-milo-and-otis-1997-columbia-tristar-vhs-480p",
+        "https://archive.org/details/ThanksgivingNight1997Tape",
+        "https://archive.org/details/bbc-one-2008-05-indiana-jones-vhs",
+        "https://archive.org/details/sky-movies-2007-the-hitchhikers-guide-to-the-galaxy-vhs",
+        "https://archive.org/details/dvd-6784-mr.-and-mrs.-smith-2005"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -563,7 +569,12 @@
         "https://archive.org/details/an-extremely-goofy-movie-2000-vhs_202505",
         "https://archive.org/details/spacejam-trb-vhs-aud-tgyhujhygtfrtgyhyy",
         "https://archive.org/details/openseasonnicknite10202016",
-        "https://archive.org/details/in-shot-20241231-102724293"
+        "https://archive.org/details/in-shot-20241231-102724293",
+        "https://archive.org/details/robots-2005-vhs_202509",
+        "https://archive.org/details/PokemonMovie2000WGN10222006",
+        "https://archive.org/details/disneys-cool-runnings-vhs-1994",
+        "https://archive.org/details/a-goofy-movie",
+        "https://archive.org/details/mighty-ducks-the-movie-the-first-face-off-1997-walt-disey-home-video-vhs-rip"
       ],
       "shuffle": "full",
       "blockSize": 3,
