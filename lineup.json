@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793716796306,
+  "updated": 1793717768160,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -498,7 +498,17 @@
         "https://archive.org/details/dvd-video-recorder_202207",
         "https://archive.org/details/BlankVHSTape6hr02min",
         "https://archive.org/details/2025-12-29-23-31-05-1",
-        "https://archive.org/details/fox-adult-swim-wb-stuff-20031998"
+        "https://archive.org/details/fox-adult-swim-wb-stuff-20031998",
+        "https://archive.org/details/comedy-central-1998-woc",
+        "https://archive.org/details/fox-sunday-5-18-2003-woc",
+        "https://archive.org/details/untitled-may-1999-fox-sunday-night-south-park-etc-ia-copy",
+        "https://archive.org/details/FOX_Sunday_Night_Block_WOC_2002-05-19_0700PM",
+        "https://archive.org/details/the-simpsons-vol-4-life-in-the-fast-lane-aka-bjorn-to-be-wild-the-tell-tale-head-uk-vhs-1991",
+        "https://archive.org/details/dvd-6600-my-name-is-earl-2006-01-12",
+        "https://archive.org/details/dvd-6812-george-lopez-2006-02-01",
+        "https://archive.org/details/wb-friday-night-sabrina-raising-dad-reba-maybe-its-me-2002-04-05-kdaf-woc",
+        "https://archive.org/details/1998_tbs_lhotp_marathon",
+        "https://archive.org/details/VHSTape17"
       ],
       "shuffle": "full",
       "blockSize": 3,
