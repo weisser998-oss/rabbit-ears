@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793554824680,
+  "updated": 1793690849016,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -460,6 +460,35 @@
       "blockSize": 3,
       "order": "oldest",
       "scanCount": 1000,
+      "scanMode": "recent",
+      "minLen": 300,
+      "maxLen": 0,
+      "linkOpts": {},
+      "breaks": "off",
+      "kind": "tv",
+      "display": "video",
+      "timeMode": "all",
+      "blocks": [],
+      "weather": null
+    },
+    {
+      "id": "ctoxkrjt",
+      "name": "VHS Kids",
+      "sources": [
+        "https://archive.org/details/tvdisneychanneltlc2008",
+        "https://archive.org/details/CCF-2000",
+        "https://archive.org/details/cn-july-13-2004",
+        "https://archive.org/details/vts-01-1_20260323",
+        "https://archive.org/details/spongebob-tape-october-25-2003",
+        "https://archive.org/details/2025-07-26-16-16-01",
+        "https://archive.org/details/rugrats-tales-from-the-crib-1996-vhs",
+        "https://archive.org/details/evenstevensclips",
+        "https://archive.org/details/tv-2006-07-21"
+      ],
+      "shuffle": "full",
+      "blockSize": 3,
+      "order": "oldest",
+      "scanCount": 50,
       "scanMode": "recent",
       "minLen": 300,
       "maxLen": 0,
