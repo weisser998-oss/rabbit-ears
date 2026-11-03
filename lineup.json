@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793701407004,
+  "updated": 1793701892539,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -469,7 +469,14 @@
         "https://archive.org/details/dvd-6630-jimmy-kimmel-live-2006-02-01",
         "https://archive.org/details/dvd-6522-jimmy-kimmel-live-january-17th-18th-20th-23rd-2006",
         "https://archive.org/details/dvd-6894-jimmy-kimmel-live-2006-03-01",
-        "https://archive.org/details/dvd-6637-the-ellen-degeneres-show-2006-02-02"
+        "https://archive.org/details/dvd-6637-the-ellen-degeneres-show-2006-02-02",
+        "https://archive.org/details/the-terminator-1984_202206",
+        "https://archive.org/details/1999-the-sixth-sense-2000-hollywood-pictures-vhs-480p-h-264",
+        "https://archive.org/details/Good_Will_Hunting_ABC_WOC_2001-02-19",
+        "https://archive.org/details/holy-grail-interlaced",
+        "https://archive.org/details/1995-jumangi-1996-columbia-tri-star-vhs-480p-h-264",
+        "https://archive.org/details/men-in-black_202312",
+        "https://archive.org/details/2006-borat-hbo-720p"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -534,7 +541,9 @@
         "https://archive.org/details/luckoftheirishandtoondisney2001",
         "https://archive.org/details/DC252003",
         "https://archive.org/details/tvcartoonnetworktoondisney2006",
-        "https://archive.org/details/CNDump2"
+        "https://archive.org/details/CNDump2",
+        "https://archive.org/details/teenage-mutant-ninja-turtles-1990-vhs-rip",
+        "https://archive.org/details/2004-shrek-2-2004-dreamworks-vhs-480p-h-264"
       ],
       "shuffle": "full",
       "blockSize": 3,
