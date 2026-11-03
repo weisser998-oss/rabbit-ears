@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793717768160,
+  "updated": 1793720803966,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -508,7 +508,29 @@
         "https://archive.org/details/dvd-6812-george-lopez-2006-02-01",
         "https://archive.org/details/wb-friday-night-sabrina-raising-dad-reba-maybe-its-me-2002-04-05-kdaf-woc",
         "https://archive.org/details/1998_tbs_lhotp_marathon",
-        "https://archive.org/details/VHSTape17"
+        "https://archive.org/details/VHSTape17",
+        "https://archive.org/details/nbc-2008",
+        "https://archive.org/details/dvd-6908-late-night-with-conan-o-brien-2006-03-07",
+        "https://archive.org/details/whose-line-is-it-anyway-s03e09",
+        "https://archive.org/details/dvd-6644-oprah-saturday-night-live-2006-02-03",
+        "https://archive.org/details/dvd-6895-house-2006-02-20",
+        "https://archive.org/details/dvd-6859-larry-king-live-that-s-what-i-m-talking-about-2006-02-15",
+        "https://archive.org/details/dvd-6842-scrubs-2006-02-07",
+        "https://archive.org/details/dvd-6816-the-tonight-show-starring-jay-leno-2006-02-17",
+        "https://archive.org/details/dvd-6805-american-idol-2006-02-21",
+        "https://archive.org/details/vhs-tape-1999-channel-surfing-tech-tv-cnn-comedy-central-e-entertainment-tv-ware",
+        "https://archive.org/details/2001.11.30-channel-surfing-with-techtv-cnn-comedy-central-c-span-e-abc-news-hgtv",
+        "https://archive.org/details/dvd-6872-entertainment-tonight-2006-01-30",
+        "https://archive.org/details/dvd-6703-that-70s-show-2006-01-19",
+        "https://archive.org/details/dvd-6532-scrubs-january-17th-24th-2006",
+        "https://archive.org/details/dvd-6601-the-office-2006-01-12",
+        "https://archive.org/details/dvd-6886-deal-or-no-deal-2006-02-27",
+        "https://archive.org/details/dvd-6545-bones-2005-12-13",
+        "https://archive.org/details/dvd-6546-lost-2006-01-18",
+        "https://archive.org/details/dvd-6547-american-idol-2006-01-24",
+        "https://archive.org/details/family-feud-gsn_202504",
+        "https://archive.org/details/gameshow_jeopardy",
+        "https://archive.org/details/cash-cab-1_1001"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -517,7 +539,15 @@
       "scanMode": "recent",
       "minLen": 300,
       "maxLen": 0,
-      "linkOpts": {},
+      "linkOpts": {
+        "https://archive.org/details/gameshow_jeopardy": {
+          "pick": "random:50",
+          "minLen": 300,
+          "maxLen": 0,
+          "shuffle": "full",
+          "blockSize": 3
+        }
+      },
       "breaks": "off",
       "kind": "tv",
       "display": "video",
@@ -589,7 +619,10 @@
         "https://archive.org/details/PokemonMovie2000WGN10222006",
         "https://archive.org/details/disneys-cool-runnings-vhs-1994",
         "https://archive.org/details/a-goofy-movie",
-        "https://archive.org/details/mighty-ducks-the-movie-the-first-face-off-1997-walt-disey-home-video-vhs-rip"
+        "https://archive.org/details/mighty-ducks-the-movie-the-first-face-off-1997-walt-disey-home-video-vhs-rip",
+        "https://archive.org/details/nickelodeon-guts-season-1",
+        "https://archive.org/details/brainsurge-bmp",
+        "https://archive.org/details/disney-channels-new-year-star-showdown-2009-2010"
       ],
       "shuffle": "full",
       "blockSize": 3,
