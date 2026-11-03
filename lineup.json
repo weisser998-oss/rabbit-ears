@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793696786668,
+  "updated": 1793701407004,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -454,7 +454,22 @@
       "id": "dt7iob0y",
       "name": "VHS",
       "sources": [
-        "https://archive.org/details/@thevhsdude"
+        "https://archive.org/details/@thevhsdude",
+        "https://archive.org/details/dvd-6534-the-ellen-degeneres-show-january-23rd-26th-2006",
+        "https://archive.org/details/dvd-6845-criminal-minds-2005-12-14",
+        "https://archive.org/details/top-gear-s10",
+        "https://archive.org/details/pimp-my-ride-s2",
+        "https://archive.org/details/1987-the-princess-bride-1998-mgm-vhs-480p-h-264",
+        "https://archive.org/details/2023-03-28-07-25-42",
+        "https://archive.org/details/um.11.vhs",
+        "https://archive.org/details/mtv-2007-tv-stream-woc-part-1",
+        "https://archive.org/details/fullhouse-michelle",
+        "https://archive.org/details/abc-tgif-12-13-96-family-matters-boy-meets-world-lily-tomlin-hosts-woc",
+        "https://archive.org/details/1997-11-07-the-tgif-time-warp",
+        "https://archive.org/details/dvd-6630-jimmy-kimmel-live-2006-02-01",
+        "https://archive.org/details/dvd-6522-jimmy-kimmel-live-january-17th-18th-20th-23rd-2006",
+        "https://archive.org/details/dvd-6894-jimmy-kimmel-live-2006-03-01",
+        "https://archive.org/details/dvd-6637-the-ellen-degeneres-show-2006-02-02"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -518,7 +533,8 @@
         "https://archive.org/details/SuiteLifeofZackAndCodySummer2007",
         "https://archive.org/details/luckoftheirishandtoondisney2001",
         "https://archive.org/details/DC252003",
-        "https://archive.org/details/tvcartoonnetworktoondisney2006"
+        "https://archive.org/details/tvcartoonnetworktoondisney2006",
+        "https://archive.org/details/CNDump2"
       ],
       "shuffle": "full",
       "blockSize": 3,
