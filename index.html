@@ -397,6 +397,8 @@ label.btn { display: inline-flex; align-items: center; font-size: 13px; }
 .src-item { display: grid; gap: 6px; }
 .src-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
 .src-custom { color: var(--accent); }
+.src-dup { color: var(--accent); font-style: italic; }
+.src-note { color: var(--accent); font-size: 13px; margin: 0; }
 .src-opts { margin-left: 14px; padding: 10px 12px; border-left: 2px solid var(--accent); display: grid; gap: 10px; }
 .fieldname { font-size: 13px; font-weight: 600; }
 .src-list { display: grid; gap: 6px; }
@@ -2427,6 +2429,21 @@ function editorOwner(id) {
 }
 const editorChannel = id => id === "ads" ? null : draft[+id.split("-")[1]];
 const openLinks = new Set(); // "editorId|link" rows showing their options
+// Duplicate links: the same channel, playlist or video, however it was typed (?si=, full URL or @handle…).
+const linkKey = raw => cleanSource(raw) || raw.trim();
+function linkPlaces(k, exceptId) {
+  if (exceptId === "ads") return [];
+  const out = [];
+  draft.forEach((ch, i) => {
+    const name = `${pad(i + 1)} ${ch.name}`;
+    if (`ch-${i}` !== exceptId && ch.sources.some(r => linkKey(r) === k)) out.push(name);
+    (ch.blocks || []).forEach((b, j) => {
+      if (`b-${i}-${j}` !== exceptId && (b.sources || []).some(r => linkKey(r) === k)) out.push(`${name} (${b.name || "time block"})`);
+    });
+  });
+  return out;
+}
+const placesText = list => list.length <= 2 ? list.join(" and ") : `${list.slice(0, 2).join(", ")} and ${list.length - 2} more`;
 const linkDefaults = ch => ({ pick: ch ? pickFor(ch) : "recent:50", minLen: ch?.minLen || 0, maxLen: ch?.maxLen || 0,
                               shuffle: ch?.shuffle || "full", blockSize: ch?.blockSize || 3 });
 
@@ -2435,11 +2452,14 @@ function sourceRows(id, list) {
   const opt = (v, cur, label) => `<option value="${v}" ${String(v) === String(cur) ? "selected" : ""}>${label}</option>`;
   return list.map((raw, j) => {
     const info = srcInfo(raw), o = owner?.linkOpts?.[raw], open = owner && openLinks.has(`${id}|${raw}`);
+    const k = linkKey(raw), twiceHere = list.filter(r => linkKey(r) === k).length > 1, elsewhere = linkPlaces(k, id);
+    const dup = twiceHere ? `<span class="src-sub err">Listed more than once here. Remove the extra one.</span>`
+      : elsewhere.length ? `<span class="src-sub src-dup">Also on ${esc(placesText(elsewhere))}</span>` : "";
     const pic = info.thumb ? `<img src="${esc(info.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : info.kind === "local" ? "▤" : info.kind === "playlist" ? "≡" : info.kind === "video" ? "▶" : "@";
     const orderText = o?.shuffle ? { full: "shuffled", none: "in order", partial: `groups of ${o.blockSize || 3}` }[o.shuffle] + ", " : "";
     const own = o ? `Own settings: ${orderText}${info.kind === "local" ? "" : pickLabel(o.pick) + ", "}${lenText(+o.minLen, +o.maxLen)}` : "";
     const body = `<span class="src-thumb ${info.kind}">${pic}</span>
-        <span class="src-text"><span class="src-name">${esc(info.title)}</span><span class="src-sub${info.err ? " err" : ""}">${esc(info.sub)}</span>${own ? `<span class="src-sub src-custom">${esc(own)}</span>` : ""}</span>`;
+        <span class="src-text"><span class="src-name">${esc(info.title)}</span><span class="src-sub${info.err ? " err" : ""}">${esc(info.sub)}</span>${own ? `<span class="src-sub src-custom">${esc(own)}</span>` : ""}${dup}</span>`;
     const ls = { ...linkDefaults(ch), ...(o || {}) };
     if (!ls.shuffle) ls.shuffle = ch?.shuffle || "full";
     const panel = !open ? "" : `<div class="src-opts">
@@ -2461,7 +2481,7 @@ const sourceEditor = (id, list) => `<div class="src-editor" data-editor-box="${i
 function sourceEditorInner(id, list) {
   const folders = [...new Set(effCatalog.map(f => f.folder))].filter(f => !list.some(r => r.toLowerCase() === `local:${f}`.toLowerCase()));
   return `<div class="src-list" data-list="${id}">${sourceRows(id, list)}</div>
-    <div class="src-add"><input type="text" class="f-newsrc" id="new-${id}" data-editor="${id}" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Paste a YouTube link or @handle" aria-label="Add a YouTube link">
+    <div class="src-add"><input type="text" class="f-newsrc" id="new-${id}" data-editor="${id}" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Paste a YouTube or Internet Archive link" aria-label="Add a YouTube or Internet Archive link">
       <button type="button" class="btn" data-src-add="${id}">Add</button></div>
     <p class="err" data-src-msg="${id}" hidden></p>
     ${id !== "ads" && folders.length ? `<div class="src-folders"><span class="hint">Your video folders:</span>${folders.map(f => `<button type="button" class="btn" data-src-folder="${esc(f)}" data-editor="${id}">+ ${esc(f || "All files")}</button>`).join("")}</div>` : ""}`;
@@ -2477,8 +2497,15 @@ function addSource(id, raw) {
   const clean = cleanSource(raw);
   if (!clean) { msg.textContent = "That doesn't look like a YouTube channel, playlist or video link."; msg.hidden = false; return false; }
   const list = editorList(id);
-  if (!list.some(r => cleanSource(r) === clean)) list.push(clean);
-  msg.hidden = true;
+  if (list.some(r => linkKey(r) === clean)) {
+    msg.textContent = id === "ads" ? "That link is already in your commercials." : `That link is already on ${id.startsWith("b-") ? "this time block" : "this channel"}, so it wasn't added again.`;
+    msg.className = "err"; msg.hidden = false;
+    return true;
+  }
+  list.push(clean);
+  const elsewhere = linkPlaces(clean, id);
+  if (elsewhere.length) { msg.textContent = `Added. It's also on ${placesText(elsewhere)}.`; msg.className = "src-note"; msg.hidden = false; }
+  else msg.hidden = true;
   return true;
 }
 // Re-render one editor (keeps everything else in the form as typed).
@@ -2486,8 +2513,10 @@ function redrawEditor(id) {
   const box = document.querySelector(`[data-editor-box="${id}"]`);
   if (!box) return;
   const typed = document.getElementById(`new-${id}`)?.value || "";
+  const msg = box.querySelector(`[data-src-msg="${id}"]`), keep = msg && !msg.hidden && [msg.textContent, msg.className];
   box.innerHTML = sourceEditorInner(id, editorList(id));
   document.getElementById(`new-${id}`).value = typed;
+  if (keep) { const m = box.querySelector(`[data-src-msg="${id}"]`); [m.textContent, m.className] = keep; m.hidden = false; }
   resolveNames();
 }
 
@@ -2506,6 +2535,7 @@ document.addEventListener("click", e => {
   }
   if (fold) editorList(id).push(`local:${fold.dataset.srcFolder}`);
   redrawEditor(id);
+  refreshEditors(); // other channels' lists update their "Also on…" notes
 });
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-src-open]");
