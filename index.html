@@ -897,13 +897,22 @@ function libraryChanged() {
   if (mine !== shared && state.ghToken && repo) { state.lineupUpdated = Date.now(); save(); shareLineup(false, true); }
 }
 
+// A request that takes longer than this is given up on (and retried once by the callers), so one slow
+// reply can't leave a channel tuning forever.
+async function fetchWithLimit(url, ms = 20000) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
+  try { return await fetch(url, { signal: ctl.signal }); } finally { clearTimeout(t); }
+}
+
 /* ---------- YouTube Data API ---------- */
 
 async function yt(path, params) {
   const u = new URL("https://www.googleapis.com/youtube/v3/" + path);
   for (const [k, v] of Object.entries(params)) if (v !== "" && v != null) u.searchParams.set(k, v);
   u.searchParams.set("key", state.apiKey);
-  const r = await fetch(u);
+  let r;
+  try { r = await fetchWithLimit(u); }
+  catch { try { r = await fetchWithLimit(u); } catch { throw new Error("YouTube didn't answer in time. Check the internet connection."); } }
   const j = await r.json().catch(() => ({}));
   if (!r.ok) {
     const reason = j.error?.errors?.[0]?.reason || "";
@@ -1007,10 +1016,16 @@ async function scanSource(src, raw, chIn, ds) {
    MP4 files in the slot's <video> element; no API key needed. */
 
 async function iaJSON(url) {
-  let r;
-  try { r = await fetch(url); } catch { throw new Error("Couldn't reach the Internet Archive. Check the internet connection."); }
-  if (!r.ok) throw new Error(`The Internet Archive didn't respond (${r.status}).`);
-  return r.json();
+  // Two tries: the Archive sometimes answers slowly or sends back an incomplete reply.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const r = await fetchWithLimit(url);
+      if (!r.ok) throw new Error(`The Internet Archive didn't respond (${r.status}).`);
+      return await r.json();
+    } catch (e) {
+      if (attempt >= 1) throw new Error(/didn't respond/.test(e.message) ? e.message : "The Internet Archive didn't answer properly. It will try again tomorrow, or use Rescan.");
+    }
+  }
 }
 // Everything an account has uploaded, the same list its profile page shows.
 async function iaAccountItems(account, maxPages = 50) {
@@ -1084,6 +1099,7 @@ const scanKey = ch => JSON.stringify([ch.sources, ch.scanCount, ch.scanMode, ch.
 const needsYouTube = ch => ch.sources.some(r => { const s = parseSource(r); return s && !["local", "iaAccount", "iaItem"].includes(s.type); });
 const queueKey = ch => JSON.stringify([ch.shuffle, ch.blockSize, ch.order, ch.breaks, ch.timeMode, ch.timeMode === "blocks" ? ch.blocks : 0, ch.kind]);
 const scans = {};   // cache key -> { key, promise } while scanning
+const scanProgress = {}; // cache key -> { done, total } while scanning
 const scanErr = {}; // channel id -> message from the last failed scan
 
 function pruneCache() {
@@ -1098,31 +1114,37 @@ function ensureEntry(ch, ds) {
   const isAds = ch.id === "__ads";
   const promise = (async () => {
     if (!state.apiKey && needsYouTube(ch)) throw new Error("Add your YouTube API key in Settings.");
-    const videos = [], errs = [], seen = new Set();
-    for (const [i, raw] of ch.sources.entries()) {
-      const src = parseSource(raw);
-      if (!src) continue;
-      if (src.type === "unknown") { errs.push(`"${raw}" isn't a channel, playlist or video link.`); continue; }
-      if (src.type === "local") {
-        const want = src.folder.toLowerCase(), before = videos.length, ls = linkSettings(ch, raw);
-        for (const f of effCatalog) {
-          if (want && f.folder.toLowerCase() !== want) continue;
-          if (!lengthOk(f.dur, ls)) continue;
-          const id = "local:" + f.path;
-          if (seen.has(id)) continue;
-          seen.add(id);
-          videos.push({ id, local: true, path: f.path, title: prettyName(f.name), by: f.folder || "Your videos", at: naturalKey(f.path), dur: f.dur, src: i });
+    // Look up up to 6 links at once, then combine them in link order (so every device gets the same list).
+    const results = new Array(ch.sources.length), prog = scanProgress[ck] = { done: 0, total: ch.sources.length };
+    let next = 0, fatal = null;
+    const work = async () => {
+      while (next < ch.sources.length && !fatal) {
+        const i = next++, raw = ch.sources[i], src = parseSource(raw);
+        try {
+          if (!src) results[i] = { vids: [] };
+          else if (src.type === "unknown") results[i] = { err: `"${raw}" isn't a channel, playlist or video link.` };
+          else if (src.type === "local") {
+            const want = src.folder.toLowerCase(), ls = linkSettings(ch, raw);
+            const vids = effCatalog.filter(f => (!want || f.folder.toLowerCase() === want) && lengthOk(f.dur, ls))
+              .map(f => ({ id: "local:" + f.path, local: true, path: f.path, title: prettyName(f.name), by: f.folder || "Your videos", at: naturalKey(f.path), dur: f.dur }));
+            results[i] = vids.length ? { vids } : { err: want ? `No video files in "${src.folder}" fit this channel's length limits yet.` : "No video files that fit this channel's length limits yet." };
+          }
+          else results[i] = { vids: await scanSource(src, raw, ch, ds) };
+        } catch (e) {
+          if (/API key|allowance/.test(e.message)) fatal = e;
+          results[i] = { err: `${raw}: ${e.message}` };
         }
-        if (videos.length === before) errs.push(want ? `No video files in "${src.folder}" fit this channel's length limits yet.` : "No video files that fit this channel's length limits yet.");
-        continue;
+        prog.done++;
       }
-      try {
-        for (const v of await scanSource(src, raw, ch, ds)) if (!seen.has(v.id)) { seen.add(v.id); videos.push({ ...v, src: i }); }
-      } catch (e) {
-        if (/API key|allowance/.test(e.message)) throw e;
-        errs.push(`${raw}: ${e.message}`);
-      }
-    }
+    };
+    await Promise.all(Array.from({ length: Math.min(6, ch.sources.length) }, work));
+    delete scanProgress[ck];
+    if (fatal) throw fatal;
+    const videos = [], errs = [], seen = new Set();
+    results.forEach((r, i) => {
+      if (r?.err) errs.push(r.err);
+      for (const v of r?.vids || []) if (!seen.has(v.id)) { seen.add(v.id); videos.push({ ...v, src: i }); }
+    });
     if (!videos.length && !isAds) throw new Error(errs[0] || "This channel has no links yet. Add some in Settings.");
     const entry = { key, day, videos, errs };
     cache[ck] = entry; pruneCache(); saveCache();
@@ -1707,8 +1729,19 @@ async function tune(i) {
   activate(s);
   setNow("Tuning…", "");
   let sch;
-  try { sch = await getSched(ch, dayStart(Date.now())); }
-  catch (err) { if (mySeq === seq) noSignal(err.message); return; }
+  const progT = setInterval(() => {
+    if (mySeq !== seq) return clearInterval(progT);
+    const ps = Object.entries(scanProgress).filter(([k]) => k.startsWith(ch.id + "@") || k.startsWith(ch.id + "#"));
+    if (!ps.length) return;
+    const done = ps.reduce((a, [, p]) => a + p.done, 0), total = ps.reduce((a, [, p]) => a + p.total, 0);
+    $("#nsBig").textContent = "TUNING";
+    $("#whyText").textContent = `Gathering videos: ${done} of ${total} links. This happens once a day.`;
+    $("#nosignal").hidden = false;
+    setNow("Tuning…", `Gathering videos: ${done} of ${total} links`);
+  }, 700);
+  try { sch = await getSched(ch, dayStart(Date.now())); clearInterval(progT); }
+  catch (err) { clearInterval(progT); if (mySeq === seq) noSignal(err.message); return; }
+  if (mySeq === seq) { $("#nosignal").hidden = true; document.body.classList.remove("no-signal"); }
   if (mySeq !== seq || active !== s) return;
   const errs = [...new Set(sch.segs.flatMap(g => g.e?.errs || []))];
   if (errs.length) toast(`Skipped ${errs.length === 1 ? "a link" : errs.length + " links"} on ${ch.name}. ${errs[0]}`);
