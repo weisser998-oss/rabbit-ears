@@ -1,6 +1,6 @@
 {
   "rabbitEars": 3,
-  "updated": 1793720803966,
+  "updated": 1793946555490,
   "channels": [
     {
       "id": "mkdgz5vj",
@@ -46,7 +46,10 @@
         "https://www.youtube.com/playlist?list=PLrOLTLC7N_iBn5KW6Tt3IqXI0KFCBt2NR",
         "@ThatFoolishGrrl",
         "https://www.youtube.com/channel/UCIgVp1qzrkOP2-C_QX0ixcA",
-        "@Skyesicles"
+        "@Skyesicles",
+        "@nintentalk",
+        "@missbubbles",
+        "@cillasyt"
       ],
       "shuffle": "full",
       "blockSize": 4,
@@ -208,7 +211,9 @@
         "https://www.youtube.com/playlist?list=PLP6xA_SBHbyg",
         "@NaturalWorldFacts",
         "@menwiththepot",
-        "@mr.scienceYT"
+        "@mr.scienceYT",
+        "@thewhyfiles",
+        "@whatdamath"
       ],
       "shuffle": "full",
       "blockSize": 3,
@@ -369,7 +374,8 @@
         "@isabelleheikens",
         "@Kath_Arun",
         "@christinesnotebook",
-        "@jenilee.thepioneerhome"
+        "@jenilee.thepioneerhome",
+        "@thecozycastle"
       ],
       "shuffle": "full",
       "blockSize": 3,
